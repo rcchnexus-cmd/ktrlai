@@ -8,6 +8,7 @@ import {
 import * as mockAuth from "./mockAuth.js";
 
 const ACTIVE_WORKSPACE_KEY = "ktrlai_active_workspace_id";
+const bootstrapPromises = new Map();
 
 function canUseStorage() {
   return typeof window !== "undefined" && Boolean(window.localStorage);
@@ -296,19 +297,54 @@ async function ensureAccountBootstrap(user, options = {}) {
   return toAuthSession({ user, profile, workspace });
 }
 
+async function getReadySession() {
+  const {
+    data: { session },
+    error
+  } = await supabase.auth.getSession();
+
+  if (error || !session?.user?.id) {
+    return null;
+  }
+
+  return session;
+}
+
+function bootstrapAfterSessionReady(session, options = {}) {
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  const userId = session.user.id;
+  const existingBootstrap = bootstrapPromises.get(userId);
+
+  if (existingBootstrap) {
+    return existingBootstrap;
+  }
+
+  console.log("Bootstrap running with user:", userId);
+
+  const bootstrapPromise = ensureAccountBootstrap(session.user, options).finally(() => {
+    bootstrapPromises.delete(userId);
+  });
+
+  bootstrapPromises.set(userId, bootstrapPromise);
+  return bootstrapPromise;
+}
+
 export async function restoreSession() {
   if (!isSupabaseConfigured) {
     return toMockSession(mockAuth.getSession());
   }
 
-  const { data, error } = await supabase.auth.getSession();
+  const session = await getReadySession();
 
-  if (error || !data.session?.user) {
+  if (!session?.user) {
     return toLoggedOutSession("supabase");
   }
 
   try {
-    return await ensureAccountBootstrap(data.session.user);
+    return await bootstrapAfterSessionReady(session);
   } catch {
     return toLoggedOutSession("supabase");
   }
@@ -330,17 +366,19 @@ export async function login(credentials = {}) {
     throw new Error("Password must be at least 6 characters.");
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     throw new Error(error.message || "Unable to log in.");
   }
 
-  if (!data.user) {
+  const session = await getReadySession();
+
+  if (!session?.user) {
     throw new Error("Unable to restore your Supabase session.");
   }
 
-  return ensureAccountBootstrap(data.user);
+  return bootstrapAfterSessionReady(session);
 }
 
 export async function signup(credentials = {}) {
@@ -360,7 +398,7 @@ export async function signup(credentials = {}) {
     throw new Error("Password must be at least 6 characters.");
   }
 
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -375,11 +413,13 @@ export async function signup(credentials = {}) {
     throw new Error(error.message || "Unable to create account.");
   }
 
-  if (!data.session?.user) {
+  const session = await getReadySession();
+
+  if (!session?.user) {
     throw new Error("Check your email to confirm your account, then log in to finish workspace setup.");
   }
 
-  return ensureAccountBootstrap(data.session.user, { domain, name: credentials.name });
+  return bootstrapAfterSessionReady(session, { domain, name: credentials.name });
 }
 
 export async function logout() {

@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const viteEnv = import.meta.env || {};
+const supabaseUrl = viteEnv.VITE_SUPABASE_URL;
+const supabaseAnonKey = viteEnv.VITE_SUPABASE_ANON_KEY;
 
 // Phase 1 foundation:
 // The current app still reads from src/api/mockApi.js so the UI remains usable
