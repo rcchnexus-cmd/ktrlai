@@ -3,9 +3,8 @@ import { RouteLink } from "../navigation.jsx";
 
 const columns = [
   ["Product", ["Dashboard", "AI Activity", "Control Center", "AI Visibility"]],
-  ["Solutions", ["Publishers", "SaaS teams", "Data owners", "Marketplaces"]],
-  ["Resources", ["Docs", "API status", "Guides", "Research"]],
-  ["Company", ["About", "Pricing", "Contact", "Careers"]],
+  ["Pricing", ["Free", "Pro", "Business", "Compare plans"]],
+  ["Company", ["About", "Contact", "Security"]],
   ["Legal", ["Privacy", "Terms", "Security", "Contact"]]
 ];
 
@@ -14,11 +13,16 @@ const routeFor = {
   "AI Activity": "/activity",
   "Control Center": "/control",
   "AI Visibility": "/visibility",
+  Free: "/#pricing",
+  Pro: "/#pricing",
+  Business: "/#pricing",
+  "Compare plans": "/#pricing",
+  About: "/#about",
   Pricing: "/#pricing",
+  Contact: "mailto:contact@ktrlai.app",
   Privacy: "/settings",
   Terms: "/settings",
-  Security: "/settings",
-  Contact: "/settings"
+  Security: "/settings"
 };
 
 export default function Footer() {
@@ -34,7 +38,7 @@ export default function Footer() {
             <h3>{title}</h3>
             {links.map((link) => {
               const to = routeFor[link] || "/";
-              return to.includes("#") ? (
+              return to.startsWith("mailto:") || to.includes("#") ? (
                 <a key={link} href={to}>
                   {link}
                 </a>

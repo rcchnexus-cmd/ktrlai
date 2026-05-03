@@ -55,6 +55,7 @@ function ChevronDown() {
 
 export default function MarketingNav() {
   const [activeMenu, setActiveMenu] = useState(null);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const openTimer = useRef(null);
   const closeTimer = useRef(null);
 
@@ -89,9 +90,33 @@ export default function MarketingNav() {
     setActiveMenu(null);
   }, [clearTimers]);
 
+  const closeMobileNav = useCallback(() => {
+    closeNow();
+    setIsMobileOpen(false);
+  }, [closeNow]);
+
+  const toggleMobileNav = useCallback(() => {
+    closeNow();
+    setIsMobileOpen((isOpen) => !isOpen);
+  }, [closeNow]);
+
+  const toggleMenu = useCallback(
+    (label) => {
+      clearTimers();
+      setActiveMenu((current) => (current === label ? null : label));
+    },
+    [clearTimers]
+  );
+
   useEffect(() => {
     return () => clearTimers();
   }, [clearTimers]);
+
+  useEffect(() => {
+    document.body.classList.toggle("mobileNavOpen", isMobileOpen);
+
+    return () => document.body.classList.remove("mobileNavOpen");
+  }, [isMobileOpen]);
 
   return (
     <header className="marketingHeader">
@@ -99,52 +124,66 @@ export default function MarketingNav() {
         <span>New</span>
         Content rights controls for answer engines and AI training crawlers are now in beta.
       </div>
-      <nav className="marketingNav" aria-label="Main navigation">
+      <nav className={isMobileOpen ? "marketingNav menuOpen" : "marketingNav"} aria-label="Main navigation">
         <Logo />
-        <div className="navMenus">
-          {menus.map((menu) => (
-            <div
-              className={activeMenu === menu.label ? "navMenu open" : "navMenu"}
-              key={menu.label}
-              onMouseEnter={() => scheduleOpen(menu.label)}
-              onMouseLeave={scheduleClose}
-              onFocus={() => openNow(menu.label)}
-              onBlur={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget)) {
-                  scheduleClose();
-                }
-              }}
-            >
-              <button
-                type="button"
-                className="navMenuButton"
-                aria-controls={`nav-menu-${menu.label.toLowerCase().replace(/\s+/g, "-")}`}
-                aria-expanded={activeMenu === menu.label}
-                aria-haspopup="true"
+        <button
+          type="button"
+          className="mobileMenuButton"
+          aria-label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={isMobileOpen}
+          onClick={toggleMobileNav}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <div className={isMobileOpen ? "mobileNavPanel open" : "mobileNavPanel"}>
+          <div className="navMenus">
+            {menus.map((menu) => (
+              <div
+                className={activeMenu === menu.label ? "navMenu open" : "navMenu"}
+                key={menu.label}
+                onMouseEnter={() => scheduleOpen(menu.label)}
+                onMouseLeave={scheduleClose}
+                onFocus={() => openNow(menu.label)}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    scheduleClose();
+                  }
+                }}
               >
-                {menu.label}
-                <ChevronDown />
-              </button>
-              <div className="navDropdown" id={`nav-menu-${menu.label.toLowerCase().replace(/\s+/g, "-")}`}>
-                {menu.items.map(([label, to]) => (
-                  <RouteLink key={label} to={to} onClick={closeNow}>
-                    {label}
-                  </RouteLink>
-                ))}
+                <button
+                  type="button"
+                  className="navMenuButton"
+                  aria-controls={`nav-menu-${menu.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  aria-expanded={activeMenu === menu.label}
+                  aria-haspopup="true"
+                  onClick={() => toggleMenu(menu.label)}
+                >
+                  {menu.label}
+                  <ChevronDown />
+                </button>
+                <div className="navDropdown" id={`nav-menu-${menu.label.toLowerCase().replace(/\s+/g, "-")}`}>
+                  {menu.items.map(([label, to]) => (
+                    <RouteLink key={label} to={to} onClick={closeMobileNav}>
+                      {label}
+                    </RouteLink>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-          <a href="#pricing" className="navMenuButton navPricing">
-            Pricing
-          </a>
-        </div>
-        <div className="navActions">
-          <RouteLink to="/login" className="ghostButton">
-            Log in
-          </RouteLink>
-          <RouteLink to="/signup" className="primaryButton smallButton">
-            Start free
-          </RouteLink>
+            ))}
+            <a href="#pricing" className="navMenuButton navPricing" onClick={closeMobileNav}>
+              Pricing
+            </a>
+          </div>
+          <div className="navActions">
+            <RouteLink to="/login" className="ghostButton" onClick={closeMobileNav}>
+              Log in
+            </RouteLink>
+            <RouteLink to="/signup" className="primaryButton smallButton" onClick={closeMobileNav}>
+              Start free
+            </RouteLink>
+          </div>
         </div>
       </nav>
     </header>

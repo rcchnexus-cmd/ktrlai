@@ -103,10 +103,9 @@ export default async function handler(req, res) {
     });
 
     return res.status(200).json({ url: session.url });
-  } catch (error) {
+  } catch {
     return res.status(500).json({
-      message: "Unable to create Stripe Checkout session.",
-      error: error.message
+      message: "Unable to create Stripe Checkout session."
     });
   }
 }

@@ -322,7 +322,9 @@ function bootstrapAfterSessionReady(session, options = {}) {
     return existingBootstrap;
   }
 
-  console.log("Bootstrap running with user:", userId);
+  if (import.meta.env.DEV) {
+    console.log("Bootstrap running with user:", userId);
+  }
 
   const bootstrapPromise = ensureAccountBootstrap(session.user, options).finally(() => {
     bootstrapPromises.delete(userId);

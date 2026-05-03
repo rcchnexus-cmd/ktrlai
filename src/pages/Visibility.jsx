@@ -70,9 +70,9 @@ export default function Visibility() {
               <h2>Test how AI systems cite you</h2>
               <div className="queryList">
                 {result.suggestedQueries.map((query) => (
-                  <button type="button" key={query}>
+                  <span key={query}>
                     {query}
-                  </button>
+                  </span>
                 ))}
               </div>
             </div>

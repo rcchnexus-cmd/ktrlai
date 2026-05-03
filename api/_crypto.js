@@ -2,7 +2,8 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 const apiKeyHashSecret = process.env.API_KEY_HASH_SECRET || "";
 const apiKeyPattern = /^ktrl_live_[A-Za-z0-9]{12,96}$/;
-const maskedApiKey = "ktrl_live_••••••••••";
+const maskGlyph = "\u2022";
+const maskedApiKey = `ktrl_live_${maskGlyph.repeat(10)}`;
 
 export function isApiKeyHashingConfigured() {
   return Boolean(apiKeyHashSecret);
@@ -26,7 +27,7 @@ export function maskApiKey(apiKey) {
     return maskedApiKey;
   }
 
-  return `${key.slice(0, 10)}${"•".repeat(10)}${key.slice(-4)}`;
+  return `${key.slice(0, 10)}${maskGlyph.repeat(10)}${key.slice(-4)}`;
 }
 
 export function hashApiKey(apiKey) {

@@ -200,10 +200,9 @@ export default async function handler(req, res) {
   try {
     const rawBody = await readRawBody(req);
     event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (error) {
+  } catch {
     return res.status(400).json({
-      message: "Invalid Stripe webhook signature.",
-      error: error.message
+      message: "Invalid Stripe webhook signature."
     });
   }
 
@@ -235,10 +234,9 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({ received: true, sync: syncResult });
-  } catch (error) {
+  } catch {
     return res.status(500).json({
-      message: "Stripe webhook received but subscription sync failed.",
-      error: error.message
+      message: "Stripe webhook received but subscription sync failed."
     });
   }
 }

@@ -10,6 +10,18 @@ import { useApp } from "../context/AppContext.jsx";
 const trust = ["Verified bot intelligence", "Dataset licensing", "AI crawler controls", "Source visibility"];
 const teams = ["Northstar", "Atlas Labs", "SignalPress", "HelioData", "Orbital Cloud"];
 
+const whatKtrlAiDoes = [
+  "Track AI bots visiting your content",
+  "Control which AI systems can access your data",
+  "Monetize AI-driven traffic and dataset usage"
+];
+
+const howItWorks = [
+  ["install", "Install tracking script", "Add one lightweight script and verify the domains you want KtrlAI to govern."],
+  ["signal", "Monitor AI activity in real time", "See bot identity, pages accessed, policy outcome, and usage patterns as events arrive."],
+  ["revenue", "Control access and monetize usage", "Set access rules, allow approved AI systems, and attach commercial terms when value is created."]
+];
+
 const features = [
   ["signal", "AI access intelligence", "See which AI systems read, summarize, cite, or train on your content."],
   ["shield", "Policy enforcement", "Set rules for trusted bots, unknown crawlers, summary access, and training use."],
@@ -185,9 +197,10 @@ export default function Landing() {
         <section className="heroSection" data-reveal>
           <div className="heroCopy">
             <div className="heroPill">Control layer for AI access, training, and monetization</div>
-            <h1>AI is using your content. You just don't see it.</h1>
+            <h1>Control how AI uses your content.</h1>
             <p>
-              KtrlAI gives you visibility, control, and monetization over how AI systems interact with your data.
+              Track AI bots visiting your site, decide which systems can access your data, and monetize approved AI
+              usage from one governance platform.
             </p>
             <div className="heroActions">
               <RouteLink to="/visibility" className="primaryButton heroPrimaryCta">
@@ -218,6 +231,39 @@ export default function Landing() {
               {item}
             </span>
           ))}
+        </section>
+
+        <section className="section productIntro twoColumn" data-reveal>
+          <div>
+            <span className="eyebrow">What is KtrlAI?</span>
+            <h2>AI governance infrastructure for websites, publishers, and data-rich businesses.</h2>
+            <p className="introStatement">
+              KtrlAI helps teams track, control, and monetize AI access to their content so the AI-powered internet has
+              a real permissions and revenue layer.
+            </p>
+          </div>
+          <div className="checkList">
+            {whatKtrlAiDoes.map((item, index) => (
+              <span key={item} data-reveal style={{ "--reveal-index": index }}>
+                {item}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <section className="section solutionBand" data-reveal>
+          <span className="eyebrow">How it works</span>
+          <h2>Go from invisible AI traffic to a governed content channel in three steps.</h2>
+          <div className="workflow onboardingWorkflow">
+            {howItWorks.map(([icon, title, body], index) => (
+              <article key={title} data-reveal style={{ "--reveal-index": index }}>
+                <FeatureGlyph type={icon} />
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{title}</strong>
+                <p>{body}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="section twoColumn" data-reveal>
@@ -315,6 +361,20 @@ export default function Landing() {
             <span data-reveal style={{ "--reveal-index": 1 }}>Separate search visibility from training access.</span>
             <span data-reveal style={{ "--reveal-index": 2 }}>Apply summary-only, paywalled, or blocked outcomes.</span>
             <span data-reveal style={{ "--reveal-index": 3 }}>Keep policy history for legal, security, and commercial teams.</span>
+          </div>
+        </section>
+
+        <section className="section solutionBand companyMission" id="about" data-reveal>
+          <span className="eyebrow">About KtrlAI</span>
+          <h2>We are building infrastructure for the AI-powered internet.</h2>
+          <p>
+            KtrlAI exists to give creators, publishers, and businesses control over how their content and data are used
+            by AI systems. Our mission is to make AI access transparent, permissioned, and economically fair.
+          </p>
+          <div className="missionStats" aria-label="Company principles">
+            <span>Visibility first</span>
+            <span>Control by default</span>
+            <span>Value for owners</span>
           </div>
         </section>
 

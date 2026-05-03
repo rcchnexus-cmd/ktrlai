@@ -1,7 +1,8 @@
 import { getSupabaseAccessToken } from "../lib/supabaseClient.js";
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const concealedApiKeyMask = "ktrl_live_••••••••••";
+const maskGlyph = "\u2022";
+const concealedApiKeyMask = `ktrl_live_${maskGlyph.repeat(10)}`;
 
 function randomString(length) {
   const cryptoApi = typeof globalThis !== "undefined" ? globalThis.crypto : null;
@@ -90,7 +91,7 @@ export function maskApiKey(key) {
     return concealedApiKeyMask;
   }
 
-  return `${value.slice(0, 10)}${"•".repeat(10)}${value.slice(-4)}`;
+  return `${value.slice(0, 10)}${maskGlyph.repeat(10)}${value.slice(-4)}`;
 }
 
 export function createWorkspaceApiKey(overrides = {}) {

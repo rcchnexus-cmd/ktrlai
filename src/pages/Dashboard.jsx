@@ -15,7 +15,15 @@ export default function Dashboard() {
     }
   }, [actions, state.dashboard, state.loading.dashboard]);
 
+  useEffect(() => {
+    if (state.auth.isAuthenticated && !state.settings && !state.loading.settings) {
+      actions.loadSettings();
+    }
+  }, [actions, state.auth.isAuthenticated, state.loading.settings, state.settings]);
+
   const dashboard = state.dashboard;
+  const domains = Array.isArray(state.settings?.domains) ? state.settings.domains : null;
+  const shouldShowOnboarding = Boolean(state.settings && domains?.length === 0);
 
   return (
     <AppShell
@@ -31,6 +39,40 @@ export default function Dashboard() {
         <div className="loadingState">Loading AI activity...</div>
       ) : (
         <>
+          {shouldShowOnboarding && (
+            <section className="onboardingCard panel" aria-label="KtrlAI onboarding checklist">
+              <div className="onboardingCopy">
+                <span className="eyebrow">Workspace setup</span>
+                <h2>Welcome to KtrlAI</h2>
+                <p>Add your first domain, install the tracker, and KtrlAI will start turning AI access into visibility, policy, and revenue signals.</p>
+              </div>
+              <div className="onboardingSteps">
+                <article>
+                  <span>1</span>
+                  <strong>Add your domain</strong>
+                  <p>Connect the website you want to monitor and verify ownership.</p>
+                </article>
+                <article>
+                  <span>2</span>
+                  <strong>Install tracking script</strong>
+                  <p>Copy the workspace script into your site header or tag manager.</p>
+                </article>
+                <article>
+                  <span>3</span>
+                  <strong>Start monitoring AI activity</strong>
+                  <p>Watch AI bot visits, policy outcomes, and monetization opportunities appear here.</p>
+                </article>
+              </div>
+              <div className="onboardingActions">
+                <RouteLink to="/settings" className="primaryButton smallButton">
+                  Add domain
+                </RouteLink>
+                <RouteLink to="/visibility" className="secondaryButton smallButton">
+                  Check visibility
+                </RouteLink>
+              </div>
+            </section>
+          )}
           <section className="metricGrid">
             {dashboard.kpis.map((kpi) => (
               <MetricCard key={kpi.label} {...kpi} />

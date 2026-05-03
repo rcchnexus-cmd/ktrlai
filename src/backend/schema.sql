@@ -5,7 +5,7 @@
 create extension if not exists "pgcrypto";
 
 create type public.workspace_role as enum ('owner', 'admin', 'member', 'viewer');
-create type public.domain_status as enum ('pending', 'verified', 'disabled');
+create type public.domain_status as enum ('pending', 'verified', 'failed', 'disabled');
 create type public.activity_status as enum ('allowed', 'blocked', 'restricted', 'paid_access', 'summaries_only');
 create type public.visibility_provider as enum ('chatgpt', 'perplexity', 'claude', 'google_ai', 'other');
 create type public.access_decision as enum ('allow_full', 'allow_summary', 'paid_access_required', 'training_denied', 'block_all');

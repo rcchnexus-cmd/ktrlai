@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!isSupabaseAdminConfigured() || process.env.PAYOUT_REQUESTS_ENABLED !== "true") {
+  if (!isSupabaseAdminConfigured()) {
     return res.status(202).json({
       ok: true,
       mode: "mock",
@@ -60,6 +60,14 @@ export default async function handler(req, res) {
 
   if (!auth.ok) {
     return;
+  }
+
+  if (process.env.PAYOUT_REQUESTS_ENABLED !== "true") {
+    return res.status(403).json({
+      ok: false,
+      mode: "supabase",
+      message: "Payout requests are disabled for this deployment."
+    });
   }
 
   const { data, error } = await supabase
