@@ -46,11 +46,15 @@ export default function App() {
   const isProtectedRoute = protectedRoutes.has(path);
 
   useEffect(() => {
-    if (isProtectedRoute && !state.auth.isAuthenticated) {
+    if (isProtectedRoute && !state.auth.isRestoring && !state.auth.isAuthenticated) {
       window.localStorage.setItem(INTENDED_ROUTE_KEY, path);
       navigate("/login");
     }
-  }, [isProtectedRoute, navigate, path, state.auth.isAuthenticated]);
+  }, [isProtectedRoute, navigate, path, state.auth.isAuthenticated, state.auth.isRestoring]);
+
+  if (isProtectedRoute && state.auth.isRestoring) {
+    return <div className="loadingState">Restoring session...</div>;
+  }
 
   if (isProtectedRoute && !state.auth.isAuthenticated) {
     return null;

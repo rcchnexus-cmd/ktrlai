@@ -19,6 +19,12 @@ function createId(prefix) {
   return `${prefix}_${randomString(10).toLowerCase()}`;
 }
 
+function createMockFallbackError(message) {
+  const error = new Error(message);
+  error.useMockFallback = true;
+  return error;
+}
+
 export function normalizeDomainInput(value) {
   return String(value || "")
     .trim()
@@ -134,6 +140,11 @@ export function mergeDomainVerificationResult(currentDomain, resultDomain = {}) 
 
 export async function verifyDomainWithApi({ domainId, workspaceId }) {
   const accessToken = await getSupabaseAccessToken();
+
+  if (!accessToken) {
+    throw createMockFallbackError("Domain verification endpoint is not available.");
+  }
+
   const response = await fetch("/api/verify-domain", {
     method: "POST",
     headers: {
@@ -149,7 +160,7 @@ export async function verifyDomainWithApi({ domainId, workspaceId }) {
   const contentType = response.headers.get("content-type") || "";
 
   if (!contentType.includes("application/json")) {
-    throw new Error("Domain verification endpoint is not available.");
+    throw createMockFallbackError("Domain verification endpoint is not available.");
   }
 
   const data = await response.json();
@@ -163,6 +174,11 @@ export async function verifyDomainWithApi({ domainId, workspaceId }) {
 
 export async function rotateApiKeyWithApi({ workspaceId }) {
   const accessToken = await getSupabaseAccessToken();
+
+  if (!accessToken) {
+    throw createMockFallbackError("API key endpoint is not available.");
+  }
+
   const response = await fetch("/api/api-key", {
     method: "POST",
     headers: {
@@ -178,7 +194,7 @@ export async function rotateApiKeyWithApi({ workspaceId }) {
   const contentType = response.headers.get("content-type") || "";
 
   if (!contentType.includes("application/json")) {
-    throw new Error("API key endpoint is not available.");
+    throw createMockFallbackError("API key endpoint is not available.");
   }
 
   const data = await response.json();

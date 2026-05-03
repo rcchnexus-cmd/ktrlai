@@ -166,7 +166,7 @@ export default function Landing() {
     const result = await startBillingCheckout({
       planKey,
       user: state.auth.user,
-      workspaceId: "mock_workspace"
+      workspaceId: state.auth.workspaceId || "mock_workspace"
     });
 
     setBillingMessage(result.message || "");

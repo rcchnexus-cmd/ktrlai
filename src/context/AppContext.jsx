@@ -1,11 +1,11 @@
-import { createContext, useContext, useMemo, useReducer } from "react";
+import { createContext, useContext, useEffect, useMemo, useReducer } from "react";
 import { mockApi } from "../api/mockApi.js";
-import * as mockAuth from "../auth/mockAuth.js";
+import * as authService from "../auth/supabaseAuth.js";
 
 const AppContext = createContext(null);
 
 function createInitialState() {
-  const session = mockAuth.getSession();
+  const session = authService.getInitialSession();
 
   return {
     dashboard: null,
@@ -19,9 +19,31 @@ function createInitialState() {
     loading: {},
     errors: {},
     auth: {
+      isRestoring: session.isRestoring,
       isAuthenticated: session.isAuthenticated,
-      user: session.user
+      user: session.user,
+      workspace: session.workspace,
+      workspaceId: session.workspaceId,
+      mode: session.mode
     }
+  };
+}
+
+function decorateSettings(settings, auth) {
+  if (!settings) {
+    return settings;
+  }
+
+  return {
+    ...settings,
+    workspaceId: auth.workspaceId || settings.workspaceId,
+    account: auth.user
+      ? {
+          name: auth.user.name,
+          email: auth.user.email,
+          plan: auth.user.plan
+        }
+      : settings.account
   };
 }
 
@@ -42,7 +64,7 @@ function reducer(state, action) {
     case "set":
       return {
         ...state,
-        [action.key]: action.value,
+        [action.key]: action.key === "settings" ? decorateSettings(action.value, state.auth) : action.value,
         loading: { ...state.loading, [action.key]: false }
       };
     case "updateControlRule":
@@ -146,9 +168,23 @@ function reducer(state, action) {
     case "authSession":
       return {
         ...state,
+        settings: state.settings
+          ? decorateSettings(state.settings, {
+              isAuthenticated: action.session.isAuthenticated,
+              user: action.session.user,
+              workspace: action.session.workspace,
+              workspaceId: action.session.workspaceId,
+              mode: action.session.mode,
+              isRestoring: false
+            })
+          : state.settings,
         auth: {
+          isRestoring: false,
           isAuthenticated: action.session.isAuthenticated,
-          user: action.session.user
+          user: action.session.user,
+          workspace: action.session.workspace,
+          workspaceId: action.session.workspaceId,
+          mode: action.session.mode
         }
       };
     default:
@@ -171,6 +207,20 @@ async function load(dispatch, key, request) {
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    authService.restoreSession().then((session) => {
+      if (isMounted) {
+        dispatch({ type: "authSession", session });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const actions = useMemo(
     () => ({
       loadDashboard: () => load(dispatch, "dashboard", mockApi.getDashboard),
@@ -179,7 +229,11 @@ export function AppProvider({ children }) {
       loadAnalytics: () => load(dispatch, "analytics", mockApi.getAnalytics),
       loadMonetization: () => load(dispatch, "monetization", mockApi.getMonetization),
       loadTraining: () => load(dispatch, "training", mockApi.getTraining),
-      loadSettings: () => load(dispatch, "settings", mockApi.getSettings),
+      loadSettings: () =>
+        load(dispatch, "settings", async () => {
+          const settings = await mockApi.getSettings();
+          return authService.getSettingsOverlay(settings);
+        }),
       checkVisibility: async (url) => {
         const value = await load(dispatch, "visibility", () => mockApi.checkVisibility(url));
         return value;
@@ -210,7 +264,8 @@ export function AppProvider({ children }) {
         dispatch({ type: "addTrainingFile", file: uploaded });
       },
       addDomain: async (domain) => {
-        const created = await mockApi.addDomain(domain);
+        const supabaseDomain = await authService.addDomain(domain);
+        const created = supabaseDomain || (await mockApi.addDomain(domain));
         dispatch({ type: "addDomain", domain: created });
         return created;
       },
@@ -232,18 +287,18 @@ export function AppProvider({ children }) {
         dispatch({ type: "rotateApiKey", apiKey: result.apiKey, script: result.script });
         return result;
       },
-      login: (credentials) => {
-        const session = mockAuth.login(credentials);
+      login: async (credentials) => {
+        const session = await authService.login(credentials);
         dispatch({ type: "authSession", session });
         return session;
       },
-      signup: (credentials) => {
-        const session = mockAuth.signup(credentials);
+      signup: async (credentials) => {
+        const session = await authService.signup(credentials);
         dispatch({ type: "authSession", session });
         return session;
       },
-      logout: () => {
-        const session = mockAuth.logout();
+      logout: async () => {
+        const session = await authService.logout();
         dispatch({ type: "authSession", session });
         return session;
       }

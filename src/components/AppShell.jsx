@@ -17,8 +17,8 @@ export default function AppShell({ title, eyebrow, children, action }) {
   const { path, navigate } = useNavigation();
   const { state, actions } = useApp();
 
-  const handleLogout = () => {
-    actions.logout();
+  const handleLogout = async () => {
+    await actions.logout();
     navigate("/");
   };
 

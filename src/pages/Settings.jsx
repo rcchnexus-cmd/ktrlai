@@ -28,6 +28,8 @@ export default function Settings() {
   const [copiedItem, setCopiedItem] = useState("");
   const [checkingDomainId, setCheckingDomainId] = useState("");
   const [verificationMessages, setVerificationMessages] = useState({});
+  const [domainMessage, setDomainMessage] = useState("");
+  const [apiKeyMessage, setApiKeyMessage] = useState("");
   const [revealedApiKey, setRevealedApiKey] = useState(false);
   const [rotatingKey, setRotatingKey] = useState(false);
 
@@ -49,8 +51,13 @@ export default function Settings() {
 
   const addDomain = async () => {
     if (domain.trim()) {
-      await actions.addDomain(domain.trim());
-      setDomain("");
+      setDomainMessage("");
+      try {
+        await actions.addDomain(domain.trim());
+        setDomain("");
+      } catch (error) {
+        setDomainMessage(error.message || "Domain could not be added.");
+      }
     }
   };
 
@@ -72,12 +79,14 @@ export default function Settings() {
         [domainId]: result.message || "Domain verification checked."
       }));
     } catch (error) {
-      const verified = await actions.checkDomainVerification(domainId);
-      actions.applyDomainVerification(verified);
+      if (error.useMockFallback) {
+        const verified = await actions.checkDomainVerification(domainId);
+        actions.applyDomainVerification(verified);
+      }
       setVerificationMessages((messages) => ({
         ...messages,
         [domainId]:
-          error.message === "Domain verification endpoint is not available."
+          error.useMockFallback
             ? "Domain verification accepted in mock mode."
             : error.message || "Domain verification accepted in mock mode."
       }));
@@ -89,17 +98,23 @@ export default function Settings() {
   const rotateApiKey = async () => {
     setRotatingKey(true);
     setRevealedApiKey(false);
+    setApiKeyMessage("");
     try {
       let result;
 
       try {
         result = await rotateApiKeyWithApi({ workspaceId: settings.workspaceId || "demo" });
         actions.applyApiKeyRotation(result);
-      } catch {
+      } catch (error) {
+        if (!error.useMockFallback) {
+          throw error;
+        }
         result = await actions.rotateApiKey();
       }
 
       setRevealedApiKey(Boolean(result.apiKey?.key));
+    } catch (error) {
+      setApiKeyMessage(error.message || "API key could not be rotated.");
     } finally {
       setRotatingKey(false);
     }
@@ -172,6 +187,11 @@ export default function Settings() {
                 <span>Last used <strong>{formatDate(apiKey.lastUsedAt)}</strong></span>
                 <span>Rotated <strong>{formatDate(apiKey.rotatedAt)}</strong></span>
               </div>
+              {apiKeyMessage && (
+                <p className="domainVerificationMessage error" role="status">
+                  {apiKeyMessage}
+                </p>
+              )}
             </div>
           </section>
 
@@ -193,6 +213,11 @@ export default function Settings() {
                 Add
               </button>
             </div>
+            {domainMessage && (
+              <p className="domainVerificationMessage error" role="status">
+                {domainMessage}
+              </p>
+            )}
             {settings.domains.length === 0 ? (
               <div className="emptyState compact">
                 <strong>No domains connected</strong>

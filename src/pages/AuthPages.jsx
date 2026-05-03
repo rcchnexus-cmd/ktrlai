@@ -43,25 +43,30 @@ export function Login() {
   const { state, actions } = useApp();
   const { navigate } = useNavigation();
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (state.auth.isAuthenticated) {
+    if (!state.auth.isRestoring && state.auth.isAuthenticated) {
       navigate(getRedirectTarget());
     }
-  }, [navigate, state.auth.isAuthenticated]);
+  }, [navigate, state.auth.isAuthenticated, state.auth.isRestoring]);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    setError("");
+    setSubmitting(true);
 
     try {
-      actions.login({
+      await actions.login({
         email: formData.get("email"),
         password: formData.get("password")
       });
       navigate(getRedirectTarget());
     } catch (authError) {
       setError(authError.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -92,8 +97,8 @@ export function Login() {
           </label>
           <RouteLink to="/forgot-password">Forgot password?</RouteLink>
         </div>
-        <button type="submit" className="primaryButton fullButton">
-          Log in
+        <button type="submit" className="primaryButton fullButton" disabled={submitting}>
+          {submitting ? "Logging in..." : "Log in"}
         </button>
       </form>
     </AuthFrame>
@@ -104,25 +109,31 @@ export function Signup() {
   const { state, actions } = useApp();
   const { navigate } = useNavigation();
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (state.auth.isAuthenticated) {
+    if (!state.auth.isRestoring && state.auth.isAuthenticated) {
       navigate("/dashboard");
     }
-  }, [navigate, state.auth.isAuthenticated]);
+  }, [navigate, state.auth.isAuthenticated, state.auth.isRestoring]);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    setError("");
+    setSubmitting(true);
 
     try {
-      actions.signup({
+      await actions.signup({
         email: formData.get("email"),
-        password: formData.get("password")
+        password: formData.get("password"),
+        domain: formData.get("domain")
       });
       navigate("/dashboard");
     } catch (authError) {
       setError(authError.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -151,8 +162,8 @@ export function Signup() {
           <input type="password" name="password" placeholder="Create a password" autoComplete="new-password" />
         </label>
         {error && <p className="authError">{error}</p>}
-        <button type="submit" className="primaryButton fullButton">
-          Start free
+        <button type="submit" className="primaryButton fullButton" disabled={submitting}>
+          {submitting ? "Creating account..." : "Start free"}
         </button>
       </form>
     </AuthFrame>
