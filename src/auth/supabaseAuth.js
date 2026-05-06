@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
+import { allowLocalMockFallback } from "../config/runtime.js";
 import {
   buildTrackerSnippet,
   maskApiKey,
@@ -106,6 +107,18 @@ function mapApiKey(row) {
   };
 }
 
+function createEmptyLiveApiKey() {
+  return {
+    id: null,
+    key: "",
+    maskedKey: maskApiKey(""),
+    keyPrefix: "",
+    oneTimeReveal: false,
+    lastUsedAt: null,
+    rotatedAt: null
+  };
+}
+
 function toAuthSession({ user, profile, workspace, mode = "supabase" }) {
   const mappedWorkspace = mapWorkspace(workspace?.workspace || workspace, workspace?.role || "owner");
   const workspaceId = mappedWorkspace?.id || "";
@@ -167,9 +180,19 @@ function toMockSession(session) {
   };
 }
 
+function assertSupabaseAvailable() {
+  if (!isSupabaseConfigured && !allowLocalMockFallback) {
+    throw new Error("Supabase is required in production. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
+  }
+}
+
 export function getInitialSession() {
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured && allowLocalMockFallback) {
     return toMockSession(mockAuth.getSession());
+  }
+
+  if (!isSupabaseConfigured) {
+    return toLoggedOutSession("live");
   }
 
   return {
@@ -335,9 +358,11 @@ function bootstrapAfterSessionReady(session, options = {}) {
 }
 
 export async function restoreSession() {
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured && allowLocalMockFallback) {
     return toMockSession(mockAuth.getSession());
   }
+
+  assertSupabaseAvailable();
 
   const session = await getReadySession();
 
@@ -353,9 +378,11 @@ export async function restoreSession() {
 }
 
 export async function login(credentials = {}) {
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured && allowLocalMockFallback) {
     return toMockSession(mockAuth.login(credentials));
   }
+
+  assertSupabaseAvailable();
 
   const email = String(credentials.email || "").trim().toLowerCase();
   const password = String(credentials.password || "");
@@ -384,9 +411,11 @@ export async function login(credentials = {}) {
 }
 
 export async function signup(credentials = {}) {
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured && allowLocalMockFallback) {
     return toMockSession(mockAuth.signup(credentials));
   }
+
+  assertSupabaseAvailable();
 
   const email = String(credentials.email || "").trim().toLowerCase();
   const password = String(credentials.password || "");
@@ -425,8 +454,12 @@ export async function signup(credentials = {}) {
 }
 
 export async function logout() {
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured && allowLocalMockFallback) {
     return toMockSession(mockAuth.logout());
+  }
+
+  if (!isSupabaseConfigured) {
+    return toLoggedOutSession("live");
   }
 
   await supabase.auth.signOut();
@@ -434,14 +467,20 @@ export async function logout() {
 }
 
 export async function addDomain(domain, workspaceId = getActiveWorkspaceId()) {
-  if (!isSupabaseConfigured || !workspaceId) {
+  if ((!isSupabaseConfigured || !workspaceId) && allowLocalMockFallback) {
     return null;
+  }
+
+  assertSupabaseAvailable();
+
+  if (!workspaceId) {
+    throw new Error("Active workspace is required before adding a domain.");
   }
 
   const { data: sessionData } = await supabase.auth.getSession();
 
   if (!sessionData.session) {
-    return null;
+    throw new Error("Sign in again before adding a domain.");
   }
 
   const hostname = normalizeDomainInput(domain);
@@ -468,14 +507,16 @@ export async function addDomain(domain, workspaceId = getActiveWorkspaceId()) {
 }
 
 export async function getSettingsOverlay(baseSettings) {
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured && allowLocalMockFallback) {
     return baseSettings;
   }
+
+  assertSupabaseAvailable();
 
   const session = await restoreSession();
 
   if (!session.isAuthenticated || !session.workspaceId) {
-    return baseSettings;
+    throw new Error("A signed-in workspace is required to load production settings.");
   }
 
   const [domainsResult, apiKeysResult] = await Promise.all([
@@ -494,13 +535,21 @@ export async function getSettingsOverlay(baseSettings) {
       .maybeSingle()
   ]);
 
-  const apiKey = mapApiKey(apiKeysResult.data) || baseSettings.apiKey;
+  if (domainsResult.error) {
+    throw new Error("Domains could not be loaded from Supabase.");
+  }
+
+  if (apiKeysResult.error) {
+    throw new Error("API key metadata could not be loaded from Supabase.");
+  }
+
+  const apiKey = mapApiKey(apiKeysResult.data) || createEmptyLiveApiKey();
 
   return {
     ...baseSettings,
     workspaceId: session.workspaceId,
     script: buildTrackerSnippet({ workspaceId: session.workspaceId, apiKey: apiKey.key || apiKey.maskedKey }),
-    domains: domainsResult.error ? baseSettings.domains : (domainsResult.data || []).map(mapDomain),
+    domains: (domainsResult.data || []).map(mapDomain),
     apiKey,
     account: {
       name: session.user.name,

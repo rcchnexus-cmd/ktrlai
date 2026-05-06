@@ -1,9 +1,10 @@
 import Stripe from "stripe";
 import { requireWorkspaceRole } from "./_auth.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
+import { allowLocalMockFallback, getAppUrl, sendMissingServerConfig } from "./_runtime.js";
 
 const BILLING_CHECKOUT_DISABLED_MESSAGE =
-  "Billing checkout will be enabled after backend deployment.";
+  "Billing is not configured. Add Stripe secret key and plan price IDs before enabling checkout.";
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -19,12 +20,6 @@ function getRequestBody(req) {
   }
 
   return req.body;
-}
-
-function getBaseUrl(req) {
-  const protocol = req.headers["x-forwarded-proto"] || "https";
-  const host = req.headers.host || "localhost:5173";
-  return process.env.APP_URL || `${protocol}://${host}`;
 }
 
 function getPriceId(plan) {
@@ -52,7 +47,7 @@ export default async function handler(req, res) {
   const priceId = getPriceId(normalizedPlan);
 
   if (!process.env.STRIPE_SECRET_KEY || !priceId) {
-    return res.status(501).json({ message: BILLING_CHECKOUT_DISABLED_MESSAGE });
+    return res.status(501).json({ ok: false, mode: "live", message: BILLING_CHECKOUT_DISABLED_MESSAGE });
   }
 
   if (!workspaceId) {
@@ -60,7 +55,11 @@ export default async function handler(req, res) {
   }
 
   if (!isSupabaseAdminConfigured()) {
-    return res.status(501).json({ message: "Authenticated billing is not configured yet." });
+    if (!allowLocalMockFallback()) {
+      return sendMissingServerConfig(res);
+    }
+
+    return res.status(501).json({ ok: false, mode: "mock", message: "Authenticated billing is not configured in local development." });
   }
 
   const supabase = getSupabaseAdmin();
@@ -75,7 +74,7 @@ export default async function handler(req, res) {
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const baseUrl = getBaseUrl(req);
+    const baseUrl = getAppUrl(req);
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -102,9 +101,11 @@ export default async function handler(req, res) {
       }
     });
 
-    return res.status(200).json({ url: session.url });
+    return res.status(200).json({ ok: true, mode: "live", url: session.url });
   } catch {
     return res.status(500).json({
+      ok: false,
+      mode: "live",
       message: "Unable to create Stripe Checkout session."
     });
   }

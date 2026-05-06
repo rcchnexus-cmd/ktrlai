@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from "react";
 import { mockApi } from "../api/mockApi.js";
 import * as authService from "../auth/supabaseAuth.js";
+import { requestPayoutReview } from "../billing/billingApi.js";
+import { allowLocalMockFallback, showInvestorSampleData } from "../config/runtime.js";
 
 const AppContext = createContext(null);
 
@@ -187,6 +189,19 @@ function reducer(state, action) {
           mode: action.session.mode
         }
       };
+    case "authRestoreFailed":
+      return {
+        ...state,
+        errors: { ...state.errors, auth: action.error },
+        auth: {
+          isRestoring: false,
+          isAuthenticated: false,
+          user: null,
+          workspace: null,
+          workspaceId: null,
+          mode: "live"
+        }
+      };
     default:
       return state;
   }
@@ -204,17 +219,38 @@ async function load(dispatch, key, request) {
   }
 }
 
+function getLiveEmptyDashboard() {
+  return {
+    kpis: [
+      { label: "Total AI Visits", value: "0", change: "Awaiting first live event", tone: "neutral" },
+      { label: "Unique AI Bots", value: "0", change: "Connect tracker", tone: "neutral" },
+      { label: "Pages Accessed", value: "0", change: "No events yet", tone: "neutral" },
+      { label: "Revenue from AI", value: "$0", change: "No revenue yet", tone: "neutral" }
+    ],
+    traffic: [],
+    botDistribution: [],
+    recentActivity: []
+  };
+}
+
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
 
   useEffect(() => {
     let isMounted = true;
 
-    authService.restoreSession().then((session) => {
-      if (isMounted) {
-        dispatch({ type: "authSession", session });
-      }
-    });
+    authService
+      .restoreSession()
+      .then((session) => {
+        if (isMounted) {
+          dispatch({ type: "authSession", session });
+        }
+      })
+      .catch((error) => {
+        if (isMounted) {
+          dispatch({ type: "authRestoreFailed", error: error.message || "Authentication could not be restored." });
+        }
+      });
 
     return () => {
       isMounted = false;
@@ -223,7 +259,8 @@ export function AppProvider({ children }) {
 
   const actions = useMemo(
     () => ({
-      loadDashboard: () => load(dispatch, "dashboard", mockApi.getDashboard),
+      loadDashboard: () =>
+        load(dispatch, "dashboard", () => (showInvestorSampleData ? mockApi.getDashboard() : getLiveEmptyDashboard())),
       loadActivity: () => load(dispatch, "activity", mockApi.getActivityLogs),
       loadControls: () => load(dispatch, "controls", mockApi.getControls),
       loadAnalytics: () => load(dispatch, "analytics", mockApi.getAnalytics),
@@ -251,7 +288,21 @@ export function AppProvider({ children }) {
         await mockApi.updateMonetizationSettings(updates);
       },
       requestPayout: async ({ amountCents, currency }) => {
-        const request = await mockApi.requestPayout({ amountCents, currency });
+        let request;
+
+        try {
+          request = await requestPayoutReview({
+            amountCents,
+            currency,
+            workspaceId: authService.getActiveWorkspaceId()
+          });
+        } catch (error) {
+          if (!error.useMockFallback || !allowLocalMockFallback) {
+            throw error;
+          }
+          request = await mockApi.requestPayout({ amountCents, currency });
+        }
+
         dispatch({ type: "requestPayout", request });
         return request;
       },
@@ -265,7 +316,12 @@ export function AppProvider({ children }) {
       },
       addDomain: async (domain) => {
         const supabaseDomain = await authService.addDomain(domain);
-        const created = supabaseDomain || (await mockApi.addDomain(domain));
+        const created = supabaseDomain || (allowLocalMockFallback ? await mockApi.addDomain(domain) : null);
+
+        if (!created) {
+          throw new Error("Domain could not be added because the production workspace is not available.");
+        }
+
         dispatch({ type: "addDomain", domain: created });
         return created;
       },

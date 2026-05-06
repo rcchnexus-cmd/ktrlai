@@ -178,7 +178,7 @@ export default function Landing() {
     const result = await startBillingCheckout({
       planKey,
       user: state.auth.user,
-      workspaceId: state.auth.workspaceId || "mock_workspace"
+      workspaceId: state.auth.workspaceId
     });
 
     setBillingMessage(result.message || "");
@@ -473,7 +473,7 @@ export default function Landing() {
           </details>
           <details>
             <summary>Is this a real tracker integration?</summary>
-            <p>The current app uses a mock backend, but the settings page includes the production-style script and domain workflow.</p>
+            <p>Yes. Install the tracker script from Settings, rotate a workspace API key, and verified events flow into your activity logs.</p>
           </details>
         </section>
       </main>

@@ -42,7 +42,7 @@ export default function Activity() {
           </div>
           <span className="liveIndicator">
             <i aria-hidden="true" />
-            Mock live
+            Tracking ready
           </span>
         </div>
         <p>Install the tracker script to start collecting AI access events.</p>

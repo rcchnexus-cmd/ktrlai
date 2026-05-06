@@ -15,6 +15,20 @@ Serverless functions use `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and any se
 
 Keep Row Level Security enabled on every workspace-owned table. Serverless functions that use the service role key must validate workspace ownership or use authenticated workspace-member checks before enabling live production mutations.
 
+## Runtime Mode Rules
+
+Production mode is detected from Vite's production build on the frontend and `NODE_ENV=production` or `VERCEL_ENV=production` in serverless functions.
+
+In production:
+
+- Supabase frontend and server env vars are required for auth, workspace settings, domain writes, API key rotation, tracker ingestion, and domain verification.
+- Serverless API routes return clear JSON configuration errors when required server env vars are missing.
+- Domain verification and API key rotation do not fall back to local sample behavior.
+- Tracker ingestion validates hashed API keys, enforces usage checks, writes to `activity_logs`, and returns `mode: "live"`.
+- Payout requests stay disabled unless `PAYOUT_REQUESTS_ENABLED=true`.
+
+In local development, missing backend env vars may use local sample responses so the UI can still be exercised without a Supabase or Stripe project.
+
 ## Vercel Environment Variables
 
 Add these in Vercel Project Settings before enabling private-beta backend flows:
@@ -22,6 +36,8 @@ Add these in Vercel Project Settings before enabling private-beta backend flows:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_STRIPE_PUBLISHABLE_KEY`
+- `VITE_APP_URL`
+- `VITE_SHOW_INVESTOR_SAMPLE_DATA=true`
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `API_KEY_HASH_SECRET`

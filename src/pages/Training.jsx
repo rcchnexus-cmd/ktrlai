@@ -100,7 +100,7 @@ export default function Training() {
           <section className="panel">
             <div className="panelHeader">
               <div>
-                <span className="eyebrow">Upload mock UI</span>
+                <span className="eyebrow">Upload center</span>
                 <h2>Text, blogs, and documents</h2>
               </div>
             </div>

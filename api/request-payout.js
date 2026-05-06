@@ -2,6 +2,7 @@ import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js
 import { requireWorkspaceRole } from "./_auth.js";
 import { buildStripeConnectPayoutPlan } from "./_payouts.js";
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
+import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -38,10 +39,14 @@ export default async function handler(req, res) {
   }
 
   if (!isSupabaseAdminConfigured()) {
+    if (!allowLocalMockFallback()) {
+      return sendMissingServerConfig(res);
+    }
+
     return res.status(202).json({
       ok: true,
       mode: "mock",
-      message: "Payout request accepted in mock mode. Authenticated payout requests are not enabled yet.",
+      message: "Payout request accepted in local development mode.",
       request: {
         id: `mock_payout_${Date.now()}`,
         workspaceId,
@@ -65,7 +70,7 @@ export default async function handler(req, res) {
   if (process.env.PAYOUT_REQUESTS_ENABLED !== "true") {
     return res.status(403).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: "Payout requests are disabled for this deployment."
     });
   }
@@ -86,7 +91,7 @@ export default async function handler(req, res) {
   if (error) {
     return res.status(500).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: "Payout request could not be created."
     });
   }
@@ -105,7 +110,7 @@ export default async function handler(req, res) {
 
   return res.status(201).json({
     ok: true,
-    mode: "supabase",
+    mode: "live",
     message: "Payout request created for review.",
     request: data,
     payoutPlan: buildStripeConnectPayoutPlan({

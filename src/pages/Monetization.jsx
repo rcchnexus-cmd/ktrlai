@@ -44,6 +44,8 @@ export default function Monetization() {
         currency: earnings.currency
       });
       setPayoutMessage("Payout request submitted for review.");
+    } catch (error) {
+      setPayoutMessage(error.message || "Payout request could not be submitted.");
     } finally {
       setRequestingPayout(false);
     }

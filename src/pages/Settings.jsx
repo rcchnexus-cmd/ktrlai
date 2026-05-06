@@ -40,6 +40,7 @@ export default function Settings() {
   }, [actions, state.loading.settings, state.settings]);
 
   const settings = state.settings;
+  const settingsError = state.errors.settings;
 
   const copyValue = async (value, itemKey) => {
     if (value && navigator.clipboard) {
@@ -87,8 +88,8 @@ export default function Settings() {
         ...messages,
         [domainId]:
           error.useMockFallback
-            ? "Domain verification accepted in mock mode."
-            : error.message || "Domain verification accepted in mock mode."
+            ? "Domain verification accepted in local development mode."
+            : error.message || "Domain verification could not be completed."
       }));
     } finally {
       setCheckingDomainId("");
@@ -127,7 +128,12 @@ export default function Settings() {
 
   return (
     <AppShell title="Settings" eyebrow="Workspace">
-      {!settings ? (
+      {settingsError ? (
+        <div className="emptyState">
+          <strong>Settings could not be loaded</strong>
+          <p>{settingsError}</p>
+        </div>
+      ) : !settings ? (
         <div className="loadingState">Loading settings...</div>
       ) : (
         <div className="settingsGrid">
@@ -140,8 +146,13 @@ export default function Settings() {
             </div>
             <div className="scriptBox">
               <code>{settings.script}</code>
-              <button type="button" className="secondaryButton smallButton" onClick={() => copyValue(settings.script, "script")}>
-                {copiedItem === "script" ? "Copied" : "Copy"}
+              <button
+                type="button"
+                className="secondaryButton smallButton"
+                onClick={() => copyValue(settings.script, "script")}
+                disabled={!canRevealApiKey}
+              >
+                {copiedItem === "script" ? "Copied" : canRevealApiKey ? "Copy" : "Rotate key first"}
               </button>
             </div>
           </section>
@@ -181,7 +192,7 @@ export default function Settings() {
               <p className="securityWarning">
                 {canRevealApiKey
                   ? "Copy this key now. For security, you won't be able to view it again."
-                  : "Keep this key private. It can submit events to your workspace."}
+                  : "Rotate an API key to reveal a full live tracker credential. After refresh, only the masked key is shown."}
               </p>
               <div className="keyMeta">
                 <span>Last used <strong>{formatDate(apiKey.lastUsedAt)}</strong></span>

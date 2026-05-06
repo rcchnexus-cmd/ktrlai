@@ -9,11 +9,9 @@ import {
 const delay = (ms = 420) => new Promise((resolve) => setTimeout(resolve, ms));
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
-// Phase 1 backend note:
-// KtrlAI now has a Supabase client and schema foundation. This mock API remains
-// the active fallback so the product UI keeps working without Supabase env vars.
-// Replace these methods incrementally with Supabase queries from
-// src/lib/supabaseClient.js as each backend endpoint is implemented.
+// Investor sample data and local-development fallback.
+// Production writes must use Supabase/API routes; this module keeps dashboard
+// presentation data available and helps local development when env vars are absent.
 
 const activityLogs = [
   {

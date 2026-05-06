@@ -2,7 +2,9 @@
 // Only VITE_ variables are exposed to the browser. Keep Stripe secret keys and
 // price IDs inside serverless functions or backend environment variables.
 
-export const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
+const viteEnv = import.meta.env || {};
+
+export const stripePublishableKey = viteEnv.VITE_STRIPE_PUBLISHABLE_KEY || "";
 
 export const checkoutEndpoint = "/api/create-checkout-session";
 

@@ -19,7 +19,7 @@ export default function Visibility() {
         <div>
           <span className="eyebrow">Check visibility</span>
           <h2>Find out how AI systems see your website.</h2>
-          <p>Run a simulated scan across major answer engines, AI crawlers, and retrieval patterns.</p>
+          <p>Run a visibility scan across major answer engines, AI crawlers, and retrieval patterns.</p>
         </div>
         <div className="urlCheck">
           <input value={url} onChange={(event) => setUrl(event.target.value)} aria-label="Website URL" />

@@ -2,6 +2,7 @@ import { resolveTxt } from "node:dns/promises";
 import { requireWorkspaceRole } from "./_auth.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
+import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 
 const propagationMessage = "TXT record not found yet. DNS can take a few minutes to propagate.";
 
@@ -91,12 +92,16 @@ export default async function handler(req, res) {
   }
 
   if (!isSupabaseAdminConfigured()) {
+    if (!allowLocalMockFallback()) {
+      return sendMissingServerConfig(res);
+    }
+
     const checkedAt = new Date().toISOString();
     return res.status(202).json({
       ok: true,
       mode: "mock",
       verified: true,
-      message: "Domain verification accepted in mock mode.",
+      message: "Domain verification accepted in local development mode.",
       domain: {
         id: domainId,
         workspaceId,
@@ -127,7 +132,7 @@ export default async function handler(req, res) {
   if (domainError) {
     return res.status(500).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: "Domain could not be loaded for verification."
     });
   }
@@ -135,7 +140,7 @@ export default async function handler(req, res) {
   if (!domain) {
     return res.status(404).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: "Domain not found for this workspace."
     });
   }
@@ -155,7 +160,7 @@ export default async function handler(req, res) {
     if (updateError) {
       return res.status(500).json({
         ok: false,
-        mode: "supabase",
+        mode: "live",
         message: "DNS lookup failed and domain status could not be updated."
       });
     }
@@ -176,7 +181,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       verified: false,
       message: propagationMessage,
       dnsHost: txtHost,
@@ -194,7 +199,7 @@ export default async function handler(req, res) {
     if (updateError) {
       return res.status(500).json({
         ok: false,
-        mode: "supabase",
+        mode: "live",
         message: "TXT record did not match and domain status could not be updated."
       });
     }
@@ -215,7 +220,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       verified: false,
       message: propagationMessage,
       dnsHost: txtHost,
@@ -234,7 +239,7 @@ export default async function handler(req, res) {
   if (updateError) {
     return res.status(500).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: "TXT record matched but domain status could not be updated."
     });
   }
@@ -254,7 +259,7 @@ export default async function handler(req, res) {
 
   return res.status(200).json({
     ok: true,
-    mode: "supabase",
+    mode: "live",
     verified: true,
     message: "Domain verified.",
     dnsHost: txtHost,

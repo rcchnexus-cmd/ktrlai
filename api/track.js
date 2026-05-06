@@ -12,6 +12,7 @@ import {
   updateWorkspaceUsageCounter,
   validateTrackingPayloadShape
 } from "./_usageLimits.js";
+import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 
 const activityStatuses = new Set(["allowed", "blocked", "restricted", "paid_access", "summaries_only"]);
 
@@ -83,7 +84,7 @@ function parsePageUrl(pageUrl) {
   }
 }
 
-function getClientIpHashPlaceholder(req) {
+function getPendingClientIpHash(req) {
   const forwardedFor = req.headers["x-forwarded-for"];
   const ip = Array.isArray(forwardedFor) ? forwardedFor[0] : String(forwardedFor || "").split(",")[0];
   return ip ? "pending-server-hash" : null;
@@ -193,7 +194,7 @@ export default async function handler(req, res) {
     page_path: parsedUrl.pagePath,
     status,
     domain_id: null,
-    ip_hash: getClientIpHashPlaceholder(req),
+    ip_hash: getPendingClientIpHash(req),
     metadata: {
       source: "tracker",
       detected_bot_type: detectedBotType,
@@ -206,10 +207,14 @@ export default async function handler(req, res) {
   };
 
   if (!isSupabaseAdminConfigured() || !isApiKeyHashingConfigured()) {
+    if (!allowLocalMockFallback()) {
+      return sendMissingServerConfig(res);
+    }
+
     return res.status(202).json({
       ok: true,
       mode: "mock",
-      message: "Tracking event accepted in mock ingestion mode.",
+      message: "Tracking event accepted in local development mode.",
       detectedBotType,
       event: eventPayload
     });
@@ -224,7 +229,7 @@ export default async function handler(req, res) {
   if (apiKeyError) {
     return res.status(401).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: "API key could not be validated."
     });
   }
@@ -232,7 +237,7 @@ export default async function handler(req, res) {
   if (!apiKeyRecord) {
     return res.status(401).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: "Invalid or revoked API key."
     });
   }
@@ -242,7 +247,7 @@ export default async function handler(req, res) {
   if (!usageState.ok) {
     return res.status(usageState.status || 429).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: usageState.message,
       usage: {
         plan: usageState.plan,
@@ -267,7 +272,7 @@ export default async function handler(req, res) {
   if (insertError) {
     return res.status(500).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: "Tracking event could not be stored."
     });
   }
@@ -285,7 +290,7 @@ export default async function handler(req, res) {
   if (updateError) {
     return res.status(202).json({
       ok: true,
-      mode: "supabase",
+      mode: "live",
       message: "Tracking event stored, but API key last-used timestamp was not updated.",
       detectedBotType,
       eventId: insertedEvent.id,
@@ -300,7 +305,7 @@ export default async function handler(req, res) {
 
   return res.status(201).json({
     ok: true,
-    mode: "supabase",
+    mode: "live",
     message: "Tracking event stored.",
     detectedBotType,
     eventId: insertedEvent.id,

@@ -1,4 +1,5 @@
 import { getSupabaseAccessToken } from "../lib/supabaseClient.js";
+import { allowLocalMockFallback, getPublicAppUrl } from "../config/runtime.js";
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const maskGlyph = "\u2022";
@@ -22,7 +23,11 @@ function createId(prefix) {
 
 function createMockFallbackError(message) {
   const error = new Error(message);
-  error.useMockFallback = true;
+
+  if (allowLocalMockFallback) {
+    error.useMockFallback = true;
+  }
+
   return error;
 }
 
@@ -112,7 +117,8 @@ export function createWorkspaceApiKey(overrides = {}) {
 }
 
 export function buildTrackerSnippet({ workspaceId = "demo", apiKey }) {
-  return `<script src="https://ktrlai.app/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey || concealedApiKeyMask}"></script>`;
+  const appUrl = getPublicAppUrl();
+  return `<script src="${appUrl}/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey || concealedApiKeyMask}"></script>`;
 }
 
 export function toDomainStatusLabel(status) {

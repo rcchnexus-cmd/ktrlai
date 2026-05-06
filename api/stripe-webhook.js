@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
+import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 
 // Webhooks must verify Stripe's signature against the raw request body.
 // If your deployment adapter parses JSON first, disable body parsing for this
@@ -185,11 +186,19 @@ export default async function handler(req, res) {
   }
 
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return res.status(501).json({ message: "Stripe webhook is not configured." });
+    if (!allowLocalMockFallback()) {
+      return sendMissingServerConfig(res);
+    }
+
+    return res.status(501).json({ ok: false, mode: "mock", message: "Stripe webhook is not configured in local development." });
   }
 
   if (!isSupabaseAdminConfigured()) {
-    return res.status(501).json({ message: "Supabase billing sync is not configured." });
+    if (!allowLocalMockFallback()) {
+      return sendMissingServerConfig(res);
+    }
+
+    return res.status(501).json({ ok: false, mode: "mock", message: "Supabase billing sync is not configured in local development." });
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);

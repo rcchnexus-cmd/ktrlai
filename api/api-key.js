@@ -2,6 +2,7 @@ import { createWorkspaceApiKeyRecord } from "./_apiKeys.js";
 import { generateApiKey, isApiKeyHashingConfigured, maskApiKey } from "./_crypto.js";
 import { requireWorkspaceRole } from "./_auth.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
+import { allowLocalMockFallback, getAppUrl, sendMissingServerConfig } from "./_runtime.js";
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -19,8 +20,8 @@ function getRequestBody(req) {
   return req.body;
 }
 
-function buildTrackerSnippet({ workspaceId, apiKey }) {
-  return `<script src="https://ktrlai.app/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey}"></script>`;
+function buildTrackerSnippet({ workspaceId, apiKey, req }) {
+  return `<script src="${getAppUrl(req)}/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey}"></script>`;
 }
 
 function toClientApiKey({ apiKey, record }) {
@@ -60,13 +61,17 @@ export default async function handler(req, res) {
   }
 
   if (!isSupabaseAdminConfigured() || !isApiKeyHashingConfigured()) {
+    if (!allowLocalMockFallback()) {
+      return sendMissingServerConfig(res);
+    }
+
     const apiKey = generateApiKey();
     return res.status(202).json({
       ok: true,
       mode: "mock",
-      message: "API key generated in mock mode. Configure Supabase admin and API_KEY_HASH_SECRET for persisted keys.",
+      message: "API key generated in local development mode. Configure Supabase admin and API_KEY_HASH_SECRET for persisted keys.",
       apiKey: toClientApiKey({ apiKey }),
-      script: buildTrackerSnippet({ workspaceId, apiKey })
+      script: buildTrackerSnippet({ workspaceId, apiKey, req })
     });
   }
 
@@ -92,15 +97,15 @@ export default async function handler(req, res) {
 
     return res.status(201).json({
       ok: true,
-      mode: "supabase",
+      mode: "live",
       message: action === "rotate" ? "API key rotated." : "API key generated.",
       apiKey,
-      script: buildTrackerSnippet({ workspaceId, apiKey: result.apiKey })
+      script: buildTrackerSnippet({ workspaceId, apiKey: result.apiKey, req })
     });
   } catch {
     return res.status(500).json({
       ok: false,
-      mode: "supabase",
+      mode: "live",
       message: "API key could not be generated."
     });
   }

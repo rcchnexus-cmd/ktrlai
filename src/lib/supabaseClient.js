@@ -4,10 +4,6 @@ const viteEnv = import.meta.env || {};
 const supabaseUrl = viteEnv.VITE_SUPABASE_URL;
 const supabaseAnonKey = viteEnv.VITE_SUPABASE_ANON_KEY;
 
-// Phase 1 foundation:
-// The current app still reads from src/api/mockApi.js so the UI remains usable
-// without Supabase credentials. When both public env vars are present, this
-// client is ready for replacing individual mock API methods with real queries.
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 // Never place a service role key in frontend code. Vite exposes VITE_* values
