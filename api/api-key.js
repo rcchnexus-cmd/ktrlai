@@ -3,6 +3,7 @@ import { generateApiKey, isApiKeyHashingConfigured, maskApiKey } from "./_crypto
 import { requireWorkspaceRole } from "./_auth.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 import { allowLocalMockFallback, getAppUrl, sendMissingServerConfig } from "./_runtime.js";
+import { enforceWorkspaceResourceLimit } from "./_planLimits.js";
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -86,6 +87,44 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (action === "generate") {
+      const { count, error: countError } = await supabase
+        .from("api_keys")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .is("revoked_at", null);
+
+      if (countError) {
+        return res.status(500).json({
+          ok: false,
+          mode: "live",
+          message: "API key limit could not be checked."
+        });
+      }
+
+      const limitState = await enforceWorkspaceResourceLimit(supabase, {
+        workspaceId,
+        resource: "apiKeys",
+        currentCount: count || 0,
+        nextCount: (count || 0) + 1,
+        upgradeMessage: "API key limit reached for this plan. Upgrade to add more keys, or rotate an existing key."
+      });
+
+      if (!limitState.ok) {
+        return res.status(limitState.status || 402).json({
+          ok: false,
+          mode: "live",
+          message: limitState.message,
+          limit: {
+            resource: "apiKeys",
+            plan: limitState.plan,
+            max: limitState.limit,
+            current: limitState.currentCount
+          }
+        });
+      }
+    }
+
     const result = await createWorkspaceApiKeyRecord(supabase, {
       workspaceId,
       name,

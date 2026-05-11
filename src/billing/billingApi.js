@@ -56,8 +56,8 @@ export async function startBillingCheckout({ planKey, user, workspaceId } = {}) 
         plan: planKey,
         workspaceId: workspaceId || "demo",
         customerEmail: user?.email || "",
-        successUrl: origin ? `${origin}/dashboard?checkout=success` : undefined,
-        cancelUrl: origin ? `${origin}/#pricing` : undefined
+        successUrl: origin ? `${origin}/settings?checkout=success` : undefined,
+        cancelUrl: origin ? `${origin}/settings?checkout=cancelled` : undefined
       })
     });
 
@@ -94,12 +94,63 @@ export async function startBillingCheckout({ planKey, user, workspaceId } = {}) 
   }
 }
 
-export async function openBillingPortal() {
-  return {
-    ok: false,
-    status: "setup_required",
-    message: BILLING_PORTAL_DISABLED_MESSAGE
-  };
+export async function openBillingPortal({ workspaceId } = {}) {
+  const origin = getBrowserOrigin();
+
+  try {
+    const accessToken = await getSupabaseAccessToken();
+
+    if (!accessToken || !workspaceId) {
+      return {
+        ok: false,
+        status: "auth_required",
+        message: "Log in and select a workspace before opening billing."
+      };
+    }
+
+    const response = await fetch("/api/create-billing-portal-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        workspace_id: workspaceId,
+        returnUrl: origin ? `${origin}/settings?billing=portal_return` : undefined
+      })
+    });
+
+    const data = await safeJson(response);
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: "setup_required",
+        message: data.message || BILLING_PORTAL_DISABLED_MESSAGE
+      };
+    }
+
+    if (data.url && typeof window !== "undefined") {
+      window.location.assign(data.url);
+      return {
+        ok: true,
+        status: "redirecting",
+        message: "Opening Stripe Billing Portal..."
+      };
+    }
+
+    return {
+      ok: false,
+      status: "setup_required",
+      message: data.message || BILLING_PORTAL_DISABLED_MESSAGE
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      status: "backend_unavailable",
+      message: error.message || BILLING_PORTAL_DISABLED_MESSAGE
+    };
+  }
 }
 
 export async function requestPayoutReview({ amountCents, currency = "USD", workspaceId } = {}) {

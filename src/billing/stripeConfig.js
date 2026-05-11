@@ -15,7 +15,7 @@ export const billingPlans = [
     price: "$0",
     cadence: "/mo",
     description: "For checking visibility and validating early AI traffic.",
-    bullets: ["1 domain", "Visibility scan", "Basic AI activity log"],
+    bullets: ["1 domain", "1 API key", "1,000 events/month"],
     highlighted: false
   },
   {
@@ -24,7 +24,7 @@ export const billingPlans = [
     price: "$49",
     cadence: "/mo",
     description: "For creators and teams that need control.",
-    bullets: ["5 domains", "Control center", "Training permissions", "Revenue estimates"],
+    bullets: ["10 domains", "10 API keys", "100,000 events/month", "Control center"],
     highlighted: true
   },
   {
@@ -33,7 +33,7 @@ export const billingPlans = [
     price: "$249",
     cadence: "/mo",
     description: "For publishers, platforms, and data owners.",
-    bullets: ["Unlimited domains", "Paid AI access", "Dataset licensing", "Priority governance support"],
+    bullets: ["High-volume domains", "High-volume API keys", "10M events/month", "Priority governance support"],
     highlighted: false
   }
 ];

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import AppShell from "../components/AppShell.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
+import { billingPlans, normalizePlan } from "../billing/stripeConfig.js";
+import { openBillingPortal, startBillingCheckout } from "../billing/billingApi.js";
 import { useApp } from "../context/AppContext.jsx";
 import {
   buildDnsRecord,
@@ -22,6 +24,16 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+const billingWarningStatuses = new Set(["canceled", "past_due", "incomplete", "incomplete_expired", "unpaid"]);
+
+function formatSubscriptionStatus(value) {
+  return String(value || "free").replace(/_/g, " ");
+}
+
+function formatRenewalDate(value) {
+  return value ? formatDate(value) : "Not scheduled";
+}
+
 export default function Settings() {
   const { state, actions } = useApp();
   const [domain, setDomain] = useState("");
@@ -34,6 +46,10 @@ export default function Settings() {
   const [revealedApiKey, setRevealedApiKey] = useState(false);
   const [oneTimeApiKey, setOneTimeApiKey] = useState("");
   const [rotatingKey, setRotatingKey] = useState(false);
+  const [billingMessage, setBillingMessage] = useState("");
+  const [billingMessageType, setBillingMessageType] = useState("success");
+  const [billingLoadingPlan, setBillingLoadingPlan] = useState("");
+  const [openingBillingPortal, setOpeningBillingPortal] = useState(false);
 
   useEffect(() => {
     if (!state.settings && !state.loading.settings) {
@@ -43,6 +59,13 @@ export default function Settings() {
 
   const settings = state.settings;
   const settingsError = state.errors.settings;
+  const billing = settings?.billing || {};
+  const currentPlan = billing.plan || settings?.account?.plan || "Free";
+  const normalizedCurrentPlan = normalizePlan(currentPlan);
+  const subscriptionStatus = billing.subscriptionStatus || (normalizedCurrentPlan === "free" ? "free" : "active");
+  const subscriptionStatusKey = String(subscriptionStatus || "free").toLowerCase();
+  const hasBillingPortal = Boolean(billing.hasStripeCustomer);
+  const showBillingWarning = billingWarningStatuses.has(subscriptionStatusKey);
 
   const copyValue = async (value, itemKey) => {
     if (value && navigator.clipboard) {
@@ -138,6 +161,46 @@ export default function Settings() {
     }
   };
 
+  const handlePlanSelect = async (planKey) => {
+    if (!settings?.workspaceId) {
+      setBillingMessageType("error");
+      setBillingMessage("A workspace is required before changing plans.");
+      return;
+    }
+
+    setBillingMessage("");
+    setBillingMessageType("success");
+    setBillingLoadingPlan(planKey);
+
+    const result = await startBillingCheckout({
+      planKey,
+      user: state.auth.user,
+      workspaceId: settings.workspaceId
+    });
+
+    setBillingMessage(result.message || "");
+    setBillingMessageType(result.ok ? "success" : "error");
+    setBillingLoadingPlan("");
+  };
+
+  const handleManageBilling = async () => {
+    if (!settings?.workspaceId) {
+      setBillingMessageType("error");
+      setBillingMessage("A workspace is required before opening billing.");
+      return;
+    }
+
+    setBillingMessage("");
+    setBillingMessageType("success");
+    setOpeningBillingPortal(true);
+
+    const result = await openBillingPortal({ workspaceId: settings.workspaceId });
+
+    setBillingMessage(result.message || "");
+    setBillingMessageType(result.ok ? "success" : "error");
+    setOpeningBillingPortal(false);
+  };
+
   const apiKey = settings?.apiKey || {};
   const apiKeyValue = apiKey.key || "";
   const plaintextApiKey = oneTimeApiKey || apiKeyValue;
@@ -164,6 +227,95 @@ export default function Settings() {
         <div className="loadingState">Loading settings...</div>
       ) : (
         <div className="settingsGrid">
+          <section className="panel largePanel billingSettingsPanel">
+            <div className="panelHeader">
+              <div>
+                <span className="eyebrow">Billing</span>
+                <h2>Plan and subscription</h2>
+              </div>
+              <StatusBadge status={formatSubscriptionStatus(subscriptionStatus)} />
+            </div>
+            {showBillingWarning && (
+              <div className="billingWarningBanner" role="status">
+                <strong>Billing attention required</strong>
+                <p>
+                  Your subscription is {formatSubscriptionStatus(subscriptionStatus)}. Update billing to keep paid plan
+                  limits and automated access controls active.
+                </p>
+              </div>
+            )}
+            <div className="billingPlanSummary">
+              <article>
+                <span>Current plan</span>
+                <strong>{currentPlan}</strong>
+              </article>
+              <article>
+                <span>Subscription status</span>
+                <strong>{formatSubscriptionStatus(subscriptionStatus)}</strong>
+              </article>
+              <article>
+                <span>Renewal date</span>
+                <strong>{formatRenewalDate(billing.currentPeriodEnd)}</strong>
+              </article>
+            </div>
+            <div className="billingMiniPlans">
+              {billingPlans.map((plan) => {
+                const isCurrentPlan = normalizedCurrentPlan === plan.key;
+                const managesDowngradeInPortal = plan.key === "free" && hasBillingPortal && !isCurrentPlan;
+                const isPlanLoading = billingLoadingPlan === plan.key || (managesDowngradeInPortal && openingBillingPortal);
+
+                return (
+                  <article className={isCurrentPlan ? "billingMiniPlan current" : "billingMiniPlan"} key={plan.key}>
+                    <div className="billingMiniTop">
+                      <div>
+                        <strong>{plan.name}</strong>
+                        <span>
+                          {plan.price}
+                          {plan.cadence}
+                        </span>
+                      </div>
+                      {isCurrentPlan ? <em>Current</em> : null}
+                    </div>
+                    <p>{plan.description}</p>
+                    <button
+                      type="button"
+                      className={plan.highlighted ? "primaryButton smallButton" : "secondaryButton smallButton"}
+                      onClick={() => (managesDowngradeInPortal ? handleManageBilling() : handlePlanSelect(plan.key))}
+                      disabled={isCurrentPlan || isPlanLoading}
+                    >
+                      {isPlanLoading
+                        ? "Preparing..."
+                        : isCurrentPlan
+                          ? "Current plan"
+                          : managesDowngradeInPortal
+                            ? "Manage downgrade"
+                            : plan.key === "free"
+                              ? "Select Free"
+                              : `Choose ${plan.name}`}
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+            <div className="billingActionRow">
+              {hasBillingPortal ? (
+                <button
+                  type="button"
+                  className="secondaryButton smallButton"
+                  onClick={handleManageBilling}
+                  disabled={openingBillingPortal}
+                >
+                  {openingBillingPortal ? "Opening..." : "Manage billing"}
+                </button>
+              ) : null}
+              {billingMessage && (
+                <p className={`domainVerificationMessage ${billingMessageType === "error" ? "error" : ""}`} role="status">
+                  {billingMessage}
+                </p>
+              )}
+            </div>
+          </section>
+
           <section className="panel largePanel">
             <div className="panelHeader">
               <div>

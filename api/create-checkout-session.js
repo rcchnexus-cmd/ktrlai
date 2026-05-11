@@ -44,6 +44,11 @@ export default async function handler(req, res) {
 
   const { plan, workspaceId, customerEmail, successUrl, cancelUrl } = getRequestBody(req);
   const normalizedPlan = String(plan || "").toLowerCase();
+
+  if (!["pro", "business"].includes(normalizedPlan)) {
+    return res.status(400).json({ ok: false, mode: "live", message: "Unsupported billing plan." });
+  }
+
   const priceId = getPriceId(normalizedPlan);
 
   if (!process.env.STRIPE_SECRET_KEY || !priceId) {
@@ -75,11 +80,17 @@ export default async function handler(req, res) {
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const baseUrl = getAppUrl(req);
+    const { data: workspace } = await supabase
+      .from("workspaces")
+      .select("id, stripe_customer_id")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    const customerId = workspace?.stripe_customer_id || undefined;
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
-      customer_email: customerEmail || auth.user.email || undefined,
+      ...(customerId ? { customer: customerId } : { customer_email: customerEmail || auth.user.email || undefined }),
       client_reference_id: workspaceId,
       line_items: [
         {
@@ -87,8 +98,8 @@ export default async function handler(req, res) {
           quantity: 1
         }
       ],
-      success_url: successUrl || `${baseUrl}/dashboard?checkout=success`,
-      cancel_url: cancelUrl || `${baseUrl}/#pricing`,
+      success_url: successUrl || `${baseUrl}/settings?checkout=success`,
+      cancel_url: cancelUrl || `${baseUrl}/settings?checkout=cancelled`,
       metadata: {
         plan: normalizedPlan,
         workspace_id: workspaceId

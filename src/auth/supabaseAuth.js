@@ -74,7 +74,11 @@ function mapWorkspace(workspace, role = "owner") {
     name: workspace.name,
     slug: workspace.slug,
     plan: workspace.plan || "Free",
-    role
+    role,
+    subscriptionStatus: workspace.subscription_status || "free",
+    currentPeriodEnd: workspace.current_period_end || null,
+    hasStripeCustomer: Boolean(workspace.stripe_customer_id),
+    hasStripeSubscription: Boolean(workspace.stripe_subscription_id)
   };
 }
 
@@ -96,11 +100,13 @@ function mapApiKey(row) {
     return null;
   }
 
+  const stableMaskedKey = row.key_prefix ? `${row.key_prefix}${"\u2022".repeat(10)}` : maskApiKey("");
+
   return {
     id: row.id,
     key: "",
-    maskedKey: row.key_prefix ? `${row.key_prefix}${"•".repeat(10)}` : maskApiKey(""),
     keyPrefix: row.key_prefix,
+    maskedKey: stableMaskedKey,
     oneTimeReveal: false,
     lastUsedAt: row.last_used_at,
     rotatedAt: row.created_at
@@ -247,18 +253,29 @@ async function ensureProfile(user, options = {}) {
 }
 
 async function getFirstWorkspace(userId) {
-  const { data, error } = await supabase
+  const withBilling = await supabase
+    .from("workspace_members")
+    .select("role, workspace:workspaces(id, name, slug, plan, subscription_status, current_period_end, stripe_customer_id, stripe_subscription_id)")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (!withBilling.error) {
+    return withBilling.data?.workspace ? withBilling.data : null;
+  }
+
+  const fallback = await supabase
     .from("workspace_members")
     .select("role, workspace:workspaces(id, name, slug, plan)")
     .eq("user_id", userId)
     .limit(1)
     .maybeSingle();
 
-  if (error) {
-    throw error;
+  if (fallback.error) {
+    throw fallback.error;
   }
 
-  return data?.workspace ? data : null;
+  return fallback.data?.workspace ? fallback.data : null;
 }
 
 async function createWorkspaceBootstrap(user, options = {}) {
@@ -489,21 +506,25 @@ export async function addDomain(domain, workspaceId = getActiveWorkspaceId()) {
     throw new Error("Enter a valid domain.");
   }
 
-  const { data, error } = await supabase
-    .from("domains")
-    .insert({
+  const response = await fetch("/api/domain", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${sessionData.session.access_token}`
+    },
+    body: JSON.stringify({
       workspace_id: workspaceId,
-      hostname,
-      status: "pending"
+      hostname
     })
-    .select("id, workspace_id, hostname, status, verification_token, verified_at, last_checked_at, created_at")
-    .single();
+  });
 
-  if (error) {
-    throw new Error(error.message || "Domain could not be added.");
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || !data.domain) {
+    throw new Error(data.message || "Domain could not be added.");
   }
 
-  return mapDomain(data);
+  return mapDomain(data.domain);
 }
 
 export async function getSettingsOverlay(baseSettings) {
@@ -554,7 +575,14 @@ export async function getSettingsOverlay(baseSettings) {
     account: {
       name: session.user.name,
       email: session.user.email,
-      plan: session.user.plan
+      plan: session.workspace?.plan || session.user.plan
+    },
+    billing: {
+      plan: session.workspace?.plan || session.user.plan || "Free",
+      subscriptionStatus: session.workspace?.subscriptionStatus || "free",
+      currentPeriodEnd: session.workspace?.currentPeriodEnd || null,
+      hasStripeCustomer: Boolean(session.workspace?.hasStripeCustomer),
+      hasStripeSubscription: Boolean(session.workspace?.hasStripeSubscription)
     }
   };
 }

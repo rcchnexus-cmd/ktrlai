@@ -129,6 +129,11 @@ export default function Admin() {
   const health = summary.systemHealth || {};
   const requiredEnv = health.requiredEnv || {};
   const billing = summary.billing || {};
+  const users = summary.users || [];
+  const workspaces = summary.workspaces || [];
+  const activity = summary.activity || [];
+  const domains = summary.domains || [];
+  const payouts = summary.payouts || [];
 
   return (
     <AppShell title="Admin" eyebrow="Platform Admin">
@@ -173,7 +178,7 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {summary.users.map((user) => (
+                {users.map((user) => (
                   <tr key={user.id}>
                     <td>{user.email}</td>
                     <td>{user.name}</td>
@@ -208,7 +213,7 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {summary.workspaces.map((workspace) => (
+                {workspaces.map((workspace) => (
                   <tr key={workspace.id}>
                     <td>{workspace.name}</td>
                     <td>{workspace.ownerEmail || workspace.ownerName}</td>
@@ -243,7 +248,7 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {summary.activity.map((event) => (
+                {activity.map((event) => (
                   <tr key={event.id}>
                     <td>{event.botType}</td>
                     <td>{event.page}</td>
@@ -276,7 +281,7 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {summary.domains.map((domain) => (
+                {domains.map((domain) => (
                   <tr key={domain.id}>
                     <td>{domain.hostname}</td>
                     <td><StatusBadge status={statusLabel(domain.status)} /></td>
@@ -327,7 +332,7 @@ export default function Admin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {summary.workspaces.slice(0, 8).map((workspace) => (
+                  {workspaces.slice(0, 8).map((workspace) => (
                     <tr key={workspace.id}>
                       <td>{workspace.name}</td>
                       <td>{workspace.stripeCustomerId || "Not linked"}</td>
@@ -346,6 +351,48 @@ export default function Admin() {
               billing.auditEvents.map((event) => (
                 <div key={event.id}>
                   <span>{statusLabel(event.eventType)}</span>
+                  <strong>{event.workspaceName}</strong>
+                  <em>{formatDateTime(event.createdAt)}</em>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="adminAuditList">
+            <h3>Recent Stripe webhook events</h3>
+            {(billing.recentBillingEvents || []).length === 0 ? (
+              <p>No Stripe webhook events processed yet.</p>
+            ) : (
+              billing.recentBillingEvents.slice(0, 8).map((event) => (
+                <div key={event.id}>
+                  <span>{statusLabel(event.eventType)}</span>
+                  <strong>{event.workspaceName}</strong>
+                  <em>{statusLabel(event.status)} · {formatDateTime(event.createdAt)}</em>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="adminAuditList">
+            <h3>Failed payments</h3>
+            {(billing.failedPayments || []).length === 0 ? (
+              <p>No recent failed payments.</p>
+            ) : (
+              billing.failedPayments.slice(0, 5).map((event) => (
+                <div key={event.id}>
+                  <span>Invoice payment failed</span>
+                  <strong>{event.workspaceName}</strong>
+                  <em>{formatDateTime(event.createdAt)}</em>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="adminAuditList">
+            <h3>Cancellations</h3>
+            {(billing.cancellations || []).length === 0 ? (
+              <p>No recent subscription cancellations.</p>
+            ) : (
+              billing.cancellations.slice(0, 5).map((event) => (
+                <div key={event.id}>
+                  <span>Subscription canceled</span>
                   <strong>{event.workspaceName}</strong>
                   <em>{formatDateTime(event.createdAt)}</em>
                 </div>
@@ -373,7 +420,7 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {summary.payouts.map((request) => (
+                {payouts.map((request) => (
                   <tr key={request.id}>
                     <td>{request.workspaceName}</td>
                     <td>{formatMoney(request.amountCents, request.currency)}</td>

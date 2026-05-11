@@ -145,6 +145,7 @@ export default function Landing() {
   const [billingLoadingPlan, setBillingLoadingPlan] = useState("");
   const currentPlan = state.auth.user?.plan || "Free";
   const normalizedCurrentPlan = normalizePlan(currentPlan);
+  const hasBillingPortal = Boolean(state.auth.workspace?.hasStripeCustomer);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -186,7 +187,7 @@ export default function Landing() {
   };
 
   const handleManageBilling = async () => {
-    const result = await openBillingPortal();
+    const result = await openBillingPortal({ workspaceId: state.auth.workspaceId });
     setBillingMessage(result.message || "");
   };
 
@@ -435,7 +436,7 @@ export default function Landing() {
                   type="button"
                   className={plan.highlighted ? "primaryButton smallButton" : "secondaryButton smallButton"}
                   onClick={() => handlePlanSelect(plan.key)}
-                  disabled={billingLoadingPlan === plan.key}
+                  disabled={billingLoadingPlan === plan.key || normalizedCurrentPlan === plan.key}
                 >
                   {billingLoadingPlan === plan.key
                     ? "Preparing..."
@@ -447,9 +448,11 @@ export default function Landing() {
             ))}
           </div>
           <div className="pricingActions" data-reveal>
-            <button type="button" className="secondaryButton smallButton" onClick={handleManageBilling}>
-              Manage billing
-            </button>
+            {hasBillingPortal ? (
+              <button type="button" className="secondaryButton smallButton" onClick={handleManageBilling}>
+                Manage billing
+              </button>
+            ) : null}
             {billingMessage && (
               <p className="billingStatus" role="status">
                 {billingMessage}

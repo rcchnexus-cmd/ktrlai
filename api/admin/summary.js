@@ -140,7 +140,8 @@ async function buildAdminSummary(supabase) {
     activityResult,
     payoutsResult,
     earningsResult,
-    auditResult
+    auditResult,
+    stripeEventsResult
   ] = await Promise.all([
     safeCount(supabase, "profiles"),
     safeCount(supabase, "workspaces"),
@@ -182,7 +183,20 @@ async function buildAdminSummary(supabase) {
     safeSelect(supabase, "audit_events", "id, workspace_id, event_type, metadata, created_at", {
       order: "created_at",
       limit: rowLimit,
-      filters: [(query) => query.in("event_type", ["plan_change", "payout_request"])]
+      filters: [
+        (query) =>
+          query.in("event_type", [
+            "plan_change",
+            "payout_request",
+            "stripe_webhook",
+            "stripe_payment_failed",
+            "stripe_subscription_canceled"
+          ])
+      ]
+    }),
+    safeSelect(supabase, "stripe_webhook_events", "id, event_id, event_type, workspace_id, status, processed_at, created_at, metadata", {
+      order: "created_at",
+      limit: rowLimit
     })
   ]);
 
@@ -201,7 +215,8 @@ async function buildAdminSummary(supabase) {
     activityResult,
     payoutsResult,
     earningsResult,
-    auditResult
+    auditResult,
+    stripeEventsResult
   ].forEach((result) => addWarning(result.warning));
 
   const users = usersResult.rows;
@@ -212,6 +227,7 @@ async function buildAdminSummary(supabase) {
   const payouts = payoutsResult.rows;
   const earnings = earningsResult.rows;
   const auditEvents = auditResult.rows;
+  const stripeEvents = stripeEventsResult.rows;
   const usersById = buildLookup(users);
   const workspacesById = buildLookup(workspaces);
   const workspaceCountByUser = new Map();
@@ -325,6 +341,29 @@ async function buildAdminSummary(supabase) {
     billing: {
       planCounts: Object.fromEntries(planCounts),
       subscriptionStatuses: Object.fromEntries(subscriptionStatuses),
+      recentBillingEvents: stripeEvents.map((event) => ({
+        id: event.id,
+        eventType: event.event_type,
+        status: event.status || "processed",
+        workspaceName: workspacesById.get(event.workspace_id)?.name || "Unknown workspace",
+        createdAt: toIso(event.created_at)
+      })),
+      failedPayments: stripeEvents
+        .filter((event) => event.event_type === "invoice.payment_failed")
+        .map((event) => ({
+          id: event.id,
+          workspaceName: workspacesById.get(event.workspace_id)?.name || "Unknown workspace",
+          status: event.status || "processed",
+          createdAt: toIso(event.created_at)
+        })),
+      cancellations: stripeEvents
+        .filter((event) => event.event_type === "customer.subscription.deleted")
+        .map((event) => ({
+          id: event.id,
+          workspaceName: workspacesById.get(event.workspace_id)?.name || "Unknown workspace",
+          status: event.status || "processed",
+          createdAt: toIso(event.created_at)
+        })),
       auditEvents: auditEvents.map((event) => ({
         id: event.id,
         eventType: event.event_type,

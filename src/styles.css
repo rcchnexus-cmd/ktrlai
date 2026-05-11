@@ -2801,6 +2801,139 @@ code {
   color: var(--text);
 }
 
+.billingSettingsPanel {
+  grid-column: 1 / -1;
+}
+
+.billingPlanSummary,
+.billingMiniPlans {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+  margin-top: 16px;
+}
+
+.billingPlanSummary article,
+.billingMiniPlan {
+  min-width: 0;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.028);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.billingPlanSummary span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.billingPlanSummary strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+
+.billingMiniPlan {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.billingMiniPlan:hover {
+  transform: translateY(-2px);
+  border-color: rgba(91, 140, 255, 0.22);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+}
+
+.billingMiniPlan.current {
+  border-color: rgba(91, 140, 255, 0.28);
+  background:
+    linear-gradient(135deg, rgba(91, 140, 255, 0.07), rgba(155, 109, 255, 0.045)),
+    rgba(255, 255, 255, 0.032);
+}
+
+.billingMiniTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.billingMiniTop strong,
+.billingMiniTop span,
+.billingMiniTop em {
+  display: block;
+}
+
+.billingMiniTop span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.billingMiniTop em {
+  align-self: flex-start;
+  padding: 5px 8px;
+  color: #dbeafe;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  background: rgba(91, 140, 255, 0.12);
+  border: 1px solid rgba(91, 140, 255, 0.2);
+  border-radius: 999px;
+}
+
+.billingMiniPlan p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.billingActionRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+  margin-top: 16px;
+}
+
+.billingActionRow .domainVerificationMessage {
+  flex: 1 1 260px;
+}
+
+.billingWarningBanner {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 13px;
+  color: #fed7aa;
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+  border-radius: var(--radius-sm);
+}
+
+.billingWarningBanner strong {
+  color: #ffedd5;
+}
+
+.billingWarningBanner p {
+  margin: 0;
+  color: #fed7aa;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .loadingState {
   display: grid;
   min-height: 220px;
@@ -3102,6 +3235,11 @@ code {
   .earningsSummary {
     grid-template-columns: 1fr;
   }
+
+  .billingPlanSummary,
+  .billingMiniPlans {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 680px) {
@@ -3335,8 +3473,20 @@ code {
 
   .adminPlanGrid,
   .adminHealthGrid,
-  .adminEnvGrid {
+  .adminEnvGrid,
+  .billingPlanSummary,
+  .billingMiniPlans {
     grid-template-columns: 1fr;
+  }
+
+  .billingActionRow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .billingActionRow .smallButton,
+  .billingActionRow .domainVerificationMessage {
+    width: 100%;
   }
 }
 

@@ -1,17 +1,9 @@
-const minuteBuckets = new Map();
+import { getWorkspacePlanState } from "./_planLimits.js";
 
-export const planUsageLimits = {
-  free: 1000,
-  pro: 100000,
-  business: 1000000
-};
+const minuteBuckets = new Map();
 
 const rateWindowMs = 60 * 1000;
 const maxRequestsPerWindow = 120;
-
-function normalizePlan(plan) {
-  return String(plan || "Free").trim().toLowerCase();
-}
 
 function getClientIdentity(req) {
   const forwardedFor = req.headers["x-forwarded-for"];
@@ -67,22 +59,16 @@ export function checkRateLimit(req, workspaceId) {
 }
 
 export async function getWorkspaceUsageState(supabase, workspaceId) {
-  const { data: workspace, error: workspaceError } = await supabase
-    .from("workspaces")
-    .select("id, plan")
-    .eq("id", workspaceId)
-    .maybeSingle();
+  const planState = await getWorkspacePlanState(supabase, workspaceId);
 
-  if (workspaceError || !workspace) {
+  if (!planState.ok) {
     return {
-      ok: false,
-      status: 404,
+      ...planState,
       message: "Workspace not found for usage limit check."
     };
   }
 
-  const planKey = normalizePlan(workspace.plan);
-  const limit = planUsageLimits[planKey] || planUsageLimits.free;
+  const limit = planState.limits.events;
   const { monthStart, nextMonthStart } = getMonthlyWindow();
   const { count, error: countError } = await supabase
     .from("activity_logs")
@@ -105,8 +91,8 @@ export async function getWorkspaceUsageState(supabase, workspaceId) {
     return {
       ok: false,
       status: 429,
-      message: `Monthly event limit reached for the ${workspace.plan || "Free"} plan.`,
-      plan: workspace.plan || "Free",
+      message: `Monthly event limit reached for the ${planState.effectivePlan} plan. Upgrade to continue ingesting events.`,
+      plan: planState.effectivePlan,
       limit,
       eventsUsed,
       monthStart
@@ -115,7 +101,7 @@ export async function getWorkspaceUsageState(supabase, workspaceId) {
 
   return {
     ok: true,
-    plan: workspace.plan || "Free",
+    plan: planState.effectivePlan,
     limit,
     eventsUsed,
     monthStart,
