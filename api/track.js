@@ -1,4 +1,4 @@
-import { classifyUserAgent } from "../src/backend/aiDetection.js";
+import { detectBot } from "./_botDetection.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 import {
   compareApiKeyHash,
@@ -105,6 +105,11 @@ function cleanBotName(value) {
   return String(value || "UnknownBot").trim().slice(0, 120) || "UnknownBot";
 }
 
+function isMissingDetectionColumn(error) {
+  const message = String(error?.message || "");
+  return error?.code === "PGRST204" || /confidence_score|is_ai_bot|is_suspicious|is_search_engine|detection_method|category/i.test(message);
+}
+
 function normalizeStatus(status) {
   const normalized = String(status || "allowed")
     .trim()
@@ -172,6 +177,26 @@ async function resolveDomainId(supabase, { workspaceId, hostname }) {
   return data.id;
 }
 
+async function insertActivityLog(supabase, eventPayload) {
+  const insert = await supabase.from("activity_logs").insert(eventPayload).select("id").single();
+
+  if (!insert.error || !isMissingDetectionColumn(insert.error)) {
+    return insert;
+  }
+
+  const {
+    category,
+    confidence_score,
+    is_ai_bot,
+    is_suspicious,
+    is_search_engine,
+    detection_method,
+    ...legacyPayload
+  } = eventPayload;
+
+  return supabase.from("activity_logs").insert(legacyPayload).select("id").single();
+}
+
 export default async function handler(req, res) {
   setCorsHeaders(req, res);
 
@@ -227,7 +252,12 @@ export default async function handler(req, res) {
     });
   }
 
-  const detectedBotType = classifyUserAgent(body.userAgent);
+  const detection = detectBot({
+    userAgent: body.userAgent,
+    headers: req.headers,
+    referrer: body.referrer
+  });
+  const detectedBotType = detection.bot_type;
   const parsedUrl = parsePageUrl(body.pageUrl);
   const status = normalizeStatus(body.status);
   const eventPayload = {
@@ -237,15 +267,29 @@ export default async function handler(req, res) {
     user_agent: String(body.userAgent),
     occurred_at: String(body.timestamp),
     page_title: String(body.pageTitle || ""),
-    bot_name: cleanBotName(body.botName || detectedBotType),
+    bot_name: cleanBotName(body.botName || detection.bot_name),
     bot_type: detectedBotType,
+    category: detection.category,
+    confidence_score: detection.confidence_score,
+    is_ai_bot: detection.is_ai_bot,
+    is_search_engine: detection.is_search_engine,
+    is_suspicious: detection.is_suspicious,
+    detection_method: detection.detection_method,
     page_path: parsedUrl.pagePath,
     status,
     domain_id: null,
     ip_hash: getPendingClientIpHash(req),
     metadata: {
       source: "tracker",
+      detection,
       detected_bot_type: detectedBotType,
+      detected_bot_name: detection.bot_name,
+      detection_category: detection.category,
+      confidence_score: detection.confidence_score,
+      is_ai_bot: detection.is_ai_bot,
+      is_search_engine: detection.is_search_engine,
+      is_suspicious: detection.is_suspicious,
+      detection_method: detection.detection_method,
       client_detected_bot_type: body.detectedBotType || null,
       hostname: parsedUrl.hostname,
       page_url: String(body.pageUrl),
@@ -264,6 +308,7 @@ export default async function handler(req, res) {
       mode: "mock",
       message: "Tracking event accepted in local development mode.",
       detectedBotType,
+      detection,
       event: eventPayload
     });
   }
@@ -311,11 +356,7 @@ export default async function handler(req, res) {
     hostname: parsedUrl.hostname
   });
 
-  const { data: insertedEvent, error: insertError } = await supabase
-    .from("activity_logs")
-    .insert(eventPayload)
-    .select("id")
-    .single();
+  const { data: insertedEvent, error: insertError } = await insertActivityLog(supabase, eventPayload);
 
   if (insertError) {
     return res.status(500).json({
@@ -341,6 +382,7 @@ export default async function handler(req, res) {
       mode: "live",
       message: "Tracking event stored, but API key last-used timestamp was not updated.",
       detectedBotType,
+      detection,
       eventId: insertedEvent.id,
       usage: {
         plan: usageState.plan,
@@ -356,6 +398,7 @@ export default async function handler(req, res) {
     mode: "live",
     message: "Tracking event stored.",
     detectedBotType,
+    detection,
     eventId: insertedEvent.id,
     usage: {
       plan: usageState.plan,

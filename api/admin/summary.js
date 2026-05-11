@@ -41,6 +41,34 @@ function getPercentChange(current, previous) {
   return Math.round(((current - previous) / previous) * 100);
 }
 
+function readBoolean(value, fallback = false) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    return value.toLowerCase() === "true";
+  }
+
+  return fallback;
+}
+
+function getEventDetection(event = {}) {
+  const metadata = event.metadata || {};
+  const detection = metadata.detection || {};
+  const botType = event.bot_type || detection.bot_type || metadata.detected_bot_type || event.bot_name || "UnknownBot";
+  const category = event.category || detection.category || metadata.detection_category || "unknown";
+
+  return {
+    botName: event.bot_name || detection.bot_name || metadata.detected_bot_name || botType,
+    botType,
+    category,
+    confidenceScore: Number(event.confidence_score ?? detection.confidence_score ?? metadata.confidence_score ?? 0),
+    isAiBot: readBoolean(event.is_ai_bot ?? detection.is_ai_bot ?? metadata.is_ai_bot, String(category).startsWith("ai_")),
+    isSuspicious: readBoolean(event.is_suspicious ?? detection.is_suspicious ?? metadata.is_suspicious, category === "scraper")
+  };
+}
+
 function buildLookup(rows, key = "id") {
   return new Map((rows || []).map((row) => [row[key], row]));
 }
@@ -222,7 +250,7 @@ async function buildAdminSummary(supabase) {
       (query) => query.gte("occurred_at", fourteenDaysAgo),
       (query) => query.lt("occurred_at", sevenDaysAgo)
     ]),
-    safeSelect(supabase, "activity_logs", "id, workspace_id, bot_type, occurred_at", {
+    safeSelect(supabase, "activity_logs", "id, workspace_id, bot_name, bot_type, occurred_at, metadata", {
       order: "occurred_at",
       limit: 5000,
       filters: [(query) => query.gte("occurred_at", sevenDaysAgo)]
@@ -270,6 +298,10 @@ async function buildAdminSummary(supabase) {
   const planCounts = new Map();
   const subscriptionStatuses = new Map();
   const botTypesLast7Days = new Map();
+  const aiCrawlersLast7Days = new Map();
+  let aiBotEventsLast7Days = 0;
+  let suspiciousEventsLast7Days = 0;
+  let unknownCrawlerEventsLast7Days = 0;
 
   const workspaceIds = workspaces.map((workspace) => workspace.id).filter(Boolean);
   const memberships = workspaceIds.length
@@ -289,7 +321,24 @@ async function buildAdminSummary(supabase) {
     increment(planCounts, workspace.plan || "Free");
     increment(subscriptionStatuses, workspace.subscription_status || "free");
   });
-  activityLast7Days.forEach((event) => increment(botTypesLast7Days, event.bot_type || "UnknownBot"));
+  activityLast7Days.forEach((event) => {
+    const detection = getEventDetection(event);
+
+    increment(botTypesLast7Days, detection.botType || "UnknownBot");
+
+    if (detection.isAiBot) {
+      aiBotEventsLast7Days += 1;
+      increment(aiCrawlersLast7Days, detection.botName || detection.botType);
+    }
+
+    if (detection.isSuspicious) {
+      suspiciousEventsLast7Days += 1;
+    }
+
+    if (detection.category === "unknown" || detection.botType === "UnknownBot") {
+      unknownCrawlerEventsLast7Days += 1;
+    }
+  });
 
   if (workspaceIds.length) {
     const [domainCounts, apiKeyCounts, eventCounts] = await Promise.all([
@@ -329,6 +378,13 @@ async function buildAdminSummary(supabase) {
       previous7DaysEvents: eventsPrevious7Days.count,
       eventGrowthPercent: getPercentChange(eventsLast7Days.count, eventsPrevious7Days.count),
       activeWorkspacesWithEvents: new Set(activityLast7Days.map((event) => event.workspace_id).filter(Boolean)).size,
+      aiBotEvents: aiBotEventsLast7Days,
+      suspiciousEvents: suspiciousEventsLast7Days,
+      unknownCrawlerEvents: unknownCrawlerEventsLast7Days,
+      topAiCrawlers: Array.from(aiCrawlersLast7Days.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([botName, count]) => ({ botName, count })),
       topBotTypes: Array.from(botTypesLast7Days.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 8)

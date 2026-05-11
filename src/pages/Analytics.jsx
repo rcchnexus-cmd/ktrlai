@@ -33,12 +33,23 @@ export default function Analytics() {
             <StatusBadge status={dataLabel} />
             <span>{dataDetail}</span>
           </section>
+          {analytics.detectionInsights?.length ? (
+            <section className="detectionInsightGrid" aria-label="AI detection analytics">
+              {analytics.detectionInsights.map((insight) => (
+                <article className={`detectionInsight ${insight.tone || "neutral"}`} key={insight.label}>
+                  <span>{insight.label}</span>
+                  <strong>{insight.value}</strong>
+                  <em>{insight.detail}</em>
+                </article>
+              ))}
+            </section>
+          ) : null}
           <section className="dashboardGrid">
             <article className="panel largePanel">
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">Usage trends</span>
-                  <h2>AI requests by month</h2>
+                  <h2>AI requests by period</h2>
                 </div>
               </div>
               <TrafficChart data={analytics.trend} />
@@ -62,6 +73,29 @@ export default function Analytics() {
                 </div>
               </div>
               <MiniBars data={analytics.botFrequency.map((item) => ({ label: item.bot.split("-")[0], value: item.requests }))} />
+            </article>
+            <article className="panel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Detection</span>
+                  <h2>Top detected AI systems</h2>
+                </div>
+              </div>
+              {(analytics.topDetectedAiSystems || []).length === 0 ? (
+                <div className="emptyState compact">
+                  <strong>No AI systems detected yet</strong>
+                  <p>Known AI crawler names will appear after live tracker events arrive.</p>
+                </div>
+              ) : (
+                <div className="adminList">
+                  {analytics.topDetectedAiSystems.map((bot) => (
+                    <div key={bot.name}>
+                      <span>{bot.name}</span>
+                      <strong>{bot.count}</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
             </article>
             <article className="panel largePanel">
               <div className="panelHeader">

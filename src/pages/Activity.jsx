@@ -113,6 +113,8 @@ export default function Activity() {
                   <tr>
                     <th>Bot</th>
                     <th>Type</th>
+                    <th>Category</th>
+                    <th>Confidence</th>
                     <th>Page</th>
                     <th>Status</th>
                     <th>Region</th>
@@ -124,6 +126,8 @@ export default function Activity() {
                     <tr key={row.id}>
                       <td>{row.bot}</td>
                       <td>{row.type}</td>
+                      <td>{row.category || "Legacy"}</td>
+                      <td>{row.confidenceScore ? `${row.confidenceScore}%` : "N/A"}</td>
                       <td>{row.page}</td>
                       <td>
                         <StatusBadge status={row.status} />

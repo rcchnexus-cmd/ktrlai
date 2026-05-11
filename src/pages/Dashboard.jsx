@@ -90,6 +90,17 @@ export default function Dashboard() {
               <MetricCard key={kpi.label} {...kpi} />
             ))}
           </section>
+          {dashboard.detectionInsights?.length ? (
+            <section className="detectionInsightGrid" aria-label="AI bot detection intelligence">
+              {dashboard.detectionInsights.map((insight) => (
+                <article className={`detectionInsight ${insight.tone || "neutral"}`} key={insight.label}>
+                  <span>{insight.label}</span>
+                  <strong>{insight.value}</strong>
+                  <em>{insight.detail}</em>
+                </article>
+              ))}
+            </section>
+          ) : null}
           <section className="dashboardGrid">
             <article className="panel largePanel">
               <div className="panelHeader">

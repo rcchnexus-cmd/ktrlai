@@ -114,6 +114,38 @@ function getBotCategory(botType) {
   return "AI Bot";
 }
 
+function getDetection(event) {
+  const metadata = event.metadata || {};
+  const detection = metadata.detection || {};
+  const botType = event.bot_type || detection.bot_type || metadata.detected_bot_type || event.bot_name || "UnknownBot";
+  const fallbackCategory = getBotCategory(botType).toLowerCase().replace(/\s+/g, "_");
+  const category = event.category || detection.category || metadata.detection_category || fallbackCategory;
+  const confidence = Number(event.confidence_score ?? detection.confidence_score ?? metadata.confidence_score ?? 0);
+
+  const readBoolean = (value, fallback = false) => {
+    if (typeof value === "boolean") {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      return value.toLowerCase() === "true";
+    }
+
+    return fallback;
+  };
+
+  return {
+    botName: event.bot_name || detection.bot_name || metadata.detected_bot_name || botType,
+    botType,
+    category,
+    confidenceScore: Number.isFinite(confidence) ? confidence : 0,
+    isAiBot: readBoolean(event.is_ai_bot ?? detection.is_ai_bot ?? metadata.is_ai_bot, category.startsWith("ai_")),
+    isSearchEngine: readBoolean(event.is_search_engine ?? detection.is_search_engine ?? metadata.is_search_engine, category === "search_engine"),
+    isSuspicious: readBoolean(event.is_suspicious ?? detection.is_suspicious ?? metadata.is_suspicious, category === "scraper"),
+    detectionMethod: event.detection_method || detection.detection_method || metadata.detection_method || "legacy"
+  };
+}
+
 function getPageLabel(event) {
   return event.page_title || event.page_path || event.url || event.metadata?.page_url || "Untitled page";
 }
@@ -146,13 +178,17 @@ function buildTopPages(pageCounts) {
 }
 
 function toRecentActivity(event) {
-  const botType = event.bot_type || event.metadata?.detected_bot_type || event.bot_name || "UnknownBot";
+  const detection = getDetection(event);
 
   return {
     id: event.id,
-    bot: cleanBotName(event.bot_name || botType),
-    type: getBotCategory(botType),
-    botType: cleanBotName(botType),
+    bot: cleanBotName(detection.botName),
+    type: getBotCategory(detection.botType),
+    botType: cleanBotName(detection.botType),
+    category: detection.category,
+    confidenceScore: detection.confidenceScore,
+    isAiBot: detection.isAiBot,
+    isSuspicious: detection.isSuspicious,
     page: getPageLabel(event),
     status: formatStatus(event.status),
     statusKey: event.status || "allowed",
@@ -171,13 +207,22 @@ function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window 
   const botCounts = new Map();
   const pageCounts = new Map();
   const statusCounts = new Map();
+  const categoryCounts = new Map();
+  const aiBotCounts = new Map();
   const uniqueBots = new Set();
   const pages = new Set();
+  let aiBotEvents = 0;
+  let humanEvents = 0;
+  let suspiciousEvents = 0;
+  let highConfidenceTrainingEvents = 0;
+  let confidenceTotal = 0;
+  let confidenceCount = 0;
 
   for (const event of events) {
     const dayKey = formatDate(event.occurred_at);
     const dailyBucket = dailyBuckets.get(dayKey);
-    const botType = event.bot_type || event.bot_name || event.metadata?.detected_bot_type || "UnknownBot";
+    const detection = getDetection(event);
+    const botType = detection.botType;
     const page = getPageLabel(event);
 
     if (dailyBucket) {
@@ -189,6 +234,27 @@ function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window 
     increment(botCounts, botType);
     increment(pageCounts, page);
     increment(statusCounts, event.status || "allowed");
+    increment(categoryCounts, detection.category);
+
+    if (detection.isAiBot) {
+      aiBotEvents += 1;
+      increment(aiBotCounts, detection.botName || botType);
+    } else if (detection.category === "browser") {
+      humanEvents += 1;
+    }
+
+    if (detection.isSuspicious) {
+      suspiciousEvents += 1;
+    }
+
+    if (detection.category === "ai_training" && detection.confidenceScore >= 80) {
+      highConfidenceTrainingEvents += 1;
+    }
+
+    if (detection.confidenceScore > 0) {
+      confidenceTotal += detection.confidenceScore;
+      confidenceCount += 1;
+    }
   }
 
   const totalEvents = totalCount ?? events.length;
@@ -215,6 +281,19 @@ function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window 
     pagesAccessed: pages.size,
     detectedBotTypes: Array.from(uniqueBots).map(cleanBotName).sort(),
     botDistribution: buildDistribution(botCounts, events.length),
+    aiDetection: {
+      aiBotEvents,
+      humanEvents,
+      suspiciousEvents,
+      highConfidenceTrainingEvents,
+      aiTrafficRatio: events.length > 0 ? Math.round((aiBotEvents / events.length) * 100) : 0,
+      confidenceAverage: confidenceCount > 0 ? Math.round(confidenceTotal / confidenceCount) : 0,
+      categoryCounts: Object.fromEntries(categoryCounts),
+      topDetectedAiSystems: Array.from(aiBotCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([name, count]) => ({ name: cleanBotName(name), count }))
+    },
     trafficOverTime: Array.from(dailyBuckets.values()),
     recentActivity,
     topPages,
@@ -230,6 +309,39 @@ function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window 
     },
     truncated: events.length >= maxEventsForServerAggregation
   };
+}
+
+async function fetchActivityRows(supabase, baseQuery) {
+  const extendedColumns =
+    "id, workspace_id, domain_id, bot_name, bot_type, category, confidence_score, is_ai_bot, is_search_engine, is_suspicious, detection_method, page_path, url, referrer, user_agent, page_title, status, tokens_used, region, occurred_at, metadata";
+  const legacyColumns =
+    "id, workspace_id, domain_id, bot_name, bot_type, page_path, url, referrer, user_agent, page_title, status, tokens_used, region, occurred_at, metadata";
+
+  const extended = await baseQuery(
+    supabase
+      .from("activity_logs")
+      .select(extendedColumns)
+      .order("occurred_at", { ascending: false })
+      .limit(maxEventsForServerAggregation)
+  );
+
+  if (!extended.error) {
+    return extended;
+  }
+
+  const message = String(extended.error.message || "");
+
+  if (!/category|confidence_score|is_ai_bot|is_search_engine|is_suspicious|detection_method/i.test(message)) {
+    return extended;
+  }
+
+  return baseQuery(
+    supabase
+      .from("activity_logs")
+      .select(legacyColumns)
+      .order("occurred_at", { ascending: false })
+      .limit(maxEventsForServerAggregation)
+  );
 }
 
 export default async function handler(req, res) {
@@ -271,15 +383,7 @@ export default async function handler(req, res) {
 
   const [{ count, error: countError }, { data, error }] = await Promise.all([
     baseQuery(supabase.from("activity_logs").select("id", { count: "exact", head: true })),
-    baseQuery(
-      supabase
-        .from("activity_logs")
-        .select(
-          "id, workspace_id, domain_id, bot_name, bot_type, page_path, url, referrer, user_agent, page_title, status, tokens_used, region, occurred_at, metadata"
-        )
-        .order("occurred_at", { ascending: false })
-        .limit(maxEventsForServerAggregation)
-    )
+    fetchActivityRows(supabase, baseQuery)
   ]);
 
   if (countError || error) {

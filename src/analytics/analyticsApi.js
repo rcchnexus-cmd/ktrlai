@@ -52,6 +52,56 @@ function getDataMode(summary) {
   };
 }
 
+function buildDetectionInsights(aiDetection = {}) {
+  const aiBotEvents = Number(aiDetection.aiBotEvents || 0);
+  const highConfidenceTrainingEvents = Number(aiDetection.highConfidenceTrainingEvents || 0);
+  const suspiciousEvents = Number(aiDetection.suspiciousEvents || 0);
+
+  return [
+    {
+      label: "AI crawler activity detected",
+      value: formatNumber(aiBotEvents),
+      detail: `${Number(aiDetection.aiTrafficRatio || 0)}% of tracked traffic`,
+      tone: aiBotEvents > 0 ? "positive" : "neutral"
+    },
+    {
+      label: "High-confidence AI training traffic",
+      value: formatNumber(highConfidenceTrainingEvents),
+      detail: `${Number(aiDetection.confidenceAverage || 0)} average confidence`,
+      tone: highConfidenceTrainingEvents > 0 ? "positive" : "neutral"
+    },
+    {
+      label: "Suspicious scraping activity",
+      value: formatNumber(suspiciousEvents),
+      detail: "Unknown or tool-like crawlers",
+      tone: suspiciousEvents > 0 ? "negative" : "neutral"
+    }
+  ];
+}
+
+function sampleDetectionInsights() {
+  return [
+    {
+      label: "AI crawler activity detected",
+      value: "6",
+      detail: "75% of sample traffic",
+      tone: "positive"
+    },
+    {
+      label: "High-confidence AI training traffic",
+      value: "3",
+      detail: "94 average confidence",
+      tone: "positive"
+    },
+    {
+      label: "Suspicious scraping activity",
+      value: "1",
+      detail: "Unknown crawler sample",
+      tone: "negative"
+    }
+  ];
+}
+
 export async function getWorkspaceAnalyticsSummary({ workspaceId, range = "7d" } = {}) {
   const accessToken = await getSupabaseAccessToken();
 
@@ -98,7 +148,9 @@ export function toDashboardView(summary) {
     ],
     traffic: normalizeTraffic(summary?.trafficOverTime),
     botDistribution: normalizeDistribution(summary?.botDistribution),
-    recentActivity: (summary?.recentActivity || []).slice(0, 5)
+    recentActivity: (summary?.recentActivity || []).slice(0, 5),
+    aiDetection: summary?.aiDetection || {},
+    detectionInsights: buildDetectionInsights(summary?.aiDetection)
   };
 }
 
@@ -121,6 +173,9 @@ export function toAnalyticsView(summary) {
       requests: Number(item.count || 0)
     })),
     sources: normalizeDistribution(summary?.botDistribution),
+    aiDetection: summary?.aiDetection || {},
+    detectionInsights: buildDetectionInsights(summary?.aiDetection),
+    topDetectedAiSystems: summary?.aiDetection?.topDetectedAiSystems || [],
     allowedBlockedCounts: summary?.allowedBlockedCounts || {},
     revenueEstimate: summary?.revenueEstimate || { amountCents: 0, formatted: "$0" }
   };
@@ -133,6 +188,10 @@ export function toActivityRows(summary) {
     type: row.type,
     page: row.page,
     status: row.status,
+    category: row.category,
+    confidenceScore: row.confidenceScore,
+    isAiBot: row.isAiBot,
+    isSuspicious: row.isSuspicious,
     date: row.date,
     time: row.time,
     tokens: row.tokens,
@@ -154,7 +213,9 @@ export function createEmptyDashboard() {
     ],
     traffic: [],
     botDistribution: [],
-    recentActivity: []
+    recentActivity: [],
+    aiDetection: {},
+    detectionInsights: buildDetectionInsights()
   };
 }
 
@@ -168,6 +229,9 @@ export function createEmptyAnalytics() {
     topPages: [],
     botFrequency: [],
     sources: [],
+    aiDetection: {},
+    detectionInsights: buildDetectionInsights(),
+    topDetectedAiSystems: [],
     allowedBlockedCounts: {},
     revenueEstimate: { amountCents: 0, formatted: "$0" }
   };
@@ -183,7 +247,8 @@ export function decorateSampleDashboard(data) {
     source: "sample",
     sourceLabel: "Sample preview",
     sourceDetail: "Investor sample data is shown until this workspace receives live tracker events.",
-    hasRealData: false
+    hasRealData: false,
+    detectionInsights: sampleDetectionInsights()
   };
 }
 
@@ -193,7 +258,13 @@ export function decorateSampleAnalytics(data) {
     source: "sample",
     sourceLabel: "Sample preview",
     sourceDetail: "Investor sample data is shown until this workspace receives live tracker events.",
-    hasRealData: false
+    hasRealData: false,
+    detectionInsights: sampleDetectionInsights(),
+    topDetectedAiSystems: [
+      { name: "ChatGPT-User", count: 2 },
+      { name: "ClaudeBot", count: 1 },
+      { name: "PerplexityBot", count: 1 }
+    ]
   };
 }
 

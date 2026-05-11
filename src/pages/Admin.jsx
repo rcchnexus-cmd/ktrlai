@@ -327,6 +327,31 @@ export default function Admin() {
               <span>Active workspaces</span>
               <strong>{platformAnalytics.activeWorkspacesWithEvents || 0}</strong>
             </article>
+            <article>
+              <span>AI bot events</span>
+              <strong>{platformAnalytics.aiBotEvents || 0}</strong>
+            </article>
+            <article>
+              <span>Suspicious events</span>
+              <strong>{platformAnalytics.suspiciousEvents || 0}</strong>
+            </article>
+            <article>
+              <span>Unknown crawlers</span>
+              <strong>{platformAnalytics.unknownCrawlerEvents || 0}</strong>
+            </article>
+          </div>
+          <div className="adminAuditList">
+            <h3>Top detected AI crawlers</h3>
+            {(platformAnalytics.topAiCrawlers || []).length === 0 ? (
+              <p>No AI crawler detections in the last 7 days.</p>
+            ) : (
+              platformAnalytics.topAiCrawlers.map((bot) => (
+                <div key={bot.botName}>
+                  <span>{bot.botName}</span>
+                  <strong>{bot.count}</strong>
+                </div>
+              ))
+            )}
           </div>
           <div className="adminAuditList">
             <h3>Top bot types</h3>
@@ -426,7 +451,7 @@ export default function Admin() {
                 <div key={event.id}>
                   <span>{statusLabel(event.eventType)}</span>
                   <strong>{event.workspaceName}</strong>
-                  <em>{statusLabel(event.status)} · {formatDateTime(event.createdAt)}</em>
+                  <em>{statusLabel(event.status)} - {formatDateTime(event.createdAt)}</em>
                 </div>
               ))
             )}
