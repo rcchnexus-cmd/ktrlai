@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Logo from "./Logo.jsx";
+import ProductHint from "./ProductHint.jsx";
 import { RouteLink, useNavigation } from "../navigation.jsx";
 import { useApp } from "../context/AppContext.jsx";
 
@@ -103,6 +104,7 @@ export default function AppShell({ title, eyebrow, children, action }) {
             </RouteLink>
           </div>
         </header>
+        <ProductHint path={path} />
         {children}
       </main>
     </div>

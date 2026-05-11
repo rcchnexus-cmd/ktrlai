@@ -3,6 +3,7 @@ import AppShell from "../components/AppShell.jsx";
 import { DistributionChart, MiniBars, TrafficChart } from "../components/Charts.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
+import { RouteLink } from "../navigation.jsx";
 
 export default function Analytics() {
   const { state, actions } = useApp();
@@ -24,6 +25,14 @@ export default function Analytics() {
         <div className="emptyState">
           <strong>Analytics could not be loaded</strong>
           <p>{analyticsError}</p>
+          <div className="emptyStateActions">
+            <button type="button" className="secondaryButton smallButton" onClick={actions.loadAnalytics}>
+              Retry analytics
+            </button>
+            <RouteLink to="/docs/analytics" className="primaryButton smallButton">
+              Read analytics guide
+            </RouteLink>
+          </div>
         </div>
       ) : !analytics ? (
         <div className="loadingState">Loading analytics...</div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getAdminSummary } from "../admin/adminApi.js";
 import AppShell from "../components/AppShell.jsx";
 import MetricCard from "../components/MetricCard.jsx";
@@ -55,31 +55,33 @@ export default function Admin() {
   const [summary, setSummary] = useState(null);
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
+  const isMountedRef = useRef(false);
 
-  useEffect(() => {
-    let isMounted = true;
-
+  const loadAdminSummary = useCallback(async () => {
     setStatus("loading");
     setMessage("");
 
-    getAdminSummary()
-      .then((data) => {
-        if (isMounted) {
-          setSummary(data);
-          setStatus("ready");
-        }
-      })
-      .catch((error) => {
-        if (isMounted) {
-          setStatus(error.status === 401 || error.status === 403 ? "denied" : "error");
-          setMessage(error.message || "Admin data could not be loaded.");
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    try {
+      const data = await getAdminSummary();
+      if (isMountedRef.current) {
+        setSummary(data);
+        setStatus("ready");
+      }
+    } catch (error) {
+      if (isMountedRef.current) {
+        setStatus(error.status === 401 || error.status === 403 ? "denied" : "error");
+        setMessage(error.message || "Admin data could not be loaded.");
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    loadAdminSummary();
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [loadAdminSummary]);
 
   const overviewCards = useMemo(() => {
     const overview = summary?.overview || {};
@@ -134,6 +136,11 @@ export default function Admin() {
         <div className="emptyState">
           <strong>Admin controls could not be loaded</strong>
           <p>{message}</p>
+          <div className="emptyStateActions">
+            <button type="button" className="secondaryButton smallButton" onClick={loadAdminSummary}>
+              Retry admin data
+            </button>
+          </div>
         </div>
       </AppShell>
     );

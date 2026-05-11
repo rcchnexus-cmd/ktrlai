@@ -3397,6 +3397,483 @@ code {
   font-size: 14px;
 }
 
+.emptyStateActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.textButton {
+  min-height: 36px;
+  padding: 0;
+  color: var(--muted);
+  font-weight: 750;
+  background: transparent;
+  border: 0;
+}
+
+.textButton:hover {
+  color: var(--text);
+}
+
+.routeLoading,
+.fatalErrorShell {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 24px;
+}
+
+.routeLoading {
+  gap: 12px;
+  text-align: center;
+}
+
+.routeLoading span {
+  width: 34px;
+  height: 34px;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  border-top-color: var(--accent);
+  border-radius: 999px;
+  animation: spin 820ms linear infinite;
+}
+
+.routeLoading strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.routeLoading p {
+  margin: 0;
+  font-size: 14px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.setupGuide {
+  position: relative;
+  overflow: hidden;
+}
+
+.setupGuide::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  opacity: 0.54;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(91, 140, 255, 0.16), transparent 34%),
+    radial-gradient(circle at 86% 10%, rgba(155, 109, 255, 0.12), transparent 32%);
+}
+
+.setupGuide > * {
+  position: relative;
+  z-index: 1;
+}
+
+.setupGuideHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  min-width: 0;
+}
+
+.setupGuideHeader h2 {
+  margin-top: 5px;
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1.1;
+}
+
+.setupGuideHeader p {
+  max-width: 760px;
+  margin-top: 10px;
+}
+
+.setupProgress {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 94px;
+  height: 94px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  box-shadow: inset 0 0 24px rgba(91, 140, 255, 0.08);
+}
+
+.setupGuideControls {
+  display: grid;
+  justify-items: center;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.setupDismissButton {
+  min-height: 32px;
+  font-size: 13px;
+}
+
+.setupProgress strong {
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.setupProgress span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.setupProgressBar {
+  height: 8px;
+  margin: 22px 0 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.055);
+  border-radius: 999px;
+}
+
+.setupProgressBar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: inherit;
+  transition: width 420ms ease;
+}
+
+.setupStepList {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.setupStepList article {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.setupStepList article.current {
+  background: rgba(91, 140, 255, 0.075);
+  border-color: rgba(91, 140, 255, 0.24);
+}
+
+.setupStepList article.done {
+  border-color: rgba(74, 222, 128, 0.18);
+}
+
+.setupStepList article > span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 820;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.setupStepList article.current > span,
+.setupStepList article.done > span {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+
+.setupStepList strong {
+  color: var(--text);
+}
+
+.setupStepList p {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.setupStepList .smallButton {
+  width: 100%;
+}
+
+.productHint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background:
+    linear-gradient(135deg, rgba(91, 140, 255, 0.09), rgba(155, 109, 255, 0.055)),
+    rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.095);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.22);
+}
+
+.productHint div:first-child {
+  min-width: 0;
+}
+
+.productHint strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--text);
+}
+
+.productHint p {
+  margin-top: 5px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.productHintActions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
+.docsShell,
+.helpShell,
+.trustPageShell {
+  display: grid;
+  width: min(100% - 48px, 1200px);
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 56px 0 42px;
+}
+
+.docsShell {
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.docsSidebar {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.028);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.docsSidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.docsSidebarHeader strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.docsSidebarHeader button,
+.docsMobileToggle {
+  display: none;
+}
+
+.docsSidebar nav {
+  display: grid;
+  gap: 4px;
+}
+
+.docsSidebar a {
+  padding: 11px 12px;
+  color: var(--muted);
+  font-size: 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+
+.docsSidebar a:hover,
+.docsSidebar a.active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.045);
+  border-color: var(--border);
+}
+
+.docsHelpLink {
+  margin-top: 8px;
+}
+
+.docsContent {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.docsHero,
+.trustHero {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 28px;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(91, 140, 255, 0.13), transparent 36%),
+    rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.docsHero h1,
+.trustHero h1 {
+  max-width: 860px;
+  font-size: clamp(34px, 5vw, 64px);
+  line-height: 0.98;
+}
+
+.docsHero p,
+.trustHero p {
+  max-width: 760px;
+}
+
+.docsSearch {
+  display: grid;
+  gap: 8px;
+  max-width: 520px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.docsGrid,
+.helpGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.docsCard,
+.docsArticle,
+.supportForm,
+.trustArticle,
+.contactPanel {
+  min-width: 0;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.docsCard {
+  display: grid;
+  gap: 12px;
+}
+
+.docsCard h2,
+.docsArticle h2,
+.trustArticle h2,
+.contactPanel h2 {
+  color: var(--text);
+  font-size: 21px;
+}
+
+.docsArticle {
+  display: grid;
+  gap: 14px;
+}
+
+.docsArticle h2:not(:first-child) {
+  margin-top: 14px;
+}
+
+.docsArticle p,
+.trustArticle p {
+  max-width: 820px;
+}
+
+.docsArticle code:not(.installCodeBlock code),
+.trustArticle code {
+  padding: 2px 5px;
+  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+}
+
+.docsCodeCard {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.docsCodeCard > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.docsCodeCard span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 780;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.docsFaq article {
+  display: grid;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.docsFaq article:last-child {
+  border-bottom: 0;
+}
+
+.docsFaq strong {
+  color: var(--text);
+}
+
+.helpShell,
+.trustPageShell {
+  gap: 22px;
+}
+
+.supportForm {
+  display: grid;
+  gap: 16px;
+}
+
+.supportActions,
+.contactPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.contactPanel + .contactPanel {
+  margin-top: 14px;
+}
+
+.trustArticle {
+  display: grid;
+  gap: 14px;
+}
+
 @media (max-width: 1120px) {
   .marketingNav {
     width: min(1200px, calc(100% - 32px));
@@ -3667,6 +4144,61 @@ code {
   .billingMiniPlans {
     grid-template-columns: 1fr;
   }
+
+  .docsShell {
+    width: min(100% - 32px, 1200px);
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .docsSidebar {
+    position: fixed;
+    inset: calc(12px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) auto max(14px, env(safe-area-inset-left));
+    z-index: 80;
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease,
+      visibility 180ms ease;
+  }
+
+  .docsSidebar.open {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .docsSidebarHeader button,
+  .docsMobileToggle {
+    display: inline-flex;
+  }
+
+  .setupStepList,
+  .docsGrid,
+  .helpGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .productHint {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .productHintActions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .productHintActions .smallButton {
+    flex: 1 1 160px;
+  }
 }
 
 @media (max-width: 680px) {
@@ -3679,7 +4211,10 @@ code {
   .section,
   .authorityStrip,
   .trustStrip,
-  .footer {
+  .footer,
+  .docsShell,
+  .helpShell,
+  .trustPageShell {
     width: min(100% - 28px, 1200px);
   }
 
@@ -3721,6 +4256,7 @@ code {
   .adminHero,
   .mockupHeader,
   .panelHeader,
+  .setupGuideHeader,
   .installHeroHeader,
   .toggleRow,
   .scriptBox,
@@ -3729,7 +4265,9 @@ code {
   .installSnippetHeader,
   .liveIngestionHeader,
   .domainVerificationHeader,
-  .domainForm {
+  .domainForm,
+  .supportActions,
+  .contactPanel {
     align-items: stretch;
     flex-direction: column;
   }
@@ -3755,7 +4293,10 @@ code {
   .buttonCluster .smallButton,
   .domainActions .smallButton,
   .onboardingActions .smallButton,
-  .installSnippetHeader .smallButton {
+  .installSnippetHeader .smallButton,
+  .supportActions .smallButton,
+  .contactPanel .smallButton,
+  .emptyStateActions .smallButton {
     width: 100%;
   }
 
@@ -3835,6 +4376,38 @@ code {
 
   .footer {
     gap: 30px;
+  }
+
+  .docsShell,
+  .helpShell,
+  .trustPageShell {
+    padding-top: 34px;
+  }
+
+  .docsHero,
+  .trustHero,
+  .docsCard,
+  .docsArticle,
+  .supportForm,
+  .trustArticle,
+  .contactPanel {
+    padding: 18px;
+  }
+
+  .docsHero h1,
+  .trustHero h1 {
+    font-size: clamp(32px, 11vw, 42px);
+    line-height: 1.06;
+  }
+
+  .setupProgress {
+    width: 82px;
+    height: 82px;
+  }
+
+  .setupGuideControls {
+    align-items: start;
+    justify-items: start;
   }
 
   .pricingCard {

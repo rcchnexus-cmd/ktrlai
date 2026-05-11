@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import AppShell from "../components/AppShell.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
+import { RouteLink } from "../navigation.jsx";
 
 export default function Activity() {
   const { state, actions } = useApp();
@@ -98,6 +99,14 @@ export default function Activity() {
         <div className="emptyState">
           <strong>AI activity could not be loaded</strong>
           <p>{activityError}</p>
+          <div className="emptyStateActions">
+            <button type="button" className="secondaryButton smallButton" onClick={actions.loadActivity}>
+              Retry activity
+            </button>
+            <RouteLink to="/settings#install" className="primaryButton smallButton">
+              Open install
+            </RouteLink>
+          </div>
         </div>
       ) : isInitialLoading ? (
         <div className="loadingState">Loading AI activity logs...</div>

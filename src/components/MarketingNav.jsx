@@ -30,17 +30,18 @@ const menus = [
   {
     label: "Resources",
     items: [
-      ["AI activity", "/activity"],
-      ["Security", "/settings"],
+      ["Docs", "/docs"],
+      ["Install guide", "/docs/install"],
+      ["Security", "/security"],
       ["Visibility check", "/visibility"]
     ]
   },
   {
     label: "Company",
     items: [
-      ["About KtrlAI", "/"],
-      ["Contact", "/settings"],
-      ["Careers", "/"]
+      ["About KtrlAI", "/#about"],
+      ["Contact", "/contact"],
+      ["Help", "/help"]
     ]
   }
 ];

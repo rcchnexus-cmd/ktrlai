@@ -1,25 +1,44 @@
-import { useEffect } from "react";
-import Landing from "./pages/Landing.jsx";
-import { Login, Signup, ForgotPassword } from "./pages/AuthPages.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import Activity from "./pages/Activity.jsx";
-import ControlCenter from "./pages/ControlCenter.jsx";
-import Visibility from "./pages/Visibility.jsx";
-import Analytics from "./pages/Analytics.jsx";
-import Monetization from "./pages/Monetization.jsx";
-import Training from "./pages/Training.jsx";
-import Settings from "./pages/Settings.jsx";
-import Admin from "./pages/Admin.jsx";
+import { lazy, Suspense, useEffect } from "react";
 import { useNavigation } from "./navigation.jsx";
 import { useApp } from "./context/AppContext.jsx";
 
 const INTENDED_ROUTE_KEY = "ktrlai_intended_route";
+
+const Landing = lazy(() => import("./pages/Landing.jsx"));
+const Login = lazy(() => import("./pages/AuthPages.jsx").then((module) => ({ default: module.Login })));
+const Signup = lazy(() => import("./pages/AuthPages.jsx").then((module) => ({ default: module.Signup })));
+const ForgotPassword = lazy(() => import("./pages/AuthPages.jsx").then((module) => ({ default: module.ForgotPassword })));
+const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
+const Activity = lazy(() => import("./pages/Activity.jsx"));
+const ControlCenter = lazy(() => import("./pages/ControlCenter.jsx"));
+const Visibility = lazy(() => import("./pages/Visibility.jsx"));
+const Analytics = lazy(() => import("./pages/Analytics.jsx"));
+const Monetization = lazy(() => import("./pages/Monetization.jsx"));
+const Training = lazy(() => import("./pages/Training.jsx"));
+const Settings = lazy(() => import("./pages/Settings.jsx"));
+const Admin = lazy(() => import("./pages/Admin.jsx"));
+const Docs = lazy(() => import("./pages/Docs.jsx"));
+const Help = lazy(() => import("./pages/Help.jsx"));
+const Privacy = lazy(() => import("./pages/LegalPages.jsx").then((module) => ({ default: module.Privacy })));
+const Terms = lazy(() => import("./pages/LegalPages.jsx").then((module) => ({ default: module.Terms })));
+const Security = lazy(() => import("./pages/LegalPages.jsx").then((module) => ({ default: module.Security })));
+const Contact = lazy(() => import("./pages/LegalPages.jsx").then((module) => ({ default: module.Contact })));
 
 const routes = {
   "/": Landing,
   "/login": Login,
   "/signup": Signup,
   "/forgot-password": ForgotPassword,
+  "/docs": Docs,
+  "/docs/install": Docs,
+  "/docs/sdk": Docs,
+  "/docs/analytics": Docs,
+  "/docs/billing": Docs,
+  "/help": Help,
+  "/privacy": Privacy,
+  "/terms": Terms,
+  "/security": Security,
+  "/contact": Contact,
   "/dashboard": Dashboard,
   "/activity": Activity,
   "/control": ControlCenter,
@@ -65,5 +84,17 @@ export default function App() {
 
   const RouteComponent = routes[path] || Landing;
 
-  return <RouteComponent />;
+  return (
+    <Suspense
+      fallback={
+        <div className="routeLoading" role="status" aria-live="polite">
+          <span />
+          <strong>Loading KtrlAI</strong>
+          <p>Preparing your workspace experience...</p>
+        </div>
+      }
+    >
+      <RouteComponent />
+    </Suspense>
+  );
 }

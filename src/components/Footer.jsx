@@ -2,9 +2,9 @@ import Logo from "./Logo.jsx";
 import { RouteLink } from "../navigation.jsx";
 
 const columns = [
-  ["Product", ["Dashboard", "AI Activity", "Control Center", "AI Visibility"]],
+  ["Product", ["Dashboard", "AI Activity", "Control Center", "AI Visibility", "Docs"]],
   ["Pricing", ["Free", "Pro", "Business", "Compare plans"]],
-  ["Company", ["About", "Contact", "Security"]],
+  ["Company", ["About", "Contact", "Security", "Help"]],
   ["Legal", ["Privacy", "Terms", "Security", "Contact"]]
 ];
 
@@ -13,16 +13,18 @@ const routeFor = {
   "AI Activity": "/activity",
   "Control Center": "/control",
   "AI Visibility": "/visibility",
+  Docs: "/docs",
+  Help: "/help",
   Free: "/#pricing",
   Pro: "/#pricing",
   Business: "/#pricing",
   "Compare plans": "/#pricing",
   About: "/#about",
   Pricing: "/#pricing",
-  Contact: "mailto:contact@ktrlai.app",
-  Privacy: "/settings",
-  Terms: "/settings",
-  Security: "/settings"
+  Contact: "/contact",
+  Privacy: "/privacy",
+  Terms: "/terms",
+  Security: "/security"
 };
 
 export default function Footer() {

@@ -471,6 +471,11 @@ export default function Settings() {
         <div className="emptyState">
           <strong>Settings could not be loaded</strong>
           <p>{settingsError}</p>
+          <div className="emptyStateActions">
+            <button type="button" className="secondaryButton smallButton" onClick={actions.loadSettings}>
+              Retry settings
+            </button>
+          </div>
         </div>
       ) : !settings ? (
         <div className="loadingState">Loading settings...</div>
@@ -565,7 +570,7 @@ export default function Settings() {
             </div>
           </section>
 
-          <section className="panel largePanel installWizardPanel">
+          <section className="panel largePanel installWizardPanel" id="install">
             <div className="installHeroHeader">
               <div>
                 <span className="eyebrow">Installation</span>
@@ -704,7 +709,7 @@ window.KtrlAI.page();`}</code>
             </div>
           </section>
 
-          <section className="panel">
+          <section className="panel" id="api-key">
             <div className="panelHeader">
               <div>
                 <span className="eyebrow">API</span>
