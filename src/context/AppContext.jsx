@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from "react";
 import { mockApi } from "../api/mockApi.js";
+import { checkPlatformAdminAccess } from "../admin/adminApi.js";
 import * as authService from "../auth/supabaseAuth.js";
 import { requestPayoutReview } from "../billing/billingApi.js";
 import { allowLocalMockFallback, showInvestorSampleData } from "../config/runtime.js";
@@ -26,7 +27,9 @@ function createInitialState() {
       user: session.user,
       workspace: session.workspace,
       workspaceId: session.workspaceId,
-      mode: session.mode
+      mode: session.mode,
+      isPlatformAdmin: false,
+      isCheckingPlatformAdmin: false
     }
   };
 }
@@ -186,7 +189,26 @@ function reducer(state, action) {
           user: action.session.user,
           workspace: action.session.workspace,
           workspaceId: action.session.workspaceId,
-          mode: action.session.mode
+          mode: action.session.mode,
+          isPlatformAdmin: false,
+          isCheckingPlatformAdmin: false
+        }
+      };
+    case "platformAdminChecking":
+      return {
+        ...state,
+        auth: {
+          ...state.auth,
+          isCheckingPlatformAdmin: action.value
+        }
+      };
+    case "platformAdminAccess":
+      return {
+        ...state,
+        auth: {
+          ...state.auth,
+          isPlatformAdmin: Boolean(action.value),
+          isCheckingPlatformAdmin: false
         }
       };
     case "authRestoreFailed":
@@ -199,7 +221,9 @@ function reducer(state, action) {
           user: null,
           workspace: null,
           workspaceId: null,
-          mode: "live"
+          mode: "live",
+          isPlatformAdmin: false,
+          isCheckingPlatformAdmin: false
         }
       };
     default:
@@ -256,6 +280,41 @@ export function AppProvider({ children }) {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (state.auth.isRestoring) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    if (!state.auth.isAuthenticated || !state.auth.user?.id) {
+      dispatch({ type: "platformAdminAccess", value: false });
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    dispatch({ type: "platformAdminChecking", value: true });
+
+    checkPlatformAdminAccess()
+      .then((isPlatformAdmin) => {
+        if (isMounted) {
+          dispatch({ type: "platformAdminAccess", value: isPlatformAdmin });
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          dispatch({ type: "platformAdminAccess", value: false });
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [state.auth.isAuthenticated, state.auth.isRestoring, state.auth.user?.id]);
 
   const actions = useMemo(
     () => ({

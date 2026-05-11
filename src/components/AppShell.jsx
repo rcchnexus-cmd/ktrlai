@@ -14,10 +14,13 @@ const appRoutes = [
   { to: "/settings", label: "Settings", icon: "*" }
 ];
 
+const adminRoute = { to: "/admin", label: "Platform Admin", icon: "K" };
+
 export default function AppShell({ title, eyebrow, children, action }) {
   const { path, navigate } = useNavigation();
   const { state, actions } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const sidebarRoutes = state.auth.isPlatformAdmin ? [...appRoutes, adminRoute] : appRoutes;
 
   const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
   const toggleSidebar = useCallback(() => setIsSidebarOpen((isOpen) => !isOpen), []);
@@ -45,7 +48,7 @@ export default function AppShell({ title, eyebrow, children, action }) {
           <Logo />
         </div>
         <nav className="sidebarNav" aria-label="Application navigation">
-          {appRoutes.map((route) => (
+          {sidebarRoutes.map((route) => (
             <RouteLink
               key={route.to}
               to={route.to}

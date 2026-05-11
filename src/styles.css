@@ -1958,7 +1958,9 @@ body.appDrawerOpen {
 .statusBadge.approved,
 .statusBadge.confirmed,
 .statusBadge.paid,
+.statusBadge.ready,
 .statusBadge.visible,
+.statusBadge.payouts-enabled,
 .statusBadge.paid-access {
   color: #bbf7d0;
   background: rgba(74, 222, 128, 0.12);
@@ -1968,6 +1970,8 @@ body.appDrawerOpen {
 .statusBadge.blocked,
 .statusBadge.rejected,
 .statusBadge.reversed,
+.statusBadge.missing,
+.statusBadge.payouts-disabled,
 .statusBadge.training-denied {
   color: #fecdd3;
   background: rgba(251, 113, 133, 0.13);
@@ -2360,6 +2364,134 @@ body.appDrawerOpen {
   margin-top: 4px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.adminHero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.adminHero h2 {
+  margin-top: 8px;
+  font-size: 24px;
+}
+
+.adminHero p {
+  max-width: 740px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.adminMetricGrid {
+  margin-bottom: 18px;
+}
+
+.adminGrid {
+  margin-top: 18px;
+}
+
+.adminSectionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  min-width: 0;
+  margin-top: 18px;
+}
+
+.adminSectionGrid .largePanel {
+  grid-column: 1 / -1;
+}
+
+.adminWarning {
+  margin: 18px 0 0;
+}
+
+.adminPlanGrid,
+.adminHealthGrid,
+.adminEnvGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.adminPlanGrid article,
+.adminHealthItem,
+.adminEnvGrid div,
+.adminList div,
+.adminAuditList div {
+  min-width: 0;
+  padding: 13px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.adminPlanGrid span,
+.adminHealthItem span,
+.adminEnvGrid span,
+.adminList span,
+.adminAuditList span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.adminPlanGrid strong,
+.adminHealthItem strong,
+.adminList strong,
+.adminAuditList strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.adminHealthItem.ready {
+  border-color: rgba(74, 222, 128, 0.18);
+}
+
+.adminHealthItem.attention {
+  border-color: rgba(249, 115, 22, 0.2);
+}
+
+.adminHealthItem em,
+.adminAuditList em {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-style: normal;
+  font-size: 13px;
+}
+
+.adminList,
+.adminAuditList {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin-top: 14px;
+}
+
+.adminAuditList h3 {
+  margin: 6px 0 0;
+  font-size: 16px;
+}
+
+.adminAuditList p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.compactTableWrap table {
+  min-width: 560px;
 }
 
 .trainingLayout {
@@ -2946,6 +3078,7 @@ code {
   .controlLayout,
   .trainingLayout,
   .settingsGrid,
+  .adminSectionGrid,
   .visibilityHero,
   .twoColumnPanel,
   .authPage {
@@ -3020,6 +3153,7 @@ code {
 
   .heroActions,
   .topbar,
+  .adminHero,
   .mockupHeader,
   .panelHeader,
   .toggleRow,
@@ -3197,6 +3331,12 @@ code {
   .payoutRequestList article {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .adminPlanGrid,
+  .adminHealthGrid,
+  .adminEnvGrid {
+    grid-template-columns: 1fr;
   }
 }
 

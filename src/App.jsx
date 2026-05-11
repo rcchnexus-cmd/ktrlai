@@ -9,6 +9,7 @@ import Analytics from "./pages/Analytics.jsx";
 import Monetization from "./pages/Monetization.jsx";
 import Training from "./pages/Training.jsx";
 import Settings from "./pages/Settings.jsx";
+import Admin from "./pages/Admin.jsx";
 import { useNavigation } from "./navigation.jsx";
 import { useApp } from "./context/AppContext.jsx";
 
@@ -26,7 +27,8 @@ const routes = {
   "/analytics": Analytics,
   "/monetization": Monetization,
   "/training": Training,
-  "/settings": Settings
+  "/settings": Settings,
+  "/admin": Admin
 };
 
 const protectedRoutes = new Set([
@@ -37,7 +39,8 @@ const protectedRoutes = new Set([
   "/analytics",
   "/monetization",
   "/training",
-  "/settings"
+  "/settings",
+  "/admin"
 ]);
 
 export default function App() {
