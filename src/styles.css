@@ -2439,15 +2439,74 @@ body.appDrawerOpen {
   align-items: flex-start;
 }
 
+.apiKeyDisplay {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 8px;
+}
+
+.apiKeyDisplay span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.apiKeyDisplay code,
 .apiKey code {
   display: block;
   flex: 1 1 auto;
   max-width: 100%;
   min-width: 0;
   overflow-x: auto;
-  padding-top: 9px;
+  padding: 10px 0 2px;
   white-space: nowrap;
   -webkit-overflow-scrolling: touch;
+}
+
+.apiKeyPlaintext {
+  background:
+    linear-gradient(135deg, rgba(91, 140, 255, 0.09), rgba(155, 109, 255, 0.06)),
+    rgba(255, 255, 255, 0.04);
+  border-color: rgba(91, 140, 255, 0.24);
+}
+
+.apiKeyPlaintext code {
+  padding: 12px;
+  color: #f8fbff;
+  background: rgba(7, 11, 20, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px rgba(91, 140, 255, 0.08);
+}
+
+.apiKeyEmptyState {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 14px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.028);
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius);
+}
+
+.apiKeyEmptyState div {
+  min-width: 0;
+}
+
+.apiKeyEmptyState strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.apiKeyEmptyState p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .buttonCluster,
@@ -2966,6 +3025,7 @@ code {
   .toggleRow,
   .scriptBox,
   .apiKey,
+  .apiKeyEmptyState,
   .liveIngestionHeader,
   .domainVerificationHeader,
   .domainForm {
@@ -3234,11 +3294,12 @@ code {
   }
 
   .scriptBox code,
+  .apiKeyDisplay code,
   .apiKey code,
   .dnsValue,
   .mutedCode {
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
   }
 
   table {

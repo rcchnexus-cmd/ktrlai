@@ -179,7 +179,7 @@ export async function verifyDomainWithApi({ domainId, workspaceId }) {
   return data;
 }
 
-export async function rotateApiKeyWithApi({ workspaceId }) {
+export async function rotateApiKeyWithApi({ workspaceId, action = "rotate" }) {
   const accessToken = await getSupabaseAccessToken();
 
   if (!accessToken) {
@@ -193,7 +193,7 @@ export async function rotateApiKeyWithApi({ workspaceId }) {
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
     },
     body: JSON.stringify({
-      action: "rotate",
+      action,
       workspace_id: workspaceId
     })
   });

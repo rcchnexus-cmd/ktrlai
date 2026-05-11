@@ -30,7 +30,9 @@ export default function Settings() {
   const [verificationMessages, setVerificationMessages] = useState({});
   const [domainMessage, setDomainMessage] = useState("");
   const [apiKeyMessage, setApiKeyMessage] = useState("");
+  const [apiKeyMessageType, setApiKeyMessageType] = useState("success");
   const [revealedApiKey, setRevealedApiKey] = useState(false);
+  const [oneTimeApiKey, setOneTimeApiKey] = useState("");
   const [rotatingKey, setRotatingKey] = useState(false);
 
   useEffect(() => {
@@ -97,14 +99,20 @@ export default function Settings() {
   };
 
   const rotateApiKey = async () => {
+    const hasExistingKey = Boolean(settings?.apiKey?.id || settings?.apiKey?.keyPrefix || settings?.apiKey?.key);
+    const action = hasExistingKey ? "rotate" : "generate";
+
     setRotatingKey(true);
     setRevealedApiKey(false);
+    setOneTimeApiKey("");
     setApiKeyMessage("");
+    setApiKeyMessageType("success");
+
     try {
       let result;
 
       try {
-        result = await rotateApiKeyWithApi({ workspaceId: settings.workspaceId || "demo" });
+        result = await rotateApiKeyWithApi({ workspaceId: settings.workspaceId || "demo", action });
         actions.applyApiKeyRotation(result);
       } catch (error) {
         if (!error.useMockFallback) {
@@ -113,8 +121,17 @@ export default function Settings() {
         result = await actions.rotateApiKey();
       }
 
-      setRevealedApiKey(Boolean(result.apiKey?.key));
+      const generatedKey = result.apiKey?.key || "";
+      setOneTimeApiKey(generatedKey);
+      setRevealedApiKey(Boolean(generatedKey));
+      setApiKeyMessageType("success");
+      setApiKeyMessage(
+        generatedKey
+          ? "API key generated. Copy it now; it will be masked after refresh."
+          : "API key updated. Only the masked key is available."
+      );
     } catch (error) {
+      setApiKeyMessageType("error");
       setApiKeyMessage(error.message || "API key could not be rotated.");
     } finally {
       setRotatingKey(false);
@@ -123,8 +140,18 @@ export default function Settings() {
 
   const apiKey = settings?.apiKey || {};
   const apiKeyValue = apiKey.key || "";
-  const canRevealApiKey = Boolean(apiKeyValue);
-  const visibleApiKey = revealedApiKey && canRevealApiKey ? apiKeyValue : apiKey.maskedKey || maskApiKey(apiKeyValue);
+  const plaintextApiKey = oneTimeApiKey || apiKeyValue;
+  const hasStoredApiKey = Boolean(apiKey.id || apiKey.keyPrefix || plaintextApiKey);
+  const canRevealApiKey = Boolean(plaintextApiKey);
+  const isShowingPlaintextKey = Boolean(revealedApiKey && plaintextApiKey);
+  const visibleApiKey = isShowingPlaintextKey ? plaintextApiKey : apiKey.maskedKey || maskApiKey(apiKeyValue);
+  const copyableApiKey = isShowingPlaintextKey ? plaintextApiKey : "";
+  const apiKeyPrimaryActionLabel = hasStoredApiKey ? "Rotate key" : "Generate key";
+  const apiKeyHelpText = !hasStoredApiKey
+    ? "Generate an API key to enable live tracker ingestion for this workspace."
+    : isShowingPlaintextKey
+      ? "Copy this key now. For security, you won't be able to view it again."
+      : "Rotate an API key to reveal a full live tracker credential. After refresh, only the masked key is shown.";
 
   return (
     <AppShell title="Settings" eyebrow="Workspace">
@@ -152,7 +179,7 @@ export default function Settings() {
                 onClick={() => copyValue(settings.script, "script")}
                 disabled={!canRevealApiKey}
               >
-                {copiedItem === "script" ? "Copied" : canRevealApiKey ? "Copy" : "Rotate key first"}
+                {copiedItem === "script" ? "Copied" : canRevealApiKey ? "Copy" : hasStoredApiKey ? "Rotate key first" : "Generate key first"}
               </button>
             </div>
           </section>
@@ -165,41 +192,54 @@ export default function Settings() {
               </div>
             </div>
             <div className="apiKeyStack">
-              <div className="apiKey">
-                <code>{visibleApiKey}</code>
-                <div className="buttonCluster">
-                  <button
-                    type="button"
-                    className="secondaryButton smallButton"
-                    onClick={() => copyValue(apiKeyValue, "apiKey")}
-                    disabled={!canRevealApiKey}
-                  >
-                    {copiedItem === "apiKey" ? "Copied" : "Copy key"}
-                  </button>
-                  <button
-                    type="button"
-                    className="secondaryButton smallButton"
-                    onClick={() => setRevealedApiKey((value) => !value)}
-                    disabled={!canRevealApiKey}
-                  >
-                    {revealedApiKey ? "Hide" : "Reveal"}
-                  </button>
-                  <button type="button" className="secondaryButton smallButton" onClick={rotateApiKey} disabled={rotatingKey}>
-                    {rotatingKey ? "Rotating..." : "Rotate key"}
+              {!hasStoredApiKey ? (
+                <div className="apiKeyEmptyState">
+                  <div>
+                    <strong>Generate your first API key</strong>
+                    <p>Create a live tracker credential for this workspace. The full key is shown once after generation.</p>
+                  </div>
+                  <button type="button" className="primaryButton smallButton" onClick={rotateApiKey} disabled={rotatingKey}>
+                    {rotatingKey ? "Generating..." : "Generate key"}
                   </button>
                 </div>
-              </div>
+              ) : (
+                <div className={isShowingPlaintextKey ? "apiKey apiKeyPlaintext" : "apiKey"}>
+                  <div className="apiKeyDisplay">
+                    <span>{isShowingPlaintextKey ? "New API key" : "API key"}</span>
+                    <code>{visibleApiKey}</code>
+                  </div>
+                  <div className="buttonCluster">
+                    <button
+                      type="button"
+                      className="secondaryButton smallButton"
+                      onClick={() => copyValue(copyableApiKey, "apiKey")}
+                      disabled={!copyableApiKey}
+                    >
+                      {copiedItem === "apiKey" ? "Copied" : "Copy key"}
+                    </button>
+                    <button
+                      type="button"
+                      className="secondaryButton smallButton"
+                      onClick={() => setRevealedApiKey((value) => !value)}
+                      disabled={!canRevealApiKey}
+                    >
+                      {revealedApiKey ? "Hide" : "Reveal"}
+                    </button>
+                    <button type="button" className="secondaryButton smallButton" onClick={rotateApiKey} disabled={rotatingKey}>
+                      {rotatingKey ? "Rotating..." : apiKeyPrimaryActionLabel}
+                    </button>
+                  </div>
+                </div>
+              )}
               <p className="securityWarning">
-                {canRevealApiKey
-                  ? "Copy this key now. For security, you won't be able to view it again."
-                  : "Rotate an API key to reveal a full live tracker credential. After refresh, only the masked key is shown."}
+                {apiKeyHelpText}
               </p>
               <div className="keyMeta">
                 <span>Last used <strong>{formatDate(apiKey.lastUsedAt)}</strong></span>
                 <span>Rotated <strong>{formatDate(apiKey.rotatedAt)}</strong></span>
               </div>
               {apiKeyMessage && (
-                <p className="domainVerificationMessage error" role="status">
+                <p className={`domainVerificationMessage ${apiKeyMessageType === "error" ? "error" : ""}`} role="status">
                   {apiKeyMessage}
                 </p>
               )}
