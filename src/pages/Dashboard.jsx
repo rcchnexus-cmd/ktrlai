@@ -10,10 +10,10 @@ export default function Dashboard() {
   const { state, actions } = useApp();
 
   useEffect(() => {
-    if (!state.dashboard && !state.loading.dashboard) {
+    if (!state.dashboard && !state.loading.dashboard && !state.errors.dashboard) {
       actions.loadDashboard();
     }
-  }, [actions, state.dashboard, state.loading.dashboard]);
+  }, [actions, state.dashboard, state.errors.dashboard, state.loading.dashboard]);
 
   useEffect(() => {
     if (state.auth.isAuthenticated && !state.settings && !state.loading.settings) {
@@ -22,8 +22,11 @@ export default function Dashboard() {
   }, [actions, state.auth.isAuthenticated, state.loading.settings, state.settings]);
 
   const dashboard = state.dashboard;
+  const dashboardError = state.errors.dashboard;
   const domains = Array.isArray(state.settings?.domains) ? state.settings.domains : null;
   const shouldShowOnboarding = Boolean(state.settings && domains?.length === 0);
+  const dataLabel = dashboard?.sourceLabel || "Awaiting tracking data";
+  const dataDetail = dashboard?.sourceDetail || "Install your tracker to start seeing live AI access analytics.";
 
   return (
     <AppShell
@@ -35,7 +38,12 @@ export default function Dashboard() {
         </RouteLink>
       }
     >
-      {!dashboard ? (
+      {dashboardError ? (
+        <div className="emptyState">
+          <strong>Dashboard analytics could not be loaded</strong>
+          <p>{dashboardError}</p>
+        </div>
+      ) : !dashboard ? (
         <div className="loadingState">Loading AI activity...</div>
       ) : (
         <>
@@ -73,6 +81,10 @@ export default function Dashboard() {
               </div>
             </section>
           )}
+          <section className={`dataModeNotice ${dashboard.source || "empty"}`} aria-label="Dashboard data status">
+            <StatusBadge status={dataLabel} />
+            <span>{dataDetail}</span>
+          </section>
           <section className="metricGrid">
             {dashboard.kpis.map((kpi) => (
               <MetricCard key={kpi.label} {...kpi} />

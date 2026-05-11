@@ -96,8 +96,13 @@ function normalizeTrackingBody(body, req) {
     userAgent: body.userAgent || body.user_agent || getHeader(req, "user-agent") || "",
     timestamp: body.timestamp || body.occurredAt || body.occurred_at || new Date().toISOString(),
     pageTitle: body.pageTitle ?? body.page_title ?? body.title ?? "",
+    botName: body.botName || body.bot_name || "",
     detectedBotType: body.detectedBotType || body.detected_bot_type || null
   };
+}
+
+function cleanBotName(value) {
+  return String(value || "UnknownBot").trim().slice(0, 120) || "UnknownBot";
 }
 
 function normalizeStatus(status) {
@@ -232,7 +237,7 @@ export default async function handler(req, res) {
     user_agent: String(body.userAgent),
     occurred_at: String(body.timestamp),
     page_title: String(body.pageTitle || ""),
-    bot_name: detectedBotType,
+    bot_name: cleanBotName(body.botName || detectedBotType),
     bot_type: detectedBotType,
     page_path: parsedUrl.pagePath,
     status,

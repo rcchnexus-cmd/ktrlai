@@ -1757,6 +1757,11 @@ body.appDrawerOpen {
   background: rgba(91, 140, 255, 0.12);
 }
 
+.metricChange.negative {
+  color: #fecdd3;
+  background: rgba(251, 113, 133, 0.13);
+}
+
 .dashboardGrid,
 .controlLayout,
 .trainingLayout,
@@ -1994,6 +1999,47 @@ body.appDrawerOpen {
   color: #fecdd3;
   background: rgba(251, 113, 133, 0.13);
   border-color: rgba(251, 113, 133, 0.22);
+}
+
+.statusBadge.live-data {
+  color: #bbf7d0;
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.18);
+}
+
+.statusBadge.sample-preview,
+.statusBadge.awaiting-tracking-data {
+  color: #dbeafe;
+  background: rgba(91, 140, 255, 0.12);
+  border-color: rgba(91, 140, 255, 0.2);
+}
+
+.dataModeNotice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 14px;
+  color: var(--muted-strong);
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.dataModeNotice.live {
+  border-color: rgba(74, 222, 128, 0.16);
+}
+
+.dataModeNotice.sample {
+  border-color: rgba(91, 140, 255, 0.18);
+}
+
+.dataModeNotice span:not(.statusBadge) {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .filters {

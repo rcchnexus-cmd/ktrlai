@@ -27,6 +27,20 @@ function safeNumber(value) {
   return Number.isFinite(Number(value)) ? Number(value) : 0;
 }
 
+function isoDaysAgo(days) {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() - days);
+  return date.toISOString();
+}
+
+function getPercentChange(current, previous) {
+  if (!previous) {
+    return current > 0 ? 100 : 0;
+  }
+
+  return Math.round(((current - previous) / previous) * 100);
+}
+
 function buildLookup(rows, key = "id") {
   return new Map((rows || []).map((row) => [row[key], row]));
 }
@@ -124,6 +138,8 @@ async function buildAdminSummary(supabase) {
       warnings.push(warning);
     }
   };
+  const sevenDaysAgo = isoDaysAgo(7);
+  const fourteenDaysAgo = isoDaysAgo(14);
 
   const [
     totalUsers,
@@ -141,7 +157,10 @@ async function buildAdminSummary(supabase) {
     payoutsResult,
     earningsResult,
     auditResult,
-    stripeEventsResult
+    stripeEventsResult,
+    eventsLast7Days,
+    eventsPrevious7Days,
+    activityLast7DaysResult
   ] = await Promise.all([
     safeCount(supabase, "profiles"),
     safeCount(supabase, "workspaces"),
@@ -197,6 +216,16 @@ async function buildAdminSummary(supabase) {
     safeSelect(supabase, "stripe_webhook_events", "id, event_id, event_type, workspace_id, status, processed_at, created_at, metadata", {
       order: "created_at",
       limit: rowLimit
+    }),
+    safeCount(supabase, "activity_logs", [(query) => query.gte("occurred_at", sevenDaysAgo)]),
+    safeCount(supabase, "activity_logs", [
+      (query) => query.gte("occurred_at", fourteenDaysAgo),
+      (query) => query.lt("occurred_at", sevenDaysAgo)
+    ]),
+    safeSelect(supabase, "activity_logs", "id, workspace_id, bot_type, occurred_at", {
+      order: "occurred_at",
+      limit: 5000,
+      filters: [(query) => query.gte("occurred_at", sevenDaysAgo)]
     })
   ]);
 
@@ -216,7 +245,10 @@ async function buildAdminSummary(supabase) {
     payoutsResult,
     earningsResult,
     auditResult,
-    stripeEventsResult
+    stripeEventsResult,
+    eventsLast7Days,
+    eventsPrevious7Days,
+    activityLast7DaysResult
   ].forEach((result) => addWarning(result.warning));
 
   const users = usersResult.rows;
@@ -228,6 +260,7 @@ async function buildAdminSummary(supabase) {
   const earnings = earningsResult.rows;
   const auditEvents = auditResult.rows;
   const stripeEvents = stripeEventsResult.rows;
+  const activityLast7Days = activityLast7DaysResult.rows;
   const usersById = buildLookup(users);
   const workspacesById = buildLookup(workspaces);
   const workspaceCountByUser = new Map();
@@ -236,6 +269,7 @@ async function buildAdminSummary(supabase) {
   const eventsByWorkspace = new Map();
   const planCounts = new Map();
   const subscriptionStatuses = new Map();
+  const botTypesLast7Days = new Map();
 
   const workspaceIds = workspaces.map((workspace) => workspace.id).filter(Boolean);
   const memberships = workspaceIds.length
@@ -255,6 +289,7 @@ async function buildAdminSummary(supabase) {
     increment(planCounts, workspace.plan || "Free");
     increment(subscriptionStatuses, workspace.subscription_status || "free");
   });
+  activityLast7Days.forEach((event) => increment(botTypesLast7Days, event.bot_type || "UnknownBot"));
 
   if (workspaceIds.length) {
     const [domainCounts, apiKeyCounts, eventCounts] = await Promise.all([
@@ -285,7 +320,32 @@ async function buildAdminSummary(supabase) {
       activeApiKeys: activeApiKeys.count,
       eventsIngested: eventsIngested.count,
       estimatedRevenueCents: confirmedRevenueCents,
-      payoutRequests: payoutRequestsCount.count
+      payoutRequests: payoutRequestsCount.count,
+      eventsLast7Days: eventsLast7Days.count,
+      activeWorkspacesWithEvents: new Set(activityLast7Days.map((event) => event.workspace_id).filter(Boolean)).size
+    },
+    platformAnalytics: {
+      eventsLast7Days: eventsLast7Days.count,
+      previous7DaysEvents: eventsPrevious7Days.count,
+      eventGrowthPercent: getPercentChange(eventsLast7Days.count, eventsPrevious7Days.count),
+      activeWorkspacesWithEvents: new Set(activityLast7Days.map((event) => event.workspace_id).filter(Boolean)).size,
+      topBotTypes: Array.from(botTypesLast7Days.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([botType, count]) => ({ botType, count })),
+      recentIngestionEvents: activity.slice(0, 12).map((event) => {
+        const workspace = workspacesById.get(event.workspace_id);
+        const metadata = event.metadata || {};
+
+        return {
+          id: event.id,
+          workspaceName: workspace?.name || "Unknown workspace",
+          botType: event.bot_type || metadata.detected_bot_type || "Unknown",
+          page: event.page_title || event.url || event.page_path || metadata.page_url || "Untitled page",
+          status: event.status || "allowed",
+          timestamp: toIso(event.occurred_at)
+        };
+      })
     },
     users: users.map((user) => ({
       id: user.id,

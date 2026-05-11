@@ -1,6 +1,19 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from "react";
 import { mockApi } from "../api/mockApi.js";
 import { checkPlatformAdminAccess } from "../admin/adminApi.js";
+import {
+  createActivityMeta,
+  createEmptyActivityMeta,
+  createEmptyAnalytics,
+  createEmptyDashboard,
+  createSampleActivityMeta,
+  decorateSampleAnalytics,
+  decorateSampleDashboard,
+  getWorkspaceAnalyticsSummary,
+  toActivityRows,
+  toAnalyticsView,
+  toDashboardView
+} from "../analytics/analyticsApi.js";
 import * as authService from "../auth/supabaseAuth.js";
 import { requestPayoutReview } from "../billing/billingApi.js";
 import { allowLocalMockFallback, showInvestorSampleData } from "../config/runtime.js";
@@ -13,6 +26,7 @@ function createInitialState() {
   return {
     dashboard: null,
     activity: [],
+    activityMeta: { ...createEmptyActivityMeta(), loaded: false },
     controls: null,
     visibility: null,
     analytics: null,
@@ -42,11 +56,11 @@ function decorateSettings(settings, auth) {
   return {
     ...settings,
     workspaceId: auth.workspaceId || settings.workspaceId,
-    account: auth.user
+        account: auth.user
       ? {
           name: auth.user.name,
           email: auth.user.email,
-          plan: auth.user.plan
+          plan: auth.workspace?.plan || auth.user.plan
         }
       : settings.account
   };
@@ -70,6 +84,7 @@ function reducer(state, action) {
       return {
         ...state,
         [action.key]: action.key === "settings" ? decorateSettings(action.value, state.auth) : action.value,
+        ...(action.meta !== undefined ? { [`${action.key}Meta`]: action.meta } : {}),
         loading: { ...state.loading, [action.key]: false }
       };
     case "updateControlRule":
@@ -171,9 +186,16 @@ function reducer(state, action) {
         }
       };
     case "authSession":
-      return {
+      {
+        const workspaceChanged = state.auth.workspaceId !== action.session.workspaceId;
+
+        return {
         ...state,
-        settings: state.settings
+        dashboard: workspaceChanged ? null : state.dashboard,
+        activity: workspaceChanged ? [] : state.activity,
+        activityMeta: workspaceChanged ? { ...createEmptyActivityMeta(), loaded: false } : state.activityMeta,
+        analytics: workspaceChanged ? null : state.analytics,
+        settings: !workspaceChanged && state.settings
           ? decorateSettings(state.settings, {
               isAuthenticated: action.session.isAuthenticated,
               user: action.session.user,
@@ -182,7 +204,7 @@ function reducer(state, action) {
               mode: action.session.mode,
               isRestoring: false
             })
-          : state.settings,
+          : null,
         auth: {
           isRestoring: false,
           isAuthenticated: action.session.isAuthenticated,
@@ -194,6 +216,7 @@ function reducer(state, action) {
           isCheckingPlatformAdmin: false
         }
       };
+      }
     case "platformAdminChecking":
       return {
         ...state,
@@ -235,26 +258,98 @@ async function load(dispatch, key, request) {
   dispatch({ type: "loading", key, value: true });
   try {
     const value = await request();
-    dispatch({ type: "set", key, value });
-    return value;
+    const isLoadResult = Boolean(value?.__loadResult);
+    const payload = isLoadResult ? value.value : value;
+    const meta = isLoadResult ? value.meta : undefined;
+    dispatch({ type: "set", key, value: payload, meta });
+    return payload;
   } catch (error) {
     dispatch({ type: "error", key, error: error.message || "Something went wrong" });
     return null;
   }
 }
 
-function getLiveEmptyDashboard() {
+function loadResult(value, meta) {
   return {
-    kpis: [
-      { label: "Total AI Visits", value: "0", change: "Awaiting first live event", tone: "neutral" },
-      { label: "Unique AI Bots", value: "0", change: "Connect tracker", tone: "neutral" },
-      { label: "Pages Accessed", value: "0", change: "No events yet", tone: "neutral" },
-      { label: "Revenue from AI", value: "$0", change: "No revenue yet", tone: "neutral" }
-    ],
-    traffic: [],
-    botDistribution: [],
-    recentActivity: []
+    __loadResult: true,
+    value,
+    meta
   };
+}
+
+async function getLiveSummary(range = "7d") {
+  return getWorkspaceAnalyticsSummary({
+    workspaceId: authService.getActiveWorkspaceId(),
+    range
+  });
+}
+
+async function getDashboardAnalyticsData() {
+  try {
+    const summary = await getLiveSummary("7d");
+
+    if (summary.hasRealData) {
+      return toDashboardView(summary);
+    }
+
+    if (showInvestorSampleData) {
+      return decorateSampleDashboard(await mockApi.getDashboard());
+    }
+
+    return createEmptyDashboard();
+  } catch (error) {
+    if (!allowLocalMockFallback) {
+      throw error;
+    }
+
+    return showInvestorSampleData ? decorateSampleDashboard(await mockApi.getDashboard()) : createEmptyDashboard();
+  }
+}
+
+async function getAnalyticsData() {
+  try {
+    const summary = await getLiveSummary("30d");
+
+    if (summary.hasRealData) {
+      return toAnalyticsView(summary);
+    }
+
+    if (showInvestorSampleData) {
+      return decorateSampleAnalytics(await mockApi.getAnalytics());
+    }
+
+    return createEmptyAnalytics();
+  } catch (error) {
+    if (!allowLocalMockFallback) {
+      throw error;
+    }
+
+    return showInvestorSampleData ? decorateSampleAnalytics(await mockApi.getAnalytics()) : createEmptyAnalytics();
+  }
+}
+
+async function getActivityData() {
+  try {
+    const summary = await getLiveSummary("30d");
+
+    if (summary.hasRealData) {
+      return loadResult(toActivityRows(summary), createActivityMeta(summary));
+    }
+
+    if (showInvestorSampleData) {
+      return loadResult(await mockApi.getActivityLogs(), createSampleActivityMeta());
+    }
+
+    return loadResult([], createEmptyActivityMeta());
+  } catch (error) {
+    if (!allowLocalMockFallback) {
+      throw error;
+    }
+
+    return showInvestorSampleData
+      ? loadResult(await mockApi.getActivityLogs(), createSampleActivityMeta())
+      : loadResult([], createEmptyActivityMeta());
+  }
 }
 
 export function AppProvider({ children }) {
@@ -319,10 +414,10 @@ export function AppProvider({ children }) {
   const actions = useMemo(
     () => ({
       loadDashboard: () =>
-        load(dispatch, "dashboard", () => (showInvestorSampleData ? mockApi.getDashboard() : getLiveEmptyDashboard())),
-      loadActivity: () => load(dispatch, "activity", mockApi.getActivityLogs),
+        load(dispatch, "dashboard", getDashboardAnalyticsData),
+      loadActivity: () => load(dispatch, "activity", getActivityData),
       loadControls: () => load(dispatch, "controls", mockApi.getControls),
-      loadAnalytics: () => load(dispatch, "analytics", mockApi.getAnalytics),
+      loadAnalytics: () => load(dispatch, "analytics", getAnalyticsData),
       loadMonetization: () => load(dispatch, "monetization", mockApi.getMonetization),
       loadTraining: () => load(dispatch, "training", mockApi.getTraining),
       loadSettings: () =>

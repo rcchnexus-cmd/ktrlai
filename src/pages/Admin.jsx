@@ -83,6 +83,7 @@ export default function Admin() {
 
   const overviewCards = useMemo(() => {
     const overview = summary?.overview || {};
+    const platformAnalytics = summary?.platformAnalytics || {};
 
     return [
       { label: "Total users", value: overview.totalUsers || 0, change: "Profiles", tone: "neutral" },
@@ -90,6 +91,18 @@ export default function Admin() {
       { label: "Domains", value: overview.totalDomains || 0, change: `${overview.verifiedDomains || 0} verified`, tone: "positive" },
       { label: "Active API keys", value: overview.activeApiKeys || 0, change: "Unrevoked", tone: "neutral" },
       { label: "Events ingested", value: overview.eventsIngested || 0, change: "All time", tone: "positive" },
+      {
+        label: "Events 7d",
+        value: platformAnalytics.eventsLast7Days || 0,
+        change: `${platformAnalytics.eventGrowthPercent || 0}% vs prior`,
+        tone: (platformAnalytics.eventGrowthPercent || 0) >= 0 ? "positive" : "negative"
+      },
+      {
+        label: "Active event workspaces",
+        value: platformAnalytics.activeWorkspacesWithEvents || 0,
+        change: "Last 7 days",
+        tone: "neutral"
+      },
       { label: "Estimated revenue", value: formatMoney(overview.estimatedRevenueCents), change: "Confirmed ledger", tone: "positive" },
       { label: "Payout requests", value: overview.payoutRequests || 0, change: "Review queue", tone: "neutral" },
       { label: "Verified domains", value: overview.verifiedDomains || 0, change: "DNS confirmed", tone: "positive" }
@@ -134,6 +147,7 @@ export default function Admin() {
   const activity = summary.activity || [];
   const domains = summary.domains || [];
   const payouts = summary.payouts || [];
+  const platformAnalytics = summary.platformAnalytics || {};
 
   return (
     <AppShell title="Admin" eyebrow="Platform Admin">
@@ -297,6 +311,52 @@ export default function Admin() {
       </section>
 
       <section className="adminSectionGrid">
+        <article className="panel">
+          <div className="panelHeader">
+            <div>
+              <span className="eyebrow">Analytics</span>
+              <h2>Platform ingestion</h2>
+            </div>
+          </div>
+          <div className="adminPlanGrid">
+            <article>
+              <span>Events last 7 days</span>
+              <strong>{platformAnalytics.eventsLast7Days || 0}</strong>
+            </article>
+            <article>
+              <span>Active workspaces</span>
+              <strong>{platformAnalytics.activeWorkspacesWithEvents || 0}</strong>
+            </article>
+          </div>
+          <div className="adminAuditList">
+            <h3>Top bot types</h3>
+            {(platformAnalytics.topBotTypes || []).length === 0 ? (
+              <p>No ingestion events in the last 7 days.</p>
+            ) : (
+              platformAnalytics.topBotTypes.map((bot) => (
+                <div key={bot.botType}>
+                  <span>{bot.botType}</span>
+                  <strong>{bot.count}</strong>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="adminAuditList">
+            <h3>Recent ingestion events</h3>
+            {(platformAnalytics.recentIngestionEvents || []).length === 0 ? (
+              <p>No recent ingestion events.</p>
+            ) : (
+              platformAnalytics.recentIngestionEvents.slice(0, 6).map((event) => (
+                <div key={event.id}>
+                  <span>{event.botType}</span>
+                  <strong>{event.workspaceName}</strong>
+                  <em>{formatDateTime(event.timestamp)}</em>
+                </div>
+              ))
+            )}
+          </div>
+        </article>
+
         <article className="panel">
           <div className="panelHeader">
             <div>

@@ -11,10 +11,10 @@ export default function Activity() {
   const [date, setDate] = useState("All");
 
   useEffect(() => {
-    if (state.activity.length === 0 && !state.loading.activity) {
+    if (!state.activityMeta?.loaded && !state.loading.activity && !state.errors.activity) {
       actions.loadActivity();
     }
-  }, [actions, state.activity.length, state.loading.activity]);
+  }, [actions, state.activityMeta?.loaded, state.errors.activity, state.loading.activity]);
 
   const filtered = useMemo(() => {
     return state.activity.filter((row) => {
@@ -31,6 +31,11 @@ export default function Activity() {
   const statuses = ["All", ...new Set(state.activity.map((row) => row.status))];
   const dates = ["All", ...new Set(state.activity.map((row) => row.date))];
   const isInitialLoading = state.loading.activity && state.activity.length === 0;
+  const activityError = state.errors.activity;
+  const activityMeta = state.activityMeta || {};
+  const sourceLabel = activityMeta.sourceLabel || "Awaiting tracking data";
+  const sourceDetail = activityMeta.sourceDetail || "Install the tracker script to start collecting AI access events.";
+  const hasActivityRows = state.activity.length > 0;
 
   return (
     <AppShell title="AI Activity" eyebrow="Access logs">
@@ -38,14 +43,11 @@ export default function Activity() {
         <div className="liveIngestionHeader">
           <div>
             <span className="eyebrow">Live ingestion</span>
-            <h2>Tracker endpoint ready</h2>
+            <h2>{sourceLabel}</h2>
           </div>
-          <span className="liveIndicator">
-            <i aria-hidden="true" />
-            Tracking ready
-          </span>
+          <StatusBadge status={sourceLabel} />
         </div>
-        <p>Install the tracker script to start collecting AI access events.</p>
+        <p>{sourceDetail}</p>
       </section>
 
       <section className="panel">
@@ -80,7 +82,12 @@ export default function Activity() {
           </label>
         </div>
       </section>
-      {isInitialLoading ? (
+      {activityError ? (
+        <div className="emptyState">
+          <strong>AI activity could not be loaded</strong>
+          <p>{activityError}</p>
+        </div>
+      ) : isInitialLoading ? (
         <div className="loadingState">Loading AI activity logs...</div>
       ) : (
         <section className="panel">
@@ -92,8 +99,12 @@ export default function Activity() {
           </div>
           {filtered.length === 0 ? (
             <div className="emptyState">
-              <strong>No matching AI events</strong>
-              <p>Try clearing your search or choosing a broader bot type, status, or date filter.</p>
+              <strong>{hasActivityRows ? "No matching AI events" : "No tracking data yet"}</strong>
+              <p>
+                {hasActivityRows
+                  ? "Try clearing your search or choosing a broader bot type, status, or date filter."
+                  : "Install your tracker script and generate a live event to start filling this log."}
+              </p>
             </div>
           ) : (
             <div className="tableWrap">

@@ -1,25 +1,38 @@
 import { useEffect } from "react";
 import AppShell from "../components/AppShell.jsx";
 import { DistributionChart, MiniBars, TrafficChart } from "../components/Charts.jsx";
+import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
 
 export default function Analytics() {
   const { state, actions } = useApp();
 
   useEffect(() => {
-    if (!state.analytics && !state.loading.analytics) {
+    if (!state.analytics && !state.loading.analytics && !state.errors.analytics) {
       actions.loadAnalytics();
     }
-  }, [actions, state.analytics, state.loading.analytics]);
+  }, [actions, state.analytics, state.errors.analytics, state.loading.analytics]);
 
   const analytics = state.analytics;
+  const analyticsError = state.errors.analytics;
+  const dataLabel = analytics?.sourceLabel || "Awaiting tracking data";
+  const dataDetail = analytics?.sourceDetail || "Install your tracker to start seeing live AI access analytics.";
 
   return (
     <AppShell title="Analytics" eyebrow="Usage intelligence">
-      {!analytics ? (
+      {analyticsError ? (
+        <div className="emptyState">
+          <strong>Analytics could not be loaded</strong>
+          <p>{analyticsError}</p>
+        </div>
+      ) : !analytics ? (
         <div className="loadingState">Loading analytics...</div>
       ) : (
         <>
+          <section className={`dataModeNotice ${analytics.source || "empty"}`} aria-label="Analytics data status">
+            <StatusBadge status={dataLabel} />
+            <span>{dataDetail}</span>
+          </section>
           <section className="dashboardGrid">
             <article className="panel largePanel">
               <div className="panelHeader">
