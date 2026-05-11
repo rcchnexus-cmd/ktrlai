@@ -40,22 +40,63 @@ function getRequestBody(req) {
   return req.body;
 }
 
-function hasRequiredFields(body) {
-  return Boolean(
-    body.workspaceId &&
-      body.apiKey &&
-      body.pageUrl &&
-      body.userAgent &&
-      body.timestamp &&
-      body.pageTitle !== undefined
-  );
+function getHeader(req, headerName) {
+  const value = req.headers[headerName] || req.headers[headerName.toLowerCase()];
+  return Array.isArray(value) ? value[0] : value;
 }
 
-function normalizeTrackingBody(body) {
+function hasValidPageUrl(pageUrl) {
+  try {
+    const url = new URL(pageUrl);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function validateRequiredFields(body) {
+  const missing = [];
+
+  if (!body.workspaceId) {
+    missing.push("workspaceId");
+  }
+
+  if (!body.apiKey) {
+    missing.push("apiKey");
+  }
+
+  if (!body.pageUrl) {
+    missing.push("pageUrl or url");
+  } else if (!hasValidPageUrl(body.pageUrl)) {
+    return {
+      ok: false,
+      status: 400,
+      message: "pageUrl must be a valid http or https URL."
+    };
+  }
+
+  if (missing.length > 0) {
+    return {
+      ok: false,
+      status: 400,
+      message: `Missing required tracking fields: ${missing.join(", ")}.`
+    };
+  }
+
+  return { ok: true };
+}
+
+function normalizeTrackingBody(body, req) {
   return {
     ...body,
-    workspaceId: body.workspaceId || body.dataWorkspaceId || body["data-workspace-id"],
-    apiKey: body.apiKey || body.dataApiKey || body["data-api-key"]
+    workspaceId: body.workspaceId || body.workspace_id || body.dataWorkspaceId || body["data-workspace-id"],
+    apiKey: body.apiKey || body.api_key || body.dataApiKey || body["data-api-key"],
+    pageUrl: body.pageUrl || body.page_url || body.url || body.href,
+    referrer: body.referrer ?? body.referer ?? body.referrerUrl ?? body.referrer_url ?? "",
+    userAgent: body.userAgent || body.user_agent || getHeader(req, "user-agent") || "",
+    timestamp: body.timestamp || body.occurredAt || body.occurred_at || new Date().toISOString(),
+    pageTitle: body.pageTitle ?? body.page_title ?? body.title ?? "",
+    detectedBotType: body.detectedBotType || body.detected_bot_type || null
   };
 }
 
@@ -138,7 +179,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false, message: "Method not allowed" });
   }
 
-  const body = normalizeTrackingBody(getRequestBody(req));
+  const body = normalizeTrackingBody(getRequestBody(req), req);
 
   if (!body.apiKey) {
     return res.status(401).json({
@@ -154,10 +195,12 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!hasRequiredFields(body)) {
-    return res.status(400).json({
+  const requiredFields = validateRequiredFields(body);
+
+  if (!requiredFields.ok) {
+    return res.status(requiredFields.status).json({
       ok: false,
-      message: "Missing required tracking fields."
+      message: requiredFields.message
     });
   }
 
