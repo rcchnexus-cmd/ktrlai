@@ -17,3 +17,7 @@ export function getPublicAppUrl() {
 
   return "https://ktrlai.vercel.app";
 }
+
+export function getTrackerInstallUrl() {
+  return String(viteEnv.VITE_TRACKER_URL || viteEnv.VITE_APP_URL || "https://ktrlai.vercel.app").replace(/\/$/, "");
+}

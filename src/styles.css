@@ -2670,6 +2670,10 @@ body.appDrawerOpen {
   grid-column: span 1;
 }
 
+.settingsGrid .installWizardPanel {
+  grid-column: 1 / -1;
+}
+
 .scriptBox,
 .apiKey {
   min-width: 0;
@@ -2824,7 +2828,7 @@ code {
 
 .installWizardPanel {
   display: grid;
-  gap: 18px;
+  gap: 20px;
   overflow: hidden;
   background:
     radial-gradient(circle at 0% 0%, rgba(91, 140, 255, 0.12), transparent 34%),
@@ -2832,19 +2836,54 @@ code {
     var(--card);
 }
 
+.installHeroHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+}
+
+.installHeroHeader div {
+  min-width: 0;
+}
+
+.installHeroHeader h2 {
+  margin: 6px 0 0;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.08;
+}
+
+.installHeroHeader p,
+.installStatusSummary {
+  max-width: 720px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.installStatusSummary {
+  margin: -6px 0 0;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
 .installHealthGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
   min-width: 0;
 }
 
 .installHealthGrid article {
   min-width: 0;
-  padding: 14px;
+  padding: 18px;
   background: rgba(255, 255, 255, 0.032);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
 }
 
 .installHealthGrid span {
@@ -2859,10 +2898,10 @@ code {
 .installHealthGrid strong {
   display: block;
   min-width: 0;
-  margin-top: 8px;
+  margin-top: 10px;
   color: var(--text);
-  font-size: 15px;
-  line-height: 1.35;
+  font-size: clamp(18px, 2.1vw, 24px);
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
@@ -2870,9 +2909,33 @@ code {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.installSetupGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.installChecklistCard,
+.installSnippetCard {
+  display: grid;
+  align-content: flex-start;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.installChecklistCard h3,
+.installMethodHeader h3 {
+  margin: 5px 0 0;
+  font-size: 18px;
+}
+
 .installSteps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   min-width: 0;
 }
@@ -2882,19 +2945,24 @@ code {
   align-items: flex-start;
   gap: 12px;
   min-width: 0;
-  padding: 14px;
-  background: rgba(255, 255, 255, 0.026);
+  padding: 14px 0 0;
+  background: transparent;
   border: 1px solid var(--border);
+  border-width: 1px 0 0;
   border-radius: var(--radius);
 }
 
+.installStep:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
 .installStep.complete {
-  border-color: rgba(74, 222, 128, 0.18);
+  border-color: rgba(74, 222, 128, 0.15);
 }
 
 .installStep.current {
-  border-color: rgba(91, 140, 255, 0.22);
-  background: rgba(91, 140, 255, 0.05);
+  border-color: rgba(91, 140, 255, 0.18);
 }
 
 .installStep > span {
@@ -2932,25 +3000,21 @@ code {
 }
 
 .installMethodTabs {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   min-width: 0;
-  padding: 6px;
-  background: rgba(255, 255, 255, 0.028);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
 }
 
 .installMethodTabs button {
-  min-height: 38px;
-  padding: 8px 11px;
+  min-height: 42px;
+  padding: 10px 12px;
   color: var(--muted-strong);
   font: inherit;
   font-size: 13px;
   font-weight: 760;
-  background: transparent;
-  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.028);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: var(--transition);
@@ -3011,6 +3075,27 @@ code {
 
 .compactCode {
   font-size: 12px;
+}
+
+.localTestNote {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 13px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+  background: rgba(91, 140, 255, 0.06);
+  border: 1px solid rgba(91, 140, 255, 0.16);
+  border-radius: var(--radius-sm);
+}
+
+.localTestNote strong {
+  color: var(--text);
+}
+
+.localTestNote p {
+  margin: 0;
 }
 
 .developerDocs {
@@ -3552,6 +3637,7 @@ code {
   .controlLayout,
   .trainingLayout,
   .settingsGrid,
+  .installSetupGrid,
   .adminSectionGrid,
   .visibilityHero,
   .twoColumnPanel,
@@ -3635,6 +3721,7 @@ code {
   .adminHero,
   .mockupHeader,
   .panelHeader,
+  .installHeroHeader,
   .toggleRow,
   .scriptBox,
   .apiKey,

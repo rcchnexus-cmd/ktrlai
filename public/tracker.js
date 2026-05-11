@@ -19,7 +19,8 @@
     workspaceId: "",
     apiKey: "",
     endpoint: "",
-    autoTrack: true
+    autoTrack: true,
+    debug: false
   };
 
   function readScriptAttribute(name) {
@@ -84,14 +85,51 @@
     }
   }
 
+  function isLocalDebugEnvironment() {
+    var hostname = window.location && window.location.hostname;
+    return window.location.protocol === "file:" || hostname === "localhost" || hostname === "127.0.0.1";
+  }
+
+  function debugWarn(message, detail) {
+    if (!config.debug || !window.console || !window.console.warn) {
+      return;
+    }
+
+    if (detail !== undefined) {
+      window.console.warn("[KtrlAI]", message, detail);
+    } else {
+      window.console.warn("[KtrlAI]", message);
+    }
+  }
+
+  function getSafePageUrl() {
+    if (window.location.protocol !== "file:") {
+      return window.location.href;
+    }
+
+    var path = window.location.pathname || "/local-test";
+    return "https://local-file.ktrlai.test" + path.replace(/\\/g, "/");
+  }
+
+  function getSafePagePath() {
+    if (window.location.protocol === "file:") {
+      return window.location.pathname || "/local-test";
+    }
+
+    return window.location.pathname + window.location.search;
+  }
+
   function getBasePayload() {
+    var pageUrl = getSafePageUrl();
+    var pagePath = getSafePagePath();
+
     return {
       workspaceId: config.workspaceId,
       apiKey: config.apiKey,
-      url: window.location.href,
-      pageUrl: window.location.href,
-      path: window.location.pathname + window.location.search,
-      pagePath: window.location.pathname + window.location.search,
+      url: pageUrl,
+      pageUrl: pageUrl,
+      path: pagePath,
+      pagePath: pagePath,
       title: document.title || "",
       pageTitle: document.title || "",
       referrer: document.referrer || "",
@@ -115,6 +153,11 @@
   function normalizePayload(eventName, properties) {
     var base = getBasePayload();
     var eventProperties = safeObject(properties, 24);
+    eventProperties.sourceProtocol = window.location.protocol || "";
+
+    if (window.location.protocol === "file:") {
+      eventProperties.localFilePath = trimString(window.location.pathname || "", 500);
+    }
 
     return {
       workspaceId: base.workspaceId,
@@ -148,6 +191,7 @@
 
   function enqueue(payload) {
     if (!payload || !canSend()) {
+      debugWarn("Tracker is not configured. Add data-workspace-id and data-api-key to the script tag.");
       return false;
     }
 
@@ -186,6 +230,13 @@
       keepalive: true,
       credentials: "omit"
     }).then(function (response) {
+      if (!response.ok) {
+        debugWarn("Tracking request was not accepted.", {
+          status: response.status,
+          endpoint: config.endpoint
+        });
+      }
+
       if (response.status >= 400 && response.status < 500) {
         return { ok: true, permanent: true };
       }
@@ -219,7 +270,7 @@
     var item = queue.shift();
     var isPageEvent = item.payload.event === "page";
 
-    if (isPageEvent && sendWithBeacon(item)) {
+    if (isPageEvent && !config.debug && sendWithBeacon(item)) {
       flushing = false;
       scheduleFlush();
       return;
@@ -236,6 +287,7 @@
         }
       })
       .catch(function () {
+        debugWarn("Tracking request failed. Check the endpoint, network tab, and API key.");
         if (item.attempts < MAX_RETRIES) {
           item.attempts += 1;
           window.setTimeout(function () {
@@ -349,6 +401,7 @@
     config.apiKey = trimString(next.apiKey || next.api_key || readScriptAttribute("data-api-key") || config.apiKey, 240);
     config.endpoint = trimString(next.endpoint || getDefaultEndpoint(), 1200);
     config.autoTrack = next.autoTrack === false || readScriptAttribute("data-auto-track") === "false" ? false : true;
+    config.debug = next.debug === true || readScriptAttribute("data-debug") === "true" || isLocalDebugEnvironment();
 
     if (initialized) {
       scheduleFlush();

@@ -4,7 +4,7 @@ import AppShell from "../components/AppShell.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { billingPlans, normalizePlan } from "../billing/stripeConfig.js";
 import { openBillingPortal, startBillingCheckout } from "../billing/billingApi.js";
-import { getPublicAppUrl } from "../config/runtime.js";
+import { getTrackerInstallUrl } from "../config/runtime.js";
 import { useApp } from "../context/AppContext.jsx";
 import {
   buildDnsRecord,
@@ -109,7 +109,7 @@ function getInstallStepState({ step, hasKey, hasSnippetKey, installStatus }) {
 }
 
 function getInstallSnippet(method, { appUrl, workspaceId, apiKey }) {
-  const scriptTag = `<script async src="${appUrl}/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey}"></script>`;
+  const scriptTag = `<script async src="${appUrl}/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey}" data-endpoint="${appUrl}/api/track"></script>`;
   const examples = {
     html: {
       title: "Paste before the closing </head> tag",
@@ -128,6 +128,7 @@ export function KtrlAITracker() {
     script.src = "${appUrl}/tracker.js";
     script.dataset.workspaceId = "${workspaceId}";
     script.dataset.apiKey = "${apiKey}";
+    script.dataset.endpoint = "${appUrl}/api/track";
     document.head.appendChild(script);
     return () => script.remove();
   }, []);
@@ -150,6 +151,7 @@ export default function RootLayout({ children }) {
           strategy="afterInteractive"
           data-workspace-id="${workspaceId}"
           data-api-key="${apiKey}"
+          data-endpoint="${appUrl}/api/track"
         />
       </body>
     </html>
@@ -415,7 +417,7 @@ export default function Settings() {
   const visibleApiKey = isShowingPlaintextKey ? plaintextApiKey : apiKey.maskedKey || maskApiKey(apiKeyValue);
   const copyableApiKey = isShowingPlaintextKey ? plaintextApiKey : "";
   const apiKeyPrimaryActionLabel = hasStoredApiKey ? "Rotate key" : "Generate key";
-  const appUrl = getPublicAppUrl();
+  const appUrl = getTrackerInstallUrl();
   const workspaceId = settings?.workspaceId || state.auth.workspaceId || "workspace_id";
   const installPlaintextApiKey = isShowingPlaintextKey ? plaintextApiKey : "";
   const installApiKey = installPlaintextApiKey || "ktrl_live_your_key";
@@ -564,13 +566,15 @@ export default function Settings() {
           </section>
 
           <section className="panel largePanel installWizardPanel">
-            <div className="panelHeader">
+            <div className="installHeroHeader">
               <div>
                 <span className="eyebrow">Installation</span>
                 <h2>Install KtrlAI tracker</h2>
+                <p>Connect your website to start sending live AI access events into this workspace.</p>
               </div>
               <StatusBadge status={installHealthLoading ? "Checking" : installStatusLabel} />
             </div>
+            <p className="installStatusSummary">{derivedInstallHealth.trackerHealth}</p>
             <div className="installHealthGrid">
               <article>
                 <span>SDK installed</span>
@@ -584,76 +588,92 @@ export default function Settings() {
                 <span>Events today</span>
                 <strong>{derivedInstallHealth.eventsToday}</strong>
               </article>
-              <article>
-                <span>Tracker health</span>
-                <strong>{derivedInstallHealth.trackerHealth}</strong>
-              </article>
             </div>
             {installHealthError && (
               <p className="domainVerificationMessage error" role="status">
                 {installHealthError}
               </p>
             )}
-            <div className="installSteps">
-              {installSteps.map((step, index) => {
-                const stepState = getInstallStepState({
-                  step: step.id,
-                  hasKey: hasStoredApiKey,
-                  hasSnippetKey: canCopyInstallSnippet,
-                  installStatus: derivedInstallHealth.status
-                });
+            <div className="installSetupGrid">
+              <article className="installChecklistCard">
+                <div>
+                  <span className="eyebrow">Setup checklist</span>
+                  <h3>Go live in three steps</h3>
+                </div>
+                <div className="installSteps">
+                  {installSteps.map((step, index) => {
+                    const stepState = getInstallStepState({
+                      step: step.id,
+                      hasKey: hasStoredApiKey,
+                      hasSnippetKey: canCopyInstallSnippet,
+                      installStatus: derivedInstallHealth.status
+                    });
 
-                return (
-                  <article className={`installStep ${stepState}`} key={step.id}>
-                    <span>{index + 1}</span>
-                    <div>
-                      <strong>{step.title}</strong>
-                      <p>{step.detail}</p>
-                    </div>
-                  </article>
-                );
-              })}
+                    return (
+                      <article className={`installStep ${stepState}`} key={step.id}>
+                        <span>{index + 1}</span>
+                        <div>
+                          <strong>{step.title}</strong>
+                          <p>{step.detail}</p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </article>
+              <article className="installSnippetCard">
+                <div className="installMethodHeader">
+                  <div>
+                    <span className="eyebrow">Installation method</span>
+                    <h3>Choose your stack</h3>
+                  </div>
+                </div>
+                <div className="installMethodTabs" role="tablist" aria-label="Installation method">
+                  {installMethods.map((method) => (
+                    <button
+                      type="button"
+                      className={installMethod === method.id ? "active" : ""}
+                      key={method.id}
+                      onClick={() => setInstallMethod(method.id)}
+                    >
+                      {method.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="installSnippetHeader">
+                  <div>
+                    <strong>{installSnippet.title}</strong>
+                    <p>{installSnippet.detail}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="secondaryButton smallButton"
+                    onClick={() => copyValue(installSnippet.code, `install-${installMethod}`)}
+                    disabled={!canCopyInstallSnippet}
+                  >
+                    {copiedItem === `install-${installMethod}`
+                      ? "Copied"
+                      : canCopyInstallSnippet
+                        ? "Copy snippet"
+                        : hasStoredApiKey
+                          ? "Rotate key first"
+                          : "Generate key first"}
+                  </button>
+                </div>
+                <pre className="installCodeBlock" aria-label={`${installMethod} installation snippet`}>
+                  <code>{installSnippet.code}</code>
+                </pre>
+                {!canCopyInstallSnippet && (
+                  <p className="securityWarning">
+                    Full API keys are only shown immediately after generation or rotation. Rotate the key when you are ready to copy a live install snippet.
+                  </p>
+                )}
+                <div className="localTestNote">
+                  <strong>Testing locally?</strong>
+                  <p>For best results, test from a local server or hosted page. Create your HTML file, run <code>npx serve .</code>, then open the localhost URL.</p>
+                </div>
+              </article>
             </div>
-            <div className="installMethodTabs" role="tablist" aria-label="Installation method">
-              {installMethods.map((method) => (
-                <button
-                  type="button"
-                  className={installMethod === method.id ? "active" : ""}
-                  key={method.id}
-                  onClick={() => setInstallMethod(method.id)}
-                >
-                  {method.label}
-                </button>
-              ))}
-            </div>
-            <div className="installSnippetHeader">
-              <div>
-                <strong>{installSnippet.title}</strong>
-                <p>{installSnippet.detail}</p>
-              </div>
-              <button
-                type="button"
-                className="secondaryButton smallButton"
-                onClick={() => copyValue(installSnippet.code, `install-${installMethod}`)}
-                disabled={!canCopyInstallSnippet}
-              >
-                {copiedItem === `install-${installMethod}`
-                  ? "Copied"
-                  : canCopyInstallSnippet
-                    ? "Copy snippet"
-                    : hasStoredApiKey
-                      ? "Rotate key first"
-                      : "Generate key first"}
-              </button>
-            </div>
-            <pre className="installCodeBlock" aria-label={`${installMethod} installation snippet`}>
-              <code>{installSnippet.code}</code>
-            </pre>
-            {!canCopyInstallSnippet && (
-              <p className="securityWarning">
-                Full API keys are only shown immediately after generation or rotation. Rotate the key when you are ready to copy a live install snippet.
-              </p>
-            )}
             <div className="developerDocs">
               <article>
                 <span className="eyebrow">SDK</span>
@@ -677,8 +697,8 @@ window.KtrlAI.page();`}</code>
                 <ul className="developerChecklist">
                   <li>Confirm the script is present once in the page head.</li>
                   <li>Open your live site after installing the snippet.</li>
-                  <li>Check that ad blockers are not blocking /api/track during testing.</li>
-                  <li>Rotate the API key if the visible snippet is masked.</li>
+                  <li>Use a local server instead of opening test files directly from disk.</li>
+                  <li>Rotate the API key if the visible snippet is using a placeholder.</li>
                 </ul>
               </article>
             </div>

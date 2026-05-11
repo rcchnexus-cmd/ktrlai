@@ -1,5 +1,5 @@
 import { getSupabaseAccessToken } from "../lib/supabaseClient.js";
-import { allowLocalMockFallback, getPublicAppUrl } from "../config/runtime.js";
+import { allowLocalMockFallback, getTrackerInstallUrl } from "../config/runtime.js";
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const maskGlyph = "\u2022";
@@ -117,8 +117,8 @@ export function createWorkspaceApiKey(overrides = {}) {
 }
 
 export function buildTrackerSnippet({ workspaceId = "demo", apiKey }) {
-  const appUrl = getPublicAppUrl();
-  return `<script async src="${appUrl}/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey || concealedApiKeyMask}"></script>`;
+  const appUrl = getTrackerInstallUrl();
+  return `<script async src="${appUrl}/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey || concealedApiKeyMask}" data-endpoint="${appUrl}/api/track"></script>`;
 }
 
 export function toDomainStatusLabel(status) {
