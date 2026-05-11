@@ -1,78 +1,399 @@
 (function () {
   "use strict";
 
+  var SDK_VERSION = "1.0.0";
+  var GLOBAL_NAME = "KtrlAI";
+  var MAX_QUEUE = 40;
+  var MAX_RETRIES = 2;
+  var RETRY_DELAY = 1200;
+  var EVENT_DEDUPE_WINDOW = 1200;
+  var initialized = false;
+  var flushing = false;
+  var queue = [];
+  var identity = {};
+  var lastPageKey = "";
   var currentScript = document.currentScript;
-  var workspaceId = currentScript ? currentScript.getAttribute("data-workspace-id") : "";
-  var apiKey = currentScript ? currentScript.getAttribute("data-api-key") : "";
+  var previousGlobal = window[GLOBAL_NAME];
 
-  function classifyUserAgent(userAgent) {
-    var value = String(userAgent || "").toLowerCase();
+  var config = {
+    workspaceId: "",
+    apiKey: "",
+    endpoint: "",
+    autoTrack: true
+  };
 
-    if (!value) return "Human/Browser";
-    if (value.indexOf("chatgpt") !== -1 || value.indexOf("oai-searchbot") !== -1 || value.indexOf("openai") !== -1) {
-      return "ChatGPT";
-    }
-    if (value.indexOf("claudebot") !== -1 || value.indexOf("anthropic") !== -1 || value.indexOf("claude") !== -1) {
-      return "Claude";
-    }
-    if (value.indexOf("perplexitybot") !== -1 || value.indexOf("perplexity") !== -1) {
-      return "Perplexity";
-    }
-    if (value.indexOf("google-extended") !== -1) {
-      return "Google-Extended";
-    }
-    if (value.indexOf("bot") !== -1 || value.indexOf("crawler") !== -1 || value.indexOf("spider") !== -1) {
-      return "UnknownBot";
-    }
-
-    return "Human/Browser";
+  function readScriptAttribute(name) {
+    return currentScript ? currentScript.getAttribute(name) : "";
   }
 
-  function buildEvent() {
-    var userAgent = navigator.userAgent || "";
+  function getDefaultEndpoint() {
+    if (readScriptAttribute("data-endpoint")) {
+      return readScriptAttribute("data-endpoint");
+    }
 
+    try {
+      return currentScript && currentScript.src ? new URL("/api/track", currentScript.src).toString() : "/api/track";
+    } catch (error) {
+      return "/api/track";
+    }
+  }
+
+  function trimString(value, maxLength) {
+    var text = String(value == null ? "" : value);
+    return text.length > maxLength ? text.slice(0, maxLength) : text;
+  }
+
+  function safeObject(value, maxKeys) {
+    var output = {};
+    var count = 0;
+
+    if (!value || typeof value !== "object") {
+      return output;
+    }
+
+    Object.keys(value).forEach(function (key) {
+      if (count >= maxKeys) {
+        return;
+      }
+
+      var safeKey = trimString(key, 80);
+      var item = value[key];
+
+      if (item == null || typeof item === "boolean" || typeof item === "number") {
+        output[safeKey] = item;
+      } else if (typeof item === "string") {
+        output[safeKey] = trimString(item, 500);
+      }
+
+      count += 1;
+    });
+
+    return output;
+  }
+
+  function createEventId() {
+    var random = Math.random().toString(36).slice(2);
+    return "kt_evt_" + Date.now().toString(36) + random;
+  }
+
+  function getTimezone() {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function getBasePayload() {
     return {
-      workspaceId: workspaceId,
-      apiKey: apiKey,
+      workspaceId: config.workspaceId,
+      apiKey: config.apiKey,
+      url: window.location.href,
       pageUrl: window.location.href,
-      referrer: document.referrer || "",
-      userAgent: userAgent,
-      timestamp: new Date().toISOString(),
+      path: window.location.pathname + window.location.search,
+      pagePath: window.location.pathname + window.location.search,
+      title: document.title || "",
       pageTitle: document.title || "",
-      detectedBotType: classifyUserAgent(userAgent),
-      source: "ktrlai-tracker"
+      referrer: document.referrer || "",
+      userAgent: navigator.userAgent || "",
+      timestamp: new Date().toISOString(),
+      screen: {
+        width: window.screen ? window.screen.width : window.innerWidth,
+        height: window.screen ? window.screen.height : window.innerHeight,
+        viewportWidth: window.innerWidth || 0,
+        viewportHeight: window.innerHeight || 0
+      },
+      language: navigator.language || "",
+      timezone: getTimezone(),
+      sdk: {
+        name: "ktrlai-browser",
+        version: SDK_VERSION
+      }
     };
   }
 
-  function sendEvent() {
-    if (!workspaceId || !apiKey) {
+  function normalizePayload(eventName, properties) {
+    var base = getBasePayload();
+    var eventProperties = safeObject(properties, 24);
+
+    return {
+      workspaceId: base.workspaceId,
+      apiKey: base.apiKey,
+      event: trimString(eventName || "custom", 80),
+      eventId: createEventId(),
+      pageUrl: trimString(base.pageUrl, 1200),
+      url: trimString(base.url, 1200),
+      pagePath: trimString(base.pagePath, 500),
+      path: trimString(base.path, 500),
+      referrer: trimString(base.referrer, 1200),
+      userAgent: trimString(base.userAgent, 800),
+      timestamp: base.timestamp,
+      pageTitle: trimString(base.pageTitle, 300),
+      title: trimString(base.title, 300),
+      screen: base.screen,
+      language: trimString(base.language, 40),
+      timezone: trimString(base.timezone, 80),
+      anonymousId: identity.anonymousId || "",
+      userId: identity.userId || "",
+      traits: safeObject(identity.traits, 16),
+      properties: eventProperties,
+      source: "ktrlai-tracker",
+      sdk: base.sdk
+    };
+  }
+
+  function canSend() {
+    return Boolean(config.workspaceId && config.apiKey && config.endpoint);
+  }
+
+  function enqueue(payload) {
+    if (!payload || !canSend()) {
+      return false;
+    }
+
+    queue.push({
+      payload: payload,
+      attempts: 0
+    });
+
+    if (queue.length > MAX_QUEUE) {
+      queue = queue.slice(queue.length - MAX_QUEUE);
+    }
+
+    scheduleFlush();
+    return true;
+  }
+
+  function scheduleFlush() {
+    if (flushing) {
       return;
     }
 
-    var payload = JSON.stringify(buildEvent());
-    var endpoint = currentScript && currentScript.src ? new URL("/api/track", currentScript.src).toString() : "/api/track";
+    window.setTimeout(flush, 0);
+  }
 
-    if (navigator.sendBeacon) {
-      var sent = navigator.sendBeacon(endpoint, new Blob([payload], { type: "application/json" }));
-      if (sent) return;
+  function sendWithFetch(item) {
+    if (!window.fetch) {
+      return Promise.resolve({ ok: false });
     }
 
-    fetch(endpoint, {
+    return fetch(config.endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: payload,
+      body: JSON.stringify(item.payload),
       keepalive: true,
       credentials: "omit"
-    }).catch(function () {
-      // Tracking should never interrupt the customer's page.
+    }).then(function (response) {
+      if (response.status >= 400 && response.status < 500) {
+        return { ok: true, permanent: true };
+      }
+
+      return { ok: response.ok };
     });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", sendEvent, { once: true });
-  } else {
-    sendEvent();
+  function sendWithBeacon(item) {
+    if (!navigator.sendBeacon) {
+      return false;
+    }
+
+    try {
+      return navigator.sendBeacon(
+        config.endpoint,
+        new Blob([JSON.stringify(item.payload)], { type: "application/json" })
+      );
+    } catch (error) {
+      return false;
+    }
   }
+
+  function flush() {
+    if (flushing || !queue.length || !canSend()) {
+      return;
+    }
+
+    flushing = true;
+
+    var item = queue.shift();
+    var isPageEvent = item.payload.event === "page";
+
+    if (isPageEvent && sendWithBeacon(item)) {
+      flushing = false;
+      scheduleFlush();
+      return;
+    }
+
+    sendWithFetch(item)
+      .then(function (result) {
+        if (!result.ok && !result.permanent && item.attempts < MAX_RETRIES) {
+          item.attempts += 1;
+          window.setTimeout(function () {
+            queue.unshift(item);
+            scheduleFlush();
+          }, RETRY_DELAY * item.attempts);
+        }
+      })
+      .catch(function () {
+        if (item.attempts < MAX_RETRIES) {
+          item.attempts += 1;
+          window.setTimeout(function () {
+            queue.unshift(item);
+            scheduleFlush();
+          }, RETRY_DELAY * item.attempts);
+        }
+      })
+      .then(function () {
+        flushing = false;
+        scheduleFlush();
+      });
+  }
+
+  function track(eventName, properties) {
+    return enqueue(normalizePayload(eventName, properties));
+  }
+
+  function page(properties) {
+    var key = window.location.href + "|" + document.title;
+    var now = Date.now();
+    var eventProperties = safeObject(properties, 24);
+
+    if (lastPageKey === key && page.lastTrackedAt && now - page.lastTrackedAt < EVENT_DEDUPE_WINDOW) {
+      return false;
+    }
+
+    lastPageKey = key;
+    page.lastTrackedAt = now;
+    eventProperties.route = window.location.pathname + window.location.search;
+    return track("page", eventProperties);
+  }
+
+  function identify(userId, traits) {
+    identity = {
+      userId: trimString(userId || "", 160),
+      anonymousId: identity.anonymousId || "kt_anon_" + Math.random().toString(36).slice(2),
+      traits: safeObject(traits, 16)
+    };
+
+    return track("identify", {
+      identified: Boolean(identity.userId)
+    });
+  }
+
+  function installRouteListener() {
+    if (installRouteListener.installed) {
+      return;
+    }
+
+    installRouteListener.installed = true;
+
+    ["pushState", "replaceState"].forEach(function (methodName) {
+      var original = history[methodName];
+
+      if (typeof original !== "function") {
+        return;
+      }
+
+      try {
+        history[methodName] = function () {
+          var result = original.apply(this, arguments);
+          window.setTimeout(function () {
+            page({ trigger: methodName });
+          }, 60);
+          return result;
+        };
+      } catch (error) {
+        // The SDK must never break a host app if history is locked down.
+      }
+    });
+
+    window.addEventListener("popstate", function () {
+      window.setTimeout(function () {
+        page({ trigger: "popstate" });
+      }, 60);
+    });
+
+    window.addEventListener("hashchange", function () {
+      window.setTimeout(function () {
+        page({ trigger: "hashchange" });
+      }, 60);
+    });
+  }
+
+  function drainPreloadQueue() {
+    var preloadQueue = previousGlobal && previousGlobal.q;
+
+    if (!preloadQueue || !preloadQueue.length) {
+      return;
+    }
+
+    preloadQueue.slice(0, MAX_QUEUE).forEach(function (call) {
+      if (!call || !call.length) {
+        return;
+      }
+
+      var method = call[0];
+      var args = Array.prototype.slice.call(call, 1);
+
+      if (api[method] && typeof api[method] === "function") {
+        api[method].apply(api, args);
+      }
+    });
+  }
+
+  function init(options) {
+    var next = options || {};
+
+    config.workspaceId = trimString(next.workspaceId || next.workspace_id || readScriptAttribute("data-workspace-id") || config.workspaceId, 120);
+    config.apiKey = trimString(next.apiKey || next.api_key || readScriptAttribute("data-api-key") || config.apiKey, 240);
+    config.endpoint = trimString(next.endpoint || getDefaultEndpoint(), 1200);
+    config.autoTrack = next.autoTrack === false || readScriptAttribute("data-auto-track") === "false" ? false : true;
+
+    if (initialized) {
+      scheduleFlush();
+      return api;
+    }
+
+    initialized = true;
+    installRouteListener();
+
+    if (config.autoTrack) {
+      if (document.readyState === "loading") {
+        document.addEventListener(
+          "DOMContentLoaded",
+          function () {
+            page({ trigger: "load" });
+          },
+          { once: true }
+        );
+      } else {
+        window.setTimeout(function () {
+          page({ trigger: "load" });
+        }, 0);
+      }
+    }
+
+    drainPreloadQueue();
+    return api;
+  }
+
+  var api = {
+    version: SDK_VERSION,
+    init: init,
+    track: track,
+    identify: identify,
+    page: page,
+    flush: flush,
+    q: []
+  };
+
+  if (previousGlobal && previousGlobal.__initialized) {
+    window[GLOBAL_NAME] = previousGlobal;
+    return;
+  }
+
+  api.__initialized = true;
+  window[GLOBAL_NAME] = api;
+  init();
 })();

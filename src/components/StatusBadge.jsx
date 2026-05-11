@@ -1,4 +1,5 @@
 export default function StatusBadge({ status }) {
-  const normalized = status.toLowerCase().replace(/\s+/g, "-");
-  return <span className={`statusBadge ${normalized}`}>{status}</span>;
+  const label = String(status || "Unknown");
+  const normalized = label.toLowerCase().replace(/[\s_]+/g, "-");
+  return <span className={`statusBadge ${normalized}`}>{label}</span>;
 }

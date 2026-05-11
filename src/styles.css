@@ -2008,10 +2008,26 @@ body.appDrawerOpen {
 }
 
 .statusBadge.sample-preview,
-.statusBadge.awaiting-tracking-data {
+.statusBadge.awaiting-tracking-data,
+.statusBadge.waiting-for-first-event,
+.statusBadge.checking {
   color: #dbeafe;
   background: rgba(91, 140, 255, 0.12);
   border-color: rgba(91, 140, 255, 0.2);
+}
+
+.statusBadge.tracker-active,
+.statusBadge.detected {
+  color: #bbf7d0;
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.18);
+}
+
+.statusBadge.not-installed,
+.statusBadge.inactive {
+  color: #fed7aa;
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.18);
 }
 
 .dataModeNotice {
@@ -2040,6 +2056,14 @@ body.appDrawerOpen {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.installHealthPanel {
+  display: grid;
+  gap: 16px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(91, 140, 255, 0.11), transparent 34%),
+    rgba(255, 255, 255, 0.03);
 }
 
 .detectionInsightGrid {
@@ -2798,6 +2822,227 @@ code {
   -webkit-overflow-scrolling: touch;
 }
 
+.installWizardPanel {
+  display: grid;
+  gap: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(91, 140, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 100% 0%, rgba(155, 109, 255, 0.08), transparent 30%),
+    var(--card);
+}
+
+.installHealthGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.installHealthGrid article {
+  min-width: 0;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.032);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.installHealthGrid span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.installHealthGrid strong {
+  display: block;
+  min-width: 0;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.installHealthGrid.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.installSteps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.installStep {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.installStep.complete {
+  border-color: rgba(74, 222, 128, 0.18);
+}
+
+.installStep.current {
+  border-color: rgba(91, 140, 255, 0.22);
+  background: rgba(91, 140, 255, 0.05);
+}
+
+.installStep > span {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 820;
+  background: linear-gradient(135deg, rgba(91, 140, 255, 0.8), rgba(155, 109, 255, 0.8));
+  border-radius: 999px;
+}
+
+.installStep.pending > span {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.installStep div {
+  min-width: 0;
+}
+
+.installStep strong {
+  display: block;
+  color: var(--text);
+}
+
+.installStep p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.installMethodTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.028);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.installMethodTabs button {
+  min-height: 38px;
+  padding: 8px 11px;
+  color: var(--muted-strong);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 760;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.installMethodTabs button:hover,
+.installMethodTabs button.active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.installSnippetHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+}
+
+.installSnippetHeader div {
+  min-width: 0;
+}
+
+.installSnippetHeader strong {
+  display: block;
+  color: var(--text);
+}
+
+.installSnippetHeader p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.installCodeBlock {
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  color: #dbeafe;
+  font-size: 12px;
+  line-height: 1.6;
+  background: rgba(2, 6, 23, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.installCodeBlock code {
+  display: block;
+  min-width: max-content;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.compactCode {
+  font-size: 12px;
+}
+
+.developerDocs {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 14px;
+  min-width: 0;
+}
+
+.developerDocs article {
+  min-width: 0;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.developerDocs h3 {
+  margin: 4px 0 12px;
+  font-size: 17px;
+}
+
+.developerChecklist {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .domainForm {
   align-items: stretch;
   min-width: 0;
@@ -3394,6 +3639,7 @@ code {
   .scriptBox,
   .apiKey,
   .apiKeyEmptyState,
+  .installSnippetHeader,
   .liveIngestionHeader,
   .domainVerificationHeader,
   .domainForm {
@@ -3421,7 +3667,8 @@ code {
 
   .buttonCluster .smallButton,
   .domainActions .smallButton,
-  .onboardingActions .smallButton {
+  .onboardingActions .smallButton,
+  .installSnippetHeader .smallButton {
     width: 100%;
   }
 
@@ -3462,6 +3709,10 @@ code {
   .pricingGrid,
   .providerGrid,
   .metricGrid,
+  .installHealthGrid,
+  .installHealthGrid.compact,
+  .installSteps,
+  .developerDocs,
   .previewMatrix,
   .footerGrid,
   .domainList {
@@ -3683,10 +3934,21 @@ code {
   .scriptBox code,
   .apiKeyDisplay code,
   .apiKey code,
+  .installCodeBlock,
   .dnsValue,
   .mutedCode {
     min-width: 0;
     overflow-wrap: normal;
+  }
+
+  .installMethodTabs {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .installCodeBlock {
+    padding: 12px;
+    font-size: 11px;
   }
 
   table {

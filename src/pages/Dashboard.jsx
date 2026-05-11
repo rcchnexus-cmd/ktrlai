@@ -6,6 +6,30 @@ import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
 import { RouteLink } from "../navigation.jsx";
 
+function formatInstallDate(value) {
+  if (!value) {
+    return "No events yet";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(new Date(value));
+}
+
+function getInstallStatusLabel(status) {
+  const labels = {
+    not_installed: "Not installed",
+    pending: "Waiting for first event",
+    active: "Tracker active",
+    inactive: "Inactive"
+  };
+
+  return labels[status] || "Waiting for first event";
+}
+
 export default function Dashboard() {
   const { state, actions } = useApp();
 
@@ -14,6 +38,18 @@ export default function Dashboard() {
       actions.loadDashboard();
     }
   }, [actions, state.dashboard, state.errors.dashboard, state.loading.dashboard]);
+
+  useEffect(() => {
+    if (!state.auth.isAuthenticated || !state.dashboard) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      actions.loadDashboard();
+    }, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, [actions, state.auth.isAuthenticated, state.dashboard]);
 
   useEffect(() => {
     if (state.auth.isAuthenticated && !state.settings && !state.loading.settings) {
@@ -27,6 +63,29 @@ export default function Dashboard() {
   const shouldShowOnboarding = Boolean(state.settings && domains?.length === 0);
   const dataLabel = dashboard?.sourceLabel || "Awaiting tracking data";
   const dataDetail = dashboard?.sourceDetail || "Install your tracker to start seeing live AI access analytics.";
+  const hasWorkspaceApiKey = Boolean(
+    state.settings?.apiKey?.id || state.settings?.apiKey?.keyPrefix || state.settings?.apiKey?.key
+  );
+  const verifiedDomainCount = (state.settings?.domains || []).filter(
+    (item) => String(item.status || "").toLowerCase() === "verified"
+  ).length;
+  const rawInstallHealth = dashboard?.installHealth || {
+    status: "not_installed",
+    sdkInstalled: false,
+    lastEventAt: null,
+    eventsToday: 0,
+    activeDomains: 0,
+    trackerHealth: "Install the tracker to begin"
+  };
+  const installHealth = {
+    ...rawInstallHealth,
+    status: rawInstallHealth.status === "not_installed" && hasWorkspaceApiKey ? "pending" : rawInstallHealth.status,
+    activeDomains: Math.max(Number(rawInstallHealth.activeDomains || 0), verifiedDomainCount),
+    trackerHealth:
+      rawInstallHealth.status === "not_installed" && hasWorkspaceApiKey
+        ? "Waiting for first event"
+        : rawInstallHealth.trackerHealth
+  };
 
   return (
     <AppShell
@@ -84,6 +143,33 @@ export default function Dashboard() {
           <section className={`dataModeNotice ${dashboard.source || "empty"}`} aria-label="Dashboard data status">
             <StatusBadge status={dataLabel} />
             <span>{dataDetail}</span>
+          </section>
+          <section className="installHealthPanel panel" aria-label="Tracker installation health">
+            <div className="panelHeader">
+              <div>
+                <span className="eyebrow">Install health</span>
+                <h2>{installHealth.trackerHealth}</h2>
+              </div>
+              <StatusBadge status={getInstallStatusLabel(installHealth.status)} />
+            </div>
+            <div className="installHealthGrid compact">
+              <article>
+                <span>SDK installed</span>
+                <strong>{installHealth.sdkInstalled ? "Detected" : "Not detected"}</strong>
+              </article>
+              <article>
+                <span>Last event</span>
+                <strong>{formatInstallDate(installHealth.lastEventAt)}</strong>
+              </article>
+              <article>
+                <span>Events today</span>
+                <strong>{installHealth.eventsToday || 0}</strong>
+              </article>
+              <article>
+                <span>Active domains</span>
+                <strong>{installHealth.activeDomains || 0}</strong>
+              </article>
+            </div>
           </section>
           <section className="metricGrid">
             {dashboard.kpis.map((kpi) => (

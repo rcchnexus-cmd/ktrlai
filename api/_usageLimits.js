@@ -22,11 +22,20 @@ export function getMonthlyWindow(now = new Date()) {
 }
 
 export function validateTrackingPayloadShape(body) {
+  let serializedLength = 0;
+
+  try {
+    serializedLength = JSON.stringify(body || {}).length;
+  } catch {
+    serializedLength = 0;
+  }
+
   const checks = [
+    [serializedLength <= 20000, "Tracking payload is too large."],
     [String(body.workspaceId || "").length <= 80, "Workspace identifier is too long."],
     [String(body.pageUrl || "").length <= 2048, "Page URL is too long."],
     [String(body.referrer || "").length <= 2048, "Referrer is too long."],
-    [String(body.userAgent || "").length <= 512, "User agent is too long."],
+    [String(body.userAgent || "").length <= 1024, "User agent is too long."],
     [String(body.pageTitle || "").length <= 300, "Page title is too long."]
   ];
 

@@ -52,6 +52,19 @@ function getDataMode(summary) {
   };
 }
 
+function normalizeInstallHealth(value = {}) {
+  const status = value.status || "not_installed";
+
+  return {
+    status,
+    sdkInstalled: Boolean(value.sdkInstalled),
+    lastEventAt: value.lastEventAt || null,
+    eventsToday: Number(value.eventsToday || 0),
+    activeDomains: Number(value.activeDomains || 0),
+    trackerHealth: value.trackerHealth || (status === "active" ? "Receiving events" : "Waiting for first event")
+  };
+}
+
 function buildDetectionInsights(aiDetection = {}) {
   const aiBotEvents = Number(aiDetection.aiBotEvents || 0);
   const highConfidenceTrainingEvents = Number(aiDetection.highConfidenceTrainingEvents || 0);
@@ -149,6 +162,7 @@ export function toDashboardView(summary) {
     traffic: normalizeTraffic(summary?.trafficOverTime),
     botDistribution: normalizeDistribution(summary?.botDistribution),
     recentActivity: (summary?.recentActivity || []).slice(0, 5),
+    installHealth: normalizeInstallHealth(summary?.installHealth),
     aiDetection: summary?.aiDetection || {},
     detectionInsights: buildDetectionInsights(summary?.aiDetection)
   };
@@ -173,6 +187,7 @@ export function toAnalyticsView(summary) {
       requests: Number(item.count || 0)
     })),
     sources: normalizeDistribution(summary?.botDistribution),
+    installHealth: normalizeInstallHealth(summary?.installHealth),
     aiDetection: summary?.aiDetection || {},
     detectionInsights: buildDetectionInsights(summary?.aiDetection),
     topDetectedAiSystems: summary?.aiDetection?.topDetectedAiSystems || [],
@@ -214,6 +229,7 @@ export function createEmptyDashboard() {
     traffic: [],
     botDistribution: [],
     recentActivity: [],
+    installHealth: normalizeInstallHealth(),
     aiDetection: {},
     detectionInsights: buildDetectionInsights()
   };
@@ -229,6 +245,7 @@ export function createEmptyAnalytics() {
     topPages: [],
     botFrequency: [],
     sources: [],
+    installHealth: normalizeInstallHealth(),
     aiDetection: {},
     detectionInsights: buildDetectionInsights(),
     topDetectedAiSystems: [],
@@ -248,6 +265,7 @@ export function decorateSampleDashboard(data) {
     sourceLabel: "Sample preview",
     sourceDetail: "Investor sample data is shown until this workspace receives live tracker events.",
     hasRealData: false,
+    installHealth: normalizeInstallHealth({ status: "pending", trackerHealth: "Ready for live tracker events" }),
     detectionInsights: sampleDetectionInsights()
   };
 }
@@ -259,6 +277,7 @@ export function decorateSampleAnalytics(data) {
     sourceLabel: "Sample preview",
     sourceDetail: "Investor sample data is shown until this workspace receives live tracker events.",
     hasRealData: false,
+    installHealth: normalizeInstallHealth({ status: "pending", trackerHealth: "Ready for live tracker events" }),
     detectionInsights: sampleDetectionInsights(),
     topDetectedAiSystems: [
       { name: "ChatGPT-User", count: 2 },

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { getWorkspaceAnalyticsSummary } from "../analytics/analyticsApi.js";
 import AppShell from "../components/AppShell.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { billingPlans, normalizePlan } from "../billing/stripeConfig.js";
 import { openBillingPortal, startBillingCheckout } from "../billing/billingApi.js";
+import { getPublicAppUrl } from "../config/runtime.js";
 import { useApp } from "../context/AppContext.jsx";
 import {
   buildDnsRecord,
@@ -11,6 +13,15 @@ import {
   rotateApiKeyWithApi,
   verifyDomainWithApi
 } from "../settings/securityUtils.js";
+
+const installMethods = [
+  { id: "html", label: "HTML script" },
+  { id: "react", label: "React/Vite" },
+  { id: "next", label: "Next.js" },
+  { id: "wordpress", label: "WordPress" },
+  { id: "webflow", label: "Webflow" },
+  { id: "shopify", label: "Shopify" }
+];
 
 function formatDate(value) {
   if (!value) {
@@ -34,8 +45,142 @@ function formatRenewalDate(value) {
   return value ? formatDate(value) : "Not scheduled";
 }
 
+function formatDateTime(value) {
+  if (!value) {
+    return "No events yet";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(new Date(value));
+}
+
+function fallbackCopyToClipboard(value) {
+  if (typeof document === "undefined") {
+    return false;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    return document.execCommand("copy");
+  } finally {
+    document.body.removeChild(textarea);
+  }
+}
+
+function getInstallStatusLabel(status) {
+  const labels = {
+    not_installed: "Not installed",
+    pending: "Waiting for first event",
+    active: "Tracker active",
+    inactive: "Inactive"
+  };
+
+  return labels[status] || "Waiting for first event";
+}
+
+function getInstallStepState({ step, hasKey, hasSnippetKey, installStatus }) {
+  if (step === "key") {
+    return hasKey ? "complete" : "current";
+  }
+
+  if (step === "install") {
+    if (!hasKey) return "pending";
+    if (installStatus === "active" || installStatus === "inactive") return "complete";
+    return hasSnippetKey ? "current" : "pending";
+  }
+
+  if (installStatus === "active") {
+    return "complete";
+  }
+
+  return hasKey ? "current" : "pending";
+}
+
+function getInstallSnippet(method, { appUrl, workspaceId, apiKey }) {
+  const scriptTag = `<script async src="${appUrl}/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey}"></script>`;
+  const examples = {
+    html: {
+      title: "Paste before the closing </head> tag",
+      detail: "Best for static sites, custom HTML, and tag managers.",
+      code: scriptTag
+    },
+    react: {
+      title: "Load once in your React app shell",
+      detail: "Use in App.jsx, main layout, or another component that mounts once.",
+      code: `import { useEffect } from "react";
+
+export function KtrlAITracker() {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = "${appUrl}/tracker.js";
+    script.dataset.workspaceId = "${workspaceId}";
+    script.dataset.apiKey = "${apiKey}";
+    document.head.appendChild(script);
+    return () => script.remove();
+  }, []);
+
+  return null;
+}`
+    },
+    next: {
+      title: "Add to your root layout",
+      detail: "Works with the Next.js Script component after the page becomes interactive.",
+      code: `import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <Script
+          src="${appUrl}/tracker.js"
+          strategy="afterInteractive"
+          data-workspace-id="${workspaceId}"
+          data-api-key="${apiKey}"
+        />
+      </body>
+    </html>
+  );
+}`
+    },
+    wordpress: {
+      title: "Add through your theme or header plugin",
+      detail: "Place this in a header injection plugin, or enqueue it from your theme.",
+      code: `add_action('wp_head', function () {
+  echo '${scriptTag.replace(/'/g, "\\'")}';
+});`
+    },
+    webflow: {
+      title: "Add to Custom Code",
+      detail: "Paste this in Project Settings -> Custom Code -> Head Code.",
+      code: scriptTag
+    },
+    shopify: {
+      title: "Add to theme.liquid",
+      detail: "Paste before </head> in your active theme, then publish the theme.",
+      code: scriptTag
+    }
+  };
+
+  return examples[method] || examples.html;
+}
+
 export default function Settings() {
   const { state, actions } = useApp();
+  const settings = state.settings;
   const [domain, setDomain] = useState("");
   const [copiedItem, setCopiedItem] = useState("");
   const [checkingDomainId, setCheckingDomainId] = useState("");
@@ -50,6 +195,10 @@ export default function Settings() {
   const [billingMessageType, setBillingMessageType] = useState("success");
   const [billingLoadingPlan, setBillingLoadingPlan] = useState("");
   const [openingBillingPortal, setOpeningBillingPortal] = useState(false);
+  const [installMethod, setInstallMethod] = useState("html");
+  const [installHealth, setInstallHealth] = useState(null);
+  const [installHealthError, setInstallHealthError] = useState("");
+  const [installHealthLoading, setInstallHealthLoading] = useState(false);
 
   useEffect(() => {
     if (!state.settings && !state.loading.settings) {
@@ -57,7 +206,49 @@ export default function Settings() {
     }
   }, [actions, state.loading.settings, state.settings]);
 
-  const settings = state.settings;
+  useEffect(() => {
+    if (!state.auth.isAuthenticated || !settings?.workspaceId) {
+      return undefined;
+    }
+
+    let isMounted = true;
+    let intervalId;
+
+    const loadInstallHealth = async ({ quiet = false } = {}) => {
+      if (!quiet) {
+        setInstallHealthLoading(true);
+      }
+
+      try {
+        const summary = await getWorkspaceAnalyticsSummary({
+          workspaceId: settings.workspaceId,
+          range: "7d"
+        });
+
+        if (isMounted) {
+          setInstallHealth(summary.installHealth || null);
+          setInstallHealthError("");
+        }
+      } catch (error) {
+        if (isMounted) {
+          setInstallHealthError(error.message || "Install health is not available yet.");
+        }
+      } finally {
+        if (isMounted && !quiet) {
+          setInstallHealthLoading(false);
+        }
+      }
+    };
+
+    loadInstallHealth();
+    intervalId = window.setInterval(() => loadInstallHealth({ quiet: true }), 15000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [settings?.workspaceId, state.auth.isAuthenticated]);
+
   const settingsError = state.errors.settings;
   const billing = settings?.billing || {};
   const currentPlan = billing.plan || settings?.account?.plan || "Free";
@@ -68,10 +259,24 @@ export default function Settings() {
   const showBillingWarning = billingWarningStatuses.has(subscriptionStatusKey);
 
   const copyValue = async (value, itemKey) => {
-    if (value && navigator.clipboard) {
-      await navigator.clipboard.writeText(value);
+    if (!value) {
+      return;
+    }
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+      } else if (!fallbackCopyToClipboard(value)) {
+        throw new Error("Clipboard unavailable.");
+      }
+
       setCopiedItem(itemKey);
       window.setTimeout(() => setCopiedItem(""), 1500);
+    } catch {
+      if (fallbackCopyToClipboard(value)) {
+        setCopiedItem(itemKey);
+        window.setTimeout(() => setCopiedItem(""), 1500);
+      }
     }
   };
 
@@ -210,6 +415,48 @@ export default function Settings() {
   const visibleApiKey = isShowingPlaintextKey ? plaintextApiKey : apiKey.maskedKey || maskApiKey(apiKeyValue);
   const copyableApiKey = isShowingPlaintextKey ? plaintextApiKey : "";
   const apiKeyPrimaryActionLabel = hasStoredApiKey ? "Rotate key" : "Generate key";
+  const appUrl = getPublicAppUrl();
+  const workspaceId = settings?.workspaceId || state.auth.workspaceId || "workspace_id";
+  const installPlaintextApiKey = isShowingPlaintextKey ? plaintextApiKey : "";
+  const installApiKey = installPlaintextApiKey || "ktrl_live_your_key";
+  const installSnippet = getInstallSnippet(installMethod, {
+    appUrl,
+    workspaceId,
+    apiKey: installApiKey
+  });
+  const canCopyInstallSnippet = Boolean(installPlaintextApiKey);
+  const verifiedDomainCount = (settings?.domains || []).filter(
+    (item) => String(item.status || "").toLowerCase() === "verified"
+  ).length;
+  const derivedInstallHealth = {
+    status: !hasStoredApiKey ? "not_installed" : installHealth?.status || "pending",
+    sdkInstalled: Boolean(installHealth?.sdkInstalled),
+    lastEventAt: installHealth?.lastEventAt || null,
+    eventsToday: Number(installHealth?.eventsToday || 0),
+    activeDomains: Math.max(Number(installHealth?.activeDomains || 0), verifiedDomainCount),
+    trackerHealth:
+      !hasStoredApiKey
+        ? "Generate an API key to start"
+        : installHealth?.trackerHealth || "Waiting for first event"
+  };
+  const installStatusLabel = getInstallStatusLabel(derivedInstallHealth.status);
+  const installSteps = [
+    {
+      id: "key",
+      title: "Generate API key",
+      detail: "Create the one-time tracker credential for this workspace."
+    },
+    {
+      id: "install",
+      title: "Install SDK",
+      detail: "Add the snippet to your site, app, CMS, or storefront."
+    },
+    {
+      id: "verify",
+      title: "Receive first event",
+      detail: "Open your site once and KtrlAI will mark the tracker active."
+    }
+  ];
   const apiKeyHelpText = !hasStoredApiKey
     ? "Generate an API key to enable live tracker ingestion for this workspace."
     : isShowingPlaintextKey
@@ -316,23 +563,124 @@ export default function Settings() {
             </div>
           </section>
 
-          <section className="panel largePanel">
+          <section className="panel largePanel installWizardPanel">
             <div className="panelHeader">
               <div>
-                <span className="eyebrow">Script installation</span>
+                <span className="eyebrow">Installation</span>
                 <h2>Install KtrlAI tracker</h2>
               </div>
+              <StatusBadge status={installHealthLoading ? "Checking" : installStatusLabel} />
             </div>
-            <div className="scriptBox">
-              <code>{settings.script}</code>
+            <div className="installHealthGrid">
+              <article>
+                <span>SDK installed</span>
+                <strong>{derivedInstallHealth.sdkInstalled ? "Detected" : "Not detected"}</strong>
+              </article>
+              <article>
+                <span>Last event received</span>
+                <strong>{formatDateTime(derivedInstallHealth.lastEventAt)}</strong>
+              </article>
+              <article>
+                <span>Events today</span>
+                <strong>{derivedInstallHealth.eventsToday}</strong>
+              </article>
+              <article>
+                <span>Tracker health</span>
+                <strong>{derivedInstallHealth.trackerHealth}</strong>
+              </article>
+            </div>
+            {installHealthError && (
+              <p className="domainVerificationMessage error" role="status">
+                {installHealthError}
+              </p>
+            )}
+            <div className="installSteps">
+              {installSteps.map((step, index) => {
+                const stepState = getInstallStepState({
+                  step: step.id,
+                  hasKey: hasStoredApiKey,
+                  hasSnippetKey: canCopyInstallSnippet,
+                  installStatus: derivedInstallHealth.status
+                });
+
+                return (
+                  <article className={`installStep ${stepState}`} key={step.id}>
+                    <span>{index + 1}</span>
+                    <div>
+                      <strong>{step.title}</strong>
+                      <p>{step.detail}</p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <div className="installMethodTabs" role="tablist" aria-label="Installation method">
+              {installMethods.map((method) => (
+                <button
+                  type="button"
+                  className={installMethod === method.id ? "active" : ""}
+                  key={method.id}
+                  onClick={() => setInstallMethod(method.id)}
+                >
+                  {method.label}
+                </button>
+              ))}
+            </div>
+            <div className="installSnippetHeader">
+              <div>
+                <strong>{installSnippet.title}</strong>
+                <p>{installSnippet.detail}</p>
+              </div>
               <button
                 type="button"
                 className="secondaryButton smallButton"
-                onClick={() => copyValue(settings.script, "script")}
-                disabled={!canRevealApiKey}
+                onClick={() => copyValue(installSnippet.code, `install-${installMethod}`)}
+                disabled={!canCopyInstallSnippet}
               >
-                {copiedItem === "script" ? "Copied" : canRevealApiKey ? "Copy" : hasStoredApiKey ? "Rotate key first" : "Generate key first"}
+                {copiedItem === `install-${installMethod}`
+                  ? "Copied"
+                  : canCopyInstallSnippet
+                    ? "Copy snippet"
+                    : hasStoredApiKey
+                      ? "Rotate key first"
+                      : "Generate key first"}
               </button>
+            </div>
+            <pre className="installCodeBlock" aria-label={`${installMethod} installation snippet`}>
+              <code>{installSnippet.code}</code>
+            </pre>
+            {!canCopyInstallSnippet && (
+              <p className="securityWarning">
+                Full API keys are only shown immediately after generation or rotation. Rotate the key when you are ready to copy a live install snippet.
+              </p>
+            )}
+            <div className="developerDocs">
+              <article>
+                <span className="eyebrow">SDK</span>
+                <h3>Browser API</h3>
+                <pre className="installCodeBlock compactCode">
+                  <code>{`window.KtrlAI.track("ai_policy_viewed", {
+  pageType: "article",
+  accessTier: "summary"
+});
+
+window.KtrlAI.identify("user_123", {
+  plan: "pro"
+});
+
+window.KtrlAI.page();`}</code>
+                </pre>
+              </article>
+              <article>
+                <span className="eyebrow">Troubleshooting</span>
+                <h3>Verification checklist</h3>
+                <ul className="developerChecklist">
+                  <li>Confirm the script is present once in the page head.</li>
+                  <li>Open your live site after installing the snippet.</li>
+                  <li>Check that ad blockers are not blocking /api/track during testing.</li>
+                  <li>Rotate the API key if the visible snippet is masked.</li>
+                </ul>
+              </article>
             </div>
           </section>
 

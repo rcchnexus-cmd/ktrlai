@@ -54,6 +54,16 @@ function hasValidPageUrl(pageUrl) {
   }
 }
 
+function normalizeTimestamp(value) {
+  const date = value ? new Date(value) : new Date();
+
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toISOString();
+  }
+
+  return date.toISOString();
+}
+
 function validateRequiredFields(body) {
   const missing = [];
 
@@ -94,10 +104,21 @@ function normalizeTrackingBody(body, req) {
     pageUrl: body.pageUrl || body.page_url || body.url || body.href,
     referrer: body.referrer ?? body.referer ?? body.referrerUrl ?? body.referrer_url ?? "",
     userAgent: body.userAgent || body.user_agent || getHeader(req, "user-agent") || "",
-    timestamp: body.timestamp || body.occurredAt || body.occurred_at || new Date().toISOString(),
+    timestamp: normalizeTimestamp(body.timestamp || body.occurredAt || body.occurred_at),
     pageTitle: body.pageTitle ?? body.page_title ?? body.title ?? "",
     botName: body.botName || body.bot_name || "",
-    detectedBotType: body.detectedBotType || body.detected_bot_type || null
+    detectedBotType: body.detectedBotType || body.detected_bot_type || null,
+    event: body.event || body.eventName || body.event_name || "page",
+    eventId: body.eventId || body.event_id || null,
+    pagePath: body.pagePath || body.page_path || body.path || "",
+    screen: body.screen && typeof body.screen === "object" ? body.screen : null,
+    language: body.language || "",
+    timezone: body.timezone || "",
+    sdk: body.sdk && typeof body.sdk === "object" ? body.sdk : null,
+    properties: body.properties && typeof body.properties === "object" ? body.properties : null,
+    traits: body.traits && typeof body.traits === "object" ? body.traits : null,
+    anonymousId: body.anonymousId || body.anonymous_id || "",
+    userId: body.userId || body.user_id || ""
   };
 }
 
@@ -275,7 +296,7 @@ export default async function handler(req, res) {
     is_search_engine: detection.is_search_engine,
     is_suspicious: detection.is_suspicious,
     detection_method: detection.detection_method,
-    page_path: parsedUrl.pagePath,
+    page_path: String(body.pagePath || parsedUrl.pagePath).slice(0, 500),
     status,
     domain_id: null,
     ip_hash: getPendingClientIpHash(req),
@@ -291,6 +312,16 @@ export default async function handler(req, res) {
       is_suspicious: detection.is_suspicious,
       detection_method: detection.detection_method,
       client_detected_bot_type: body.detectedBotType || null,
+      event: String(body.event || "page").slice(0, 80),
+      event_id: body.eventId ? String(body.eventId).slice(0, 120) : null,
+      sdk: body.sdk,
+      screen: body.screen,
+      language: String(body.language || "").slice(0, 40),
+      timezone: String(body.timezone || "").slice(0, 80),
+      properties: body.properties,
+      traits: body.traits,
+      anonymous_id: String(body.anonymousId || "").slice(0, 180),
+      user_id: String(body.userId || "").slice(0, 180),
       hostname: parsedUrl.hostname,
       page_url: String(body.pageUrl),
       referrer: String(body.referrer || ""),

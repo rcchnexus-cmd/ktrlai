@@ -118,7 +118,7 @@ export function createWorkspaceApiKey(overrides = {}) {
 
 export function buildTrackerSnippet({ workspaceId = "demo", apiKey }) {
   const appUrl = getPublicAppUrl();
-  return `<script src="${appUrl}/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey || concealedApiKeyMask}"></script>`;
+  return `<script async src="${appUrl}/tracker.js" data-workspace-id="${workspaceId}" data-api-key="${apiKey || concealedApiKeyMask}"></script>`;
 }
 
 export function toDomainStatusLabel(status) {

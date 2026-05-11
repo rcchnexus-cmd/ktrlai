@@ -177,6 +177,33 @@ function buildTopPages(pageCounts) {
     }));
 }
 
+function getInstallHealth({ totalEvents, latestEvent, eventsToday, domains }) {
+  const latestEventAt = latestEvent?.occurred_at || null;
+  const verifiedDomains = (domains || []).filter((domain) => String(domain.status || "").toLowerCase() === "verified").length;
+  const now = Date.now();
+  const latestTime = latestEventAt ? new Date(latestEventAt).getTime() : 0;
+  const ageHours = latestTime ? (now - latestTime) / (1000 * 60 * 60) : null;
+  let status = "not_installed";
+  let trackerHealth = "No tracker events received";
+
+  if (totalEvents > 0 || latestEventAt) {
+    status = ageHours !== null && ageHours <= 24 ? "active" : "inactive";
+    trackerHealth = status === "active" ? "Receiving events" : "No events in the last 24 hours";
+  } else if (verifiedDomains > 0) {
+    status = "pending";
+    trackerHealth = "Waiting for first event";
+  }
+
+  return {
+    status,
+    sdkInstalled: Boolean(latestEventAt),
+    lastEventAt: latestEventAt,
+    eventsToday: Number(eventsToday || 0),
+    activeDomains: verifiedDomains,
+    trackerHealth
+  };
+}
+
 function toRecentActivity(event) {
   const detection = getDetection(event);
 
@@ -202,7 +229,7 @@ function toRecentActivity(event) {
   };
 }
 
-function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window }) {
+function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window, latestEvent, eventsToday, domains }) {
   const dailyBuckets = buildDailyBuckets(window.start, window.days);
   const botCounts = new Map();
   const pageCounts = new Map();
@@ -298,6 +325,12 @@ function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window 
     recentActivity,
     topPages,
     allowedBlockedCounts: Object.fromEntries(statusCounts),
+    installHealth: getInstallHealth({
+      totalEvents,
+      latestEvent,
+      eventsToday,
+      domains
+    }),
     revenueEstimate: {
       amountCents: estimatedCents,
       currency: "USD",
@@ -378,15 +411,39 @@ export default async function handler(req, res) {
   }
 
   const window = getRangeWindow(range);
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
   const baseQuery = (query) =>
     query.eq("workspace_id", workspaceId).gte("occurred_at", window.startIso).lte("occurred_at", window.endIso);
 
-  const [{ count, error: countError }, { data, error }] = await Promise.all([
+  const [
+    { count, error: countError },
+    { data, error },
+    { data: latestEvent, error: latestError },
+    { count: eventsToday, error: eventsTodayError },
+    { data: domains, error: domainsError }
+  ] = await Promise.all([
     baseQuery(supabase.from("activity_logs").select("id", { count: "exact", head: true })),
-    fetchActivityRows(supabase, baseQuery)
+    fetchActivityRows(supabase, baseQuery),
+    supabase
+      .from("activity_logs")
+      .select("id, occurred_at")
+      .eq("workspace_id", workspaceId)
+      .order("occurred_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("activity_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId)
+      .gte("occurred_at", todayStart.toISOString()),
+    supabase
+      .from("domains")
+      .select("id, status")
+      .eq("workspace_id", workspaceId)
   ]);
 
-  if (countError || error) {
+  if (countError || error || latestError || eventsTodayError || domainsError) {
     return res.status(500).json({
       ok: false,
       mode: "live",
@@ -400,7 +457,10 @@ export default async function handler(req, res) {
       range,
       events: data || [],
       totalCount: count || 0,
-      window
+      window,
+      latestEvent,
+      eventsToday: eventsToday || 0,
+      domains: domains || []
     })
   );
 }

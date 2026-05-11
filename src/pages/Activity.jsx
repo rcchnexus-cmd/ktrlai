@@ -16,6 +16,18 @@ export default function Activity() {
     }
   }, [actions, state.activityMeta?.loaded, state.errors.activity, state.loading.activity]);
 
+  useEffect(() => {
+    if (!state.auth.isAuthenticated || !state.activityMeta?.loaded) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      actions.loadActivity();
+    }, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, [actions, state.activityMeta?.loaded, state.auth.isAuthenticated]);
+
   const filtered = useMemo(() => {
     return state.activity.filter((row) => {
       const query = `${row.bot} ${row.page} ${row.type}`.toLowerCase();
