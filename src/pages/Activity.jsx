@@ -23,8 +23,10 @@ export default function Activity() {
     }
 
     const intervalId = window.setInterval(() => {
-      actions.loadActivity();
-    }, 30000);
+      if (document.visibilityState === "visible") {
+        actions.loadActivity();
+      }
+    }, 45000);
 
     return () => window.clearInterval(intervalId);
   }, [actions, state.activityMeta?.loaded, state.auth.isAuthenticated]);

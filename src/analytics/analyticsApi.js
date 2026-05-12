@@ -141,6 +141,32 @@ export async function getWorkspaceAnalyticsSummary({ workspaceId, range = "7d" }
   return data;
 }
 
+export async function getWorkspaceInstallHealth({ workspaceId } = {}) {
+  const accessToken = await getSupabaseAccessToken();
+
+  if (!accessToken || !workspaceId) {
+    throw new AnalyticsApiError("Sign in and select a workspace before loading install health.", 401);
+  }
+
+  const search = new URLSearchParams({
+    workspace_id: workspaceId,
+    view: "install_health"
+  });
+  const response = await fetch(`/api/analytics/summary?${search.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+  const contentType = response.headers.get("content-type") || "";
+  const data = contentType.includes("application/json") ? await response.json() : {};
+
+  if (!response.ok || data.ok === false) {
+    throw new AnalyticsApiError(data.message || "Install health could not be loaded.", response.status);
+  }
+
+  return normalizeInstallHealth(data.installHealth);
+}
+
 export function toDashboardView(summary) {
   const mode = getDataMode(summary);
   const totalEvents = Number(summary?.totalEvents || 0);

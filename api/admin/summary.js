@@ -562,6 +562,8 @@ async function buildAdminSummary(supabase) {
       stripeConfigPresent: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRO_PRICE_ID && process.env.STRIPE_BUSINESS_PRICE_ID),
       stripeWebhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
       trackerEndpointStatus: isApiKeyHashingConfigured() ? "Ready" : "Missing API key hash secret",
+      healthEndpointStatus: "Available at /api/health",
+      rateLimitStore: "In-memory per serverless instance",
       payoutsEnabled: process.env.PAYOUT_REQUESTS_ENABLED === "true",
       requiredEnv: {
         SUPABASE_URL: Boolean(process.env.SUPABASE_URL),

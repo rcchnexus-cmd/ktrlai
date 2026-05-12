@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getWorkspaceAnalyticsSummary } from "../analytics/analyticsApi.js";
+import { getWorkspaceInstallHealth } from "../analytics/analyticsApi.js";
 import AppShell from "../components/AppShell.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { billingPlans, normalizePlan } from "../billing/stripeConfig.js";
@@ -235,13 +235,12 @@ export default function Settings() {
       }
 
       try {
-        const summary = await getWorkspaceAnalyticsSummary({
-          workspaceId: settings.workspaceId,
-          range: "7d"
+        const installHealthSummary = await getWorkspaceInstallHealth({
+          workspaceId: settings.workspaceId
         });
 
         if (isMounted) {
-          setInstallHealth(summary.installHealth || null);
+          setInstallHealth(installHealthSummary || null);
           setInstallHealthError("");
         }
       } catch (error) {
@@ -256,7 +255,11 @@ export default function Settings() {
     };
 
     loadInstallHealth();
-    intervalId = window.setInterval(() => loadInstallHealth({ quiet: true }), 15000);
+    intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadInstallHealth({ quiet: true });
+      }
+    }, 45000);
 
     return () => {
       isMounted = false;

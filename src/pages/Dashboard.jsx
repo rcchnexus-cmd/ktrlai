@@ -46,8 +46,10 @@ export default function Dashboard() {
     }
 
     const intervalId = window.setInterval(() => {
-      actions.loadDashboard();
-    }, 30000);
+      if (document.visibilityState === "visible") {
+        actions.loadDashboard();
+      }
+    }, 45000);
 
     return () => window.clearInterval(intervalId);
   }, [actions, state.auth.isAuthenticated, state.dashboard]);

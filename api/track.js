@@ -25,6 +25,8 @@ function setCorsHeaders(req, res) {
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Max-Age", "86400");
+  res.setHeader("Cache-Control", "no-store, max-age=0");
 }
 
 function getRequestBody(req) {
@@ -284,7 +286,8 @@ export default async function handler(req, res) {
 
     return res.status(429).json({
       ok: false,
-      message: rateLimit.message
+      message: rateLimit.message,
+      retryAfterSeconds: rateLimit.retryAfterSeconds
     });
   }
 

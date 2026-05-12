@@ -54,6 +54,39 @@ export async function getWorkspaceUsageState(supabase, workspaceId) {
 
   const limit = planState.limits.events;
   const { monthStart, nextMonthStart } = getMonthlyWindow();
+  const monthStartDate = monthStart.slice(0, 10);
+  const { data: usageRow, error: usageError } = await supabase
+    .from("workspace_usage_months")
+    .select("events_used, event_limit, plan, updated_at")
+    .eq("workspace_id", workspaceId)
+    .eq("month_start", monthStartDate)
+    .maybeSingle();
+
+  if (!usageError && usageRow) {
+    const eventsUsed = Number(usageRow.events_used || 0);
+
+    if (eventsUsed >= limit) {
+      return {
+        ok: false,
+        status: 429,
+        message: `Monthly event limit reached for the ${planState.effectivePlan} plan. Upgrade to continue ingesting events.`,
+        plan: planState.effectivePlan,
+        limit,
+        eventsUsed,
+        monthStart
+      };
+    }
+
+    return {
+      ok: true,
+      plan: planState.effectivePlan,
+      limit,
+      eventsUsed,
+      monthStart,
+      nextMonthStart
+    };
+  }
+
   const { count, error: countError } = await supabase
     .from("activity_logs")
     .select("id", { count: "exact", head: true })

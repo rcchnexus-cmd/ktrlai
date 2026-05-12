@@ -9,7 +9,12 @@ const rangeDays = {
 };
 
 const botColors = ["#5B8CFF", "#9B6DFF", "#4ADE80", "#F97316", "#38BDF8", "#F472B6"];
-const maxEventsForServerAggregation = 5000;
+const maxEventsByRange = {
+  "7d": 2000,
+  "30d": 3500,
+  "90d": 5000
+};
+const maxEventsForServerAggregation = maxEventsByRange["90d"];
 
 function getQueryParam(req, key) {
   const value = req.query?.[key];
@@ -204,6 +209,23 @@ function getInstallHealth({ totalEvents, latestEvent, eventsToday, domains }) {
   };
 }
 
+function buildInstallHealthPayload({ workspaceId, latestEvent, eventsToday, domains }) {
+  const hasLatestEvent = Boolean(latestEvent?.occurred_at);
+
+  return {
+    ok: true,
+    mode: "live",
+    workspaceId,
+    hasRealData: hasLatestEvent,
+    installHealth: getInstallHealth({
+      totalEvents: hasLatestEvent ? 1 : 0,
+      latestEvent,
+      eventsToday,
+      domains
+    })
+  };
+}
+
 function toRecentActivity(event) {
   const detection = getDetection(event);
 
@@ -229,7 +251,7 @@ function toRecentActivity(event) {
   };
 }
 
-function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window, latestEvent, eventsToday, domains }) {
+function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window, latestEvent, eventsToday, domains, aggregationLimit }) {
   const dailyBuckets = buildDailyBuckets(window.start, window.days);
   const botCounts = new Map();
   const pageCounts = new Map();
@@ -340,11 +362,11 @@ function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window,
         maximumFractionDigits: 0
       }).format(estimatedCents / 100)
     },
-    truncated: events.length >= maxEventsForServerAggregation
+    truncated: events.length >= (aggregationLimit || maxEventsForServerAggregation)
   };
 }
 
-async function fetchActivityRows(supabase, baseQuery) {
+async function fetchActivityRows(supabase, baseQuery, maxRows = maxEventsForServerAggregation) {
   const extendedColumns =
     "id, workspace_id, domain_id, bot_name, bot_type, category, confidence_score, is_ai_bot, is_search_engine, is_suspicious, detection_method, page_path, url, referrer, user_agent, page_title, status, tokens_used, region, occurred_at, metadata";
   const legacyColumns =
@@ -355,7 +377,7 @@ async function fetchActivityRows(supabase, baseQuery) {
       .from("activity_logs")
       .select(extendedColumns)
       .order("occurred_at", { ascending: false })
-      .limit(maxEventsForServerAggregation)
+      .limit(maxRows)
   );
 
   if (!extended.error) {
@@ -373,11 +395,13 @@ async function fetchActivityRows(supabase, baseQuery) {
       .from("activity_logs")
       .select(legacyColumns)
       .order("occurred_at", { ascending: false })
-      .limit(maxEventsForServerAggregation)
+      .limit(maxRows)
   );
 }
 
 export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store, max-age=0");
+
   if (req.method === "OPTIONS") {
     res.setHeader("Allow", "GET, OPTIONS");
     return res.status(204).end();
@@ -394,6 +418,7 @@ export default async function handler(req, res) {
 
   const workspaceId = getQueryParam(req, "workspace_id") || getQueryParam(req, "workspaceId");
   const range = normalizeRange(getQueryParam(req, "range"));
+  const view = String(getQueryParam(req, "view") || "summary").toLowerCase();
 
   if (!workspaceId) {
     return res.status(400).json({ ok: false, message: "workspace_id is required." });
@@ -416,6 +441,49 @@ export default async function handler(req, res) {
   const baseQuery = (query) =>
     query.eq("workspace_id", workspaceId).gte("occurred_at", window.startIso).lte("occurred_at", window.endIso);
 
+  if (view === "install" || view === "install_health") {
+    const [
+      { data: latestEvent, error: latestError },
+      { count: eventsToday, error: eventsTodayError },
+      { data: domains, error: domainsError }
+    ] = await Promise.all([
+      supabase
+        .from("activity_logs")
+        .select("id, occurred_at")
+        .eq("workspace_id", workspaceId)
+        .order("occurred_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("activity_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .gte("occurred_at", todayStart.toISOString()),
+      supabase
+        .from("domains")
+        .select("id, status")
+        .eq("workspace_id", workspaceId)
+    ]);
+
+    if (latestError || eventsTodayError || domainsError) {
+      return res.status(500).json({
+        ok: false,
+        mode: "live",
+        message: "Install health could not be loaded."
+      });
+    }
+
+    return res.status(200).json(
+      buildInstallHealthPayload({
+        workspaceId,
+        latestEvent,
+        eventsToday: eventsToday || 0,
+        domains: domains || []
+      })
+    );
+  }
+
+  const aggregationLimit = maxEventsByRange[range] || maxEventsForServerAggregation;
   const [
     { count, error: countError },
     { data, error },
@@ -424,7 +492,7 @@ export default async function handler(req, res) {
     { data: domains, error: domainsError }
   ] = await Promise.all([
     baseQuery(supabase.from("activity_logs").select("id", { count: "exact", head: true })),
-    fetchActivityRows(supabase, baseQuery),
+    fetchActivityRows(supabase, baseQuery, aggregationLimit),
     supabase
       .from("activity_logs")
       .select("id, occurred_at")
@@ -460,7 +528,8 @@ export default async function handler(req, res) {
       window,
       latestEvent,
       eventsToday: eventsToday || 0,
-      domains: domains || []
+      domains: domains || [],
+      aggregationLimit
     })
   );
 }

@@ -622,6 +622,8 @@ export default function Admin() {
             <HealthItem label="Stripe checkout" enabled={health.stripeConfigPresent} detail="Secret and price IDs" />
             <HealthItem label="Stripe webhook" enabled={health.stripeWebhookConfigured} detail="Signature verification" />
             <HealthItem label="Tracker endpoint" enabled={health.trackerEndpointStatus === "Ready"} detail={health.trackerEndpointStatus} />
+            <HealthItem label="Health endpoint" enabled={Boolean(health.healthEndpointStatus)} detail={health.healthEndpointStatus} />
+            <HealthItem label="Rate limits" enabled={Boolean(health.rateLimitStore)} detail={health.rateLimitStore} />
             <HealthItem
               label="Payouts"
               enabled={health.payoutsEnabled}

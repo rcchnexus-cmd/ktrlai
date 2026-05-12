@@ -7,6 +7,7 @@
   var MAX_RETRIES = 2;
   var RETRY_DELAY = 1200;
   var EVENT_DEDUPE_WINDOW = 1200;
+  var MAX_PAYLOAD_BYTES = 18000;
   var initialized = false;
   var flushing = false;
   var queue = [];
@@ -189,9 +190,22 @@
     return Boolean(config.workspaceId && config.apiKey && config.endpoint);
   }
 
+  function payloadSize(payload) {
+    try {
+      return JSON.stringify(payload || {}).length;
+    } catch (error) {
+      return MAX_PAYLOAD_BYTES + 1;
+    }
+  }
+
   function enqueue(payload) {
     if (!payload || !canSend()) {
       debugWarn("Tracker is not configured. Add data-workspace-id and data-api-key to the script tag.");
+      return false;
+    }
+
+    if (payloadSize(payload) > MAX_PAYLOAD_BYTES) {
+      debugWarn("Tracking payload was too large and was not sent.");
       return false;
     }
 

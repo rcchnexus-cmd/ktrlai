@@ -1,4 +1,5 @@
 const buckets = new Map();
+const recordedTriggers = new Map();
 const defaultWindowMs = 60 * 1000;
 
 function readHeader(req, name) {
@@ -57,10 +58,26 @@ export function checkServerRateLimit(
 
 export async function recordRateLimitTrigger(
   supabase,
-  { workspaceId = null, scope, ipHash = "pending-server-hash", reason, metadata = {} } = {}
+  { workspaceId = null, scope, ipHash = "pending-server-hash", reason, metadata = {}, windowMs = defaultWindowMs } = {}
 ) {
   if (!supabase || !scope) {
     return { ok: false };
+  }
+
+  const now = Date.now();
+  const bucket = Math.floor(now / windowMs);
+  const triggerKey = [scope, workspaceId || "platform", ipHash || "unknown", reason || "rate_limit_exceeded", bucket].join(":");
+
+  if (recordedTriggers.has(triggerKey)) {
+    return { ok: true, skipped: true };
+  }
+
+  recordedTriggers.set(triggerKey, true);
+
+  for (const storedKey of recordedTriggers.keys()) {
+    if (!storedKey.endsWith(`:${bucket}`)) {
+      recordedTriggers.delete(storedKey);
+    }
   }
 
   const { error } = await supabase.from("rate_limit_events").insert({
