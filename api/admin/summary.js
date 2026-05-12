@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "../_adminAuth.js";
 import { isApiKeyHashingConfigured } from "../_crypto.js";
+import { checkServerRateLimit } from "../_rateLimit.js";
 import { sendMissingServerConfig } from "../_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "../_supabaseAdmin.js";
 
@@ -188,7 +189,11 @@ async function buildAdminSummary(supabase) {
     stripeEventsResult,
     eventsLast7Days,
     eventsPrevious7Days,
-    activityLast7DaysResult
+    activityLast7DaysResult,
+    rateLimitEventsResult,
+    enterpriseAuditResult,
+    newUsersLast7Days,
+    newWorkspacesLast7Days
   ] = await Promise.all([
     safeCount(supabase, "profiles"),
     safeCount(supabase, "workspaces"),
@@ -254,7 +259,17 @@ async function buildAdminSummary(supabase) {
       order: "occurred_at",
       limit: 5000,
       filters: [(query) => query.gte("occurred_at", sevenDaysAgo)]
-    })
+    }),
+    safeSelect(supabase, "rate_limit_events", "id, workspace_id, scope, reason, created_at, metadata", {
+      order: "created_at",
+      limit: rowLimit
+    }),
+    safeSelect(supabase, "audit_logs", "id, workspace_id, actor_user_id, event_type, event_summary, timestamp, metadata", {
+      order: "timestamp",
+      limit: rowLimit
+    }),
+    safeCount(supabase, "profiles", [(query) => query.gte("created_at", sevenDaysAgo)]),
+    safeCount(supabase, "workspaces", [(query) => query.gte("created_at", sevenDaysAgo)])
   ]);
 
   [
@@ -276,7 +291,11 @@ async function buildAdminSummary(supabase) {
     stripeEventsResult,
     eventsLast7Days,
     eventsPrevious7Days,
-    activityLast7DaysResult
+    activityLast7DaysResult,
+    rateLimitEventsResult,
+    enterpriseAuditResult,
+    newUsersLast7Days,
+    newWorkspacesLast7Days
   ].forEach((result) => addWarning(result.warning));
 
   const users = usersResult.rows;
@@ -289,6 +308,8 @@ async function buildAdminSummary(supabase) {
   const auditEvents = auditResult.rows;
   const stripeEvents = stripeEventsResult.rows;
   const activityLast7Days = activityLast7DaysResult.rows;
+  const rateLimitEvents = rateLimitEventsResult.rows;
+  const enterpriseAuditEvents = enterpriseAuditResult.rows;
   const usersById = buildLookup(users);
   const workspacesById = buildLookup(workspaces);
   const workspaceCountByUser = new Map();
@@ -299,6 +320,8 @@ async function buildAdminSummary(supabase) {
   const subscriptionStatuses = new Map();
   const botTypesLast7Days = new Map();
   const aiCrawlersLast7Days = new Map();
+  const suspiciousByWorkspace = new Map();
+  const eventVolumeByWorkspaceLast7Days = new Map();
   let aiBotEventsLast7Days = 0;
   let suspiciousEventsLast7Days = 0;
   let unknownCrawlerEventsLast7Days = 0;
@@ -324,6 +347,7 @@ async function buildAdminSummary(supabase) {
   activityLast7Days.forEach((event) => {
     const detection = getEventDetection(event);
 
+    increment(eventVolumeByWorkspaceLast7Days, event.workspace_id);
     increment(botTypesLast7Days, detection.botType || "UnknownBot");
 
     if (detection.isAiBot) {
@@ -333,6 +357,7 @@ async function buildAdminSummary(supabase) {
 
     if (detection.isSuspicious) {
       suspiciousEventsLast7Days += 1;
+      increment(suspiciousByWorkspace, event.workspace_id);
     }
 
     if (detection.category === "unknown" || detection.botType === "UnknownBot") {
@@ -402,6 +427,43 @@ async function buildAdminSummary(supabase) {
           timestamp: toIso(event.occurred_at)
         };
       })
+    },
+    security: {
+      suspiciousWorkspaces: Array.from(suspiciousByWorkspace.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([workspaceId, suspiciousCount]) => ({
+          workspaceId,
+          workspaceName: workspacesById.get(workspaceId)?.name || "Unknown workspace",
+          suspiciousCount
+        })),
+      ingestionSpikes: Array.from(eventVolumeByWorkspaceLast7Days.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([workspaceId, eventCount]) => ({
+          workspaceId,
+          workspaceName: workspacesById.get(workspaceId)?.name || "Unknown workspace",
+          eventCount
+        })),
+      rateLimitTriggers: rateLimitEvents.map((event) => ({
+        id: event.id,
+        workspaceName: workspacesById.get(event.workspace_id)?.name || "Platform",
+        scope: event.scope,
+        reason: event.reason,
+        createdAt: toIso(event.created_at)
+      })),
+      auditActivityFeed: enterpriseAuditEvents.map((event) => ({
+        id: event.id,
+        workspaceName: workspacesById.get(event.workspace_id)?.name || "Unknown workspace",
+        actor: usersById.get(event.actor_user_id)?.email || "System",
+        eventType: event.event_type,
+        eventSummary: event.event_summary || String(event.event_type || "Audit event").replace(/_/g, " "),
+        createdAt: toIso(event.timestamp)
+      })),
+      growth: {
+        usersLast7Days: newUsersLast7Days.count,
+        workspacesLast7Days: newWorkspacesLast7Days.count
+      }
     },
     users: users.map((user) => ({
       id: user.id,
@@ -528,6 +590,17 @@ export default async function handler(req, res) {
 
   if (!isSupabaseAdminConfigured()) {
     return sendMissingServerConfig(res);
+  }
+
+  const rateLimit = checkServerRateLimit(req, {
+    scope: "admin_summary",
+    workspaceId: "platform",
+    max: 90,
+    message: "Too many admin requests. Please retry shortly."
+  });
+
+  if (!rateLimit.ok) {
+    return res.status(429).json({ ok: false, message: rateLimit.message });
   }
 
   const supabase = getSupabaseAdmin();

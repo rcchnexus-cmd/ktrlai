@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { requireWorkspaceRole } from "./_auth.js";
 import { allowLocalMockFallback, getAppUrl, sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
+import { checkServerRateLimit, recordRateLimitTrigger } from "./_rateLimit.js";
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -35,6 +36,25 @@ export default async function handler(req, res) {
 
   if (!workspaceId) {
     return res.status(400).json({ ok: false, message: "workspace_id is required." });
+  }
+
+  const rateLimit = checkServerRateLimit(req, {
+    scope: "billing_portal",
+    workspaceId,
+    max: 25,
+    message: "Too many billing portal requests. Please retry shortly."
+  });
+
+  if (!rateLimit.ok) {
+    if (isSupabaseAdminConfigured()) {
+      await recordRateLimitTrigger(getSupabaseAdmin(), {
+        workspaceId,
+        scope: "billing_portal",
+        reason: "billing_portal_limit"
+      });
+    }
+
+    return res.status(429).json({ ok: false, message: rateLimit.message });
   }
 
   if (!process.env.STRIPE_SECRET_KEY) {

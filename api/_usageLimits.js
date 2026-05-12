@@ -1,15 +1,5 @@
 import { getWorkspacePlanState } from "./_planLimits.js";
-
-const minuteBuckets = new Map();
-
-const rateWindowMs = 60 * 1000;
-const maxRequestsPerWindow = 120;
-
-function getClientIdentity(req) {
-  const forwardedFor = req.headers["x-forwarded-for"];
-  const ip = Array.isArray(forwardedFor) ? forwardedFor[0] : String(forwardedFor || "").split(",")[0];
-  return ip || req.headers["x-real-ip"] || "unknown";
-}
+import { checkServerRateLimit } from "./_rateLimit.js";
 
 export function getMonthlyWindow(now = new Date()) {
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
@@ -44,27 +34,12 @@ export function validateTrackingPayloadShape(body) {
 }
 
 export function checkRateLimit(req, workspaceId) {
-  const now = Date.now();
-  const bucket = Math.floor(now / rateWindowMs);
-  const key = `${workspaceId || "unknown"}:${getClientIdentity(req)}:${bucket}`;
-  const currentCount = minuteBuckets.get(key) || 0;
-
-  if (currentCount >= maxRequestsPerWindow) {
-    return {
-      ok: false,
-      message: "Rate limit exceeded. Please retry shortly."
-    };
-  }
-
-  minuteBuckets.set(key, currentCount + 1);
-
-  for (const storedKey of minuteBuckets.keys()) {
-    if (!storedKey.endsWith(`:${bucket}`)) {
-      minuteBuckets.delete(storedKey);
-    }
-  }
-
-  return { ok: true };
+  return checkServerRateLimit(req, {
+    scope: "track",
+    workspaceId,
+    max: 120,
+    message: "Tracker rate limit exceeded. Please retry shortly."
+  });
 }
 
 export async function getWorkspaceUsageState(supabase, workspaceId) {

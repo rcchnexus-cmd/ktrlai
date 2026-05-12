@@ -13,6 +13,9 @@ import {
   validateTrackingPayloadShape
 } from "./_usageLimits.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
+import { recordRateLimitTrigger } from "./_rateLimit.js";
+import { evaluateAiPolicy } from "./_policyEngine.js";
+import { auditEventTypes, recordAuditEvent } from "./_audit.js";
 
 const activityStatuses = new Set(["allowed", "blocked", "restricted", "paid_access", "summaries_only"]);
 
@@ -267,6 +270,18 @@ export default async function handler(req, res) {
   const rateLimit = checkRateLimit(req, body.workspaceId);
 
   if (!rateLimit.ok) {
+    if (isSupabaseAdminConfigured()) {
+      await recordRateLimitTrigger(getSupabaseAdmin(), {
+        workspaceId: body.workspaceId,
+        scope: "track",
+        reason: "tracker_burst_limit",
+        metadata: {
+          message: rateLimit.message,
+          retry_after_seconds: rateLimit.retryAfterSeconds
+        }
+      });
+    }
+
     return res.status(429).json({
       ok: false,
       message: rateLimit.message
@@ -387,6 +402,16 @@ export default async function handler(req, res) {
     hostname: parsedUrl.hostname
   });
 
+  const policyDecision = await evaluateAiPolicy(supabase, {
+    workspaceId: eventPayload.workspace_id,
+    detection
+  });
+
+  eventPayload.metadata = {
+    ...eventPayload.metadata,
+    governance_policy: policyDecision
+  };
+
   const { data: insertedEvent, error: insertError } = await insertActivityLog(supabase, eventPayload);
 
   if (insertError) {
@@ -394,6 +419,19 @@ export default async function handler(req, res) {
       ok: false,
       mode: "live",
       message: "Tracking event could not be stored."
+    });
+  }
+
+  if (detection.is_suspicious) {
+    await recordAuditEvent(supabase, {
+      workspaceId: eventPayload.workspace_id,
+      eventType: auditEventTypes.suspiciousCrawlerDetected,
+      metadata: {
+        activity_log_id: insertedEvent.id,
+        bot_name: eventPayload.bot_name,
+        confidence_score: detection.confidence_score,
+        page_path: eventPayload.page_path
+      }
     });
   }
 

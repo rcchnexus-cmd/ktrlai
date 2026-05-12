@@ -64,6 +64,16 @@ function randomSuffix() {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("") || String(Date.now()).slice(-8);
 }
 
+function normalizeWorkspaceRole(role) {
+  const normalized = String(role || "").trim().toLowerCase();
+
+  if (normalized === "member") {
+    return "analyst";
+  }
+
+  return ["owner", "admin", "analyst", "viewer"].includes(normalized) ? normalized : "viewer";
+}
+
 function mapWorkspace(workspace, role = "owner") {
   if (!workspace) {
     return null;
@@ -74,7 +84,7 @@ function mapWorkspace(workspace, role = "owner") {
     name: workspace.name,
     slug: workspace.slug,
     plan: workspace.plan || "Free",
-    role,
+    role: normalizeWorkspaceRole(role),
     subscriptionStatus: workspace.subscription_status || "free",
     currentPeriodEnd: workspace.current_period_end || null,
     hasStripeCustomer: Boolean(workspace.stripe_customer_id),
@@ -374,6 +384,28 @@ function bootstrapAfterSessionReady(session, options = {}) {
   return bootstrapPromise;
 }
 
+async function recordSessionAudit(eventType, { workspaceId, accessToken } = {}) {
+  if (!workspaceId || !accessToken) {
+    return;
+  }
+
+  try {
+    await fetch("/api/audit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        workspace_id: workspaceId,
+        event_type: eventType
+      })
+    });
+  } catch {
+    // Audit recording should never block auth recovery.
+  }
+}
+
 export async function restoreSession() {
   if (!isSupabaseConfigured && allowLocalMockFallback) {
     return toMockSession(mockAuth.getSession());
@@ -424,7 +456,12 @@ export async function login(credentials = {}) {
     throw new Error("Unable to restore your Supabase session.");
   }
 
-  return bootstrapAfterSessionReady(session);
+  const nextSession = await bootstrapAfterSessionReady(session);
+  await recordSessionAudit("login", {
+    workspaceId: nextSession.workspaceId,
+    accessToken: session.access_token
+  });
+  return nextSession;
 }
 
 export async function signup(credentials = {}) {
@@ -467,7 +504,12 @@ export async function signup(credentials = {}) {
     throw new Error("Check your email to confirm your account, then log in to finish workspace setup.");
   }
 
-  return bootstrapAfterSessionReady(session, { domain, name: credentials.name });
+  const nextSession = await bootstrapAfterSessionReady(session, { domain, name: credentials.name });
+  await recordSessionAudit("login", {
+    workspaceId: nextSession.workspaceId,
+    accessToken: session.access_token
+  });
+  return nextSession;
 }
 
 export async function logout() {
@@ -479,6 +521,11 @@ export async function logout() {
     return toLoggedOutSession("live");
   }
 
+  const { data } = await supabase.auth.getSession();
+  await recordSessionAudit("logout", {
+    workspaceId: getActiveWorkspaceId(),
+    accessToken: data.session?.access_token
+  });
   await supabase.auth.signOut();
   return toLoggedOutSession("supabase");
 }

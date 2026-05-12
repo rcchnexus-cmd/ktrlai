@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import AppShell from "../components/AppShell.jsx";
+import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
 
 export default function ControlCenter() {
   const { state, actions } = useApp();
   const [bot, setBot] = useState("ChatGPT-User");
   const [access, setAccess] = useState("Allow summaries only");
+  const [policyOverrides, setPolicyOverrides] = useState({});
 
   useEffect(() => {
     if (!state.controls && !state.loading.controls) {
@@ -14,6 +16,10 @@ export default function ControlCenter() {
   }, [actions, state.controls, state.loading.controls]);
 
   const controls = state.controls;
+  const policyRows = (controls?.governancePolicies || []).map((policy) => ({
+    ...policy,
+    policyType: policyOverrides[policy.botScope] || policy.policyType
+  }));
 
   const addRule = async () => {
     await actions.addControlRule({ bot, access });
@@ -99,6 +105,43 @@ export default function ControlCenter() {
                 ))}
               </div>
             )}
+          </section>
+
+          <section className="panel largePanel">
+            <div className="panelHeader">
+              <div>
+                <span className="eyebrow">AI policy engine</span>
+                <h2>Governance visibility</h2>
+              </div>
+              <StatusBadge status="Policy preview" />
+            </div>
+            <p className="enterpriseCopy">
+              Define crawler intent for analytics and governance workflows. Network-level blocking is not enabled yet.
+            </p>
+            <div className="policyGrid">
+              {policyRows.map((policy) => (
+                <article key={policy.id}>
+                  <div>
+                    <strong>{policy.botScope}</strong>
+                    <p>{policy.detail}</p>
+                  </div>
+                  <select
+                    value={policy.policyType}
+                    onChange={(event) =>
+                      setPolicyOverrides((current) => ({
+                        ...current,
+                        [policy.botScope]: event.target.value
+                      }))
+                    }
+                  >
+                    <option value="allow">Allow</option>
+                    <option value="monitor">Monitor</option>
+                    <option value="restrict">Restrict</option>
+                    <option value="block">Block</option>
+                  </select>
+                </article>
+              ))}
+            </div>
           </section>
         </div>
       )}

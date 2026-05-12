@@ -1,7 +1,9 @@
 import { requireWorkspaceRole } from "./_auth.js";
+import { auditEventTypes, recordAuditEvent } from "./_audit.js";
 import { enforceWorkspaceResourceLimit } from "./_planLimits.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
+import { checkServerRateLimit, recordRateLimitTrigger } from "./_rateLimit.js";
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -61,6 +63,25 @@ export default async function handler(req, res) {
       ok: false,
       message: "workspace_id and hostname are required."
     });
+  }
+
+  const rateLimit = checkServerRateLimit(req, {
+    scope: "domain",
+    workspaceId,
+    max: 40,
+    message: "Too many domain requests. Please retry shortly."
+  });
+
+  if (!rateLimit.ok) {
+    if (isSupabaseAdminConfigured()) {
+      await recordRateLimitTrigger(getSupabaseAdmin(), {
+        workspaceId,
+        scope: "domain",
+        reason: "domain_mutation_limit"
+      });
+    }
+
+    return res.status(429).json({ ok: false, message: rateLimit.message });
   }
 
   if (!isSupabaseAdminConfigured()) {
@@ -140,6 +161,16 @@ export default async function handler(req, res) {
       message: isDuplicate ? "This domain is already connected to the workspace." : "Domain could not be added."
     });
   }
+
+  await recordAuditEvent(supabase, {
+    workspaceId,
+    actorId: auth.user.id,
+    eventType: auditEventTypes.domainAdded,
+    metadata: {
+      domain_id: data.id,
+      hostname: data.hostname
+    }
+  });
 
   return res.status(201).json({
     ok: true,

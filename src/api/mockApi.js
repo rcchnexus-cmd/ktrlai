@@ -140,6 +140,13 @@ const controls = {
   customRules: [
     { id: "custom_1", bot: "PerplexityBot", access: "Summaries only", createdAt: "May 1, 2026" },
     { id: "custom_2", bot: "ClaudeBot", access: "Training denied", createdAt: "Apr 29, 2026" }
+  ],
+  governancePolicies: [
+    { id: "policy_gptbot", botScope: "GPTBot", policyType: "monitor", detail: "Track GPTBot activity and attribution paths before enforcement." },
+    { id: "policy_claude", botScope: "ClaudeBot", policyType: "monitor", detail: "Monitor Claude access and high-value pages." },
+    { id: "policy_perplexity", botScope: "PerplexityBot", policyType: "allow", detail: "Allow answer-engine access with visibility." },
+    { id: "policy_google", botScope: "Google-Extended", policyType: "restrict", detail: "Restrict training-oriented crawler access unless licensed." },
+    { id: "policy_unknown", botScope: "Unknown/Suspicious", policyType: "block", detail: "Block or review suspicious crawler patterns." }
   ]
 };
 

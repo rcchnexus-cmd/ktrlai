@@ -1,4 +1,39 @@
+export const workspaceRoles = ["owner", "admin", "analyst", "viewer"];
+export const workspaceRoleLabels = {
+  owner: "Owner",
+  admin: "Admin",
+  analyst: "Analyst",
+  member: "Member",
+  viewer: "Viewer"
+};
+
 const adminRoles = new Set(["owner", "admin"]);
+const legacyRoleAliases = {
+  member: "analyst"
+};
+
+export function normalizeWorkspaceRole(role, fallback = "viewer") {
+  const normalized = String(role || "").trim().toLowerCase();
+  const alias = legacyRoleAliases[normalized];
+
+  if (alias) {
+    return alias;
+  }
+
+  return workspaceRoles.includes(normalized) ? normalized : fallback;
+}
+
+export function canManageTeam(role) {
+  return normalizeWorkspaceRole(role) === "owner";
+}
+
+export function canManageOperations(role) {
+  return adminRoles.has(normalizeWorkspaceRole(role));
+}
+
+export function canViewWorkspace(role) {
+  return workspaceRoles.includes(normalizeWorkspaceRole(role));
+}
 
 export function getBearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization || "";
@@ -69,9 +104,10 @@ export async function requireWorkspaceRole(
     return { ok: false };
   }
 
-  const allowed = new Set(allowedRoles);
+  const memberRole = normalizeWorkspaceRole(member.role);
+  const allowed = new Set(allowedRoles.map((role) => normalizeWorkspaceRole(role)));
 
-  if (allowed.size > 0 && !allowed.has(member.role)) {
+  if (allowed.size > 0 && !allowed.has(memberRole)) {
     res.status(403).json({
       ok: false,
       message: "You do not have the required workspace role for this action."
@@ -82,7 +118,10 @@ export async function requireWorkspaceRole(
   return {
     ok: true,
     user,
-    member,
-    isAdmin: adminRoles.has(member.role)
+    member: {
+      ...member,
+      role: memberRole
+    },
+    isAdmin: adminRoles.has(memberRole)
   };
 }

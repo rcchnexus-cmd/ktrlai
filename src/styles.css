@@ -3360,6 +3360,138 @@ code {
   line-height: 1.5;
 }
 
+.roleAccessNotice {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-color: rgba(91, 140, 255, 0.18);
+}
+
+.roleAccessNotice h2 {
+  margin-top: 5px;
+  color: var(--text);
+  font-size: 24px;
+  text-transform: capitalize;
+}
+
+.enterprisePanel {
+  align-content: flex-start;
+}
+
+.enterpriseCopy {
+  max-width: 760px;
+  margin-top: -4px;
+  font-size: 14px;
+}
+
+.inviteMemberCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.28fr) auto;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.teamList,
+.policyGrid,
+.securityPostureList {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.teamList article,
+.policyGrid article,
+.securityPostureList article {
+  display: grid;
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.teamList strong,
+.policyGrid strong,
+.securityPostureList strong {
+  display: block;
+  color: var(--text);
+}
+
+.teamList span,
+.securityPostureList span {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.teamActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.teamActions select {
+  min-width: 130px;
+}
+
+.policyGrid article {
+  grid-template-columns: minmax(0, 1fr) 160px;
+}
+
+.policyGrid p {
+  margin-top: 5px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.auditMiniList {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.auditMiniList h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.auditMiniList div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 11px 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.024);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.auditMiniList strong {
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.auditMiniList em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  text-transform: capitalize;
+}
+
 .loadingState {
   display: grid;
   min-height: 220px;
@@ -4116,6 +4248,7 @@ code {
   .settingsGrid,
   .installSetupGrid,
   .adminSectionGrid,
+  .adminSecurityGrid,
   .visibilityHero,
   .twoColumnPanel,
   .authPage {
@@ -4143,6 +4276,17 @@ code {
   .billingPlanSummary,
   .billingMiniPlans {
     grid-template-columns: 1fr;
+  }
+
+  .inviteMemberCard,
+  .teamList article,
+  .policyGrid article {
+    grid-template-columns: 1fr;
+  }
+
+  .teamActions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .docsShell {
@@ -4254,6 +4398,7 @@ code {
   .heroActions,
   .topbar,
   .adminHero,
+  .roleAccessNotice,
   .mockupHeader,
   .panelHeader,
   .setupGuideHeader,

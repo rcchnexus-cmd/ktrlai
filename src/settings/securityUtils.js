@@ -212,3 +212,119 @@ export async function rotateApiKeyWithApi({ workspaceId, action = "rotate" }) {
 
   return data;
 }
+
+async function callEnterpriseEndpoint({ method = "GET", workspaceId, body } = {}) {
+  const accessToken = await getSupabaseAccessToken();
+
+  if (!accessToken) {
+    throw createMockFallbackError("Enterprise workspace settings are not available.");
+  }
+
+  const url = method === "GET" ? `/api/team?workspace_id=${encodeURIComponent(workspaceId)}` : "/api/team";
+  const response = await fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`
+    },
+    ...(method === "GET" ? {} : { body: JSON.stringify({ workspace_id: workspaceId, ...body }) })
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!contentType.includes("application/json")) {
+    throw createMockFallbackError("Enterprise workspace settings are not available.");
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Enterprise workspace settings could not be updated.");
+  }
+
+  return data;
+}
+
+export function createLocalEnterpriseSettings() {
+  return {
+    currentMemberRole: "owner",
+    permissions: {
+      canManageTeam: true,
+      canManageOperations: true,
+      canViewSecurity: true,
+      canViewBilling: true
+    },
+    members: [
+      {
+        id: "member_owner",
+        userId: "local_owner",
+        name: "Workspace owner",
+        email: "owner@example.com",
+        role: "owner",
+        createdAt: new Date().toISOString()
+      }
+    ],
+    invitations: [],
+    auditLogs: [
+      {
+        id: "audit_local",
+        actor: "System",
+        eventSummary: "Enterprise security controls ready",
+        eventType: "security_ready",
+        timestamp: new Date().toISOString()
+      }
+    ],
+    policies: [
+      { id: "policy_gptbot", botScope: "GPTBot", policyType: "monitor", notes: "Watch OpenAI crawler activity before enforcing access." },
+      { id: "policy_claudebot", botScope: "ClaudeBot", policyType: "monitor", notes: "Monitor Claude crawler behavior and content paths." },
+      { id: "policy_perplexity", botScope: "PerplexityBot", policyType: "allow", notes: "Allow answer-engine preview access while analytics mature." },
+      { id: "policy_google_extended", botScope: "Google-Extended", policyType: "restrict", notes: "Restrict training-style access unless licensed." },
+      { id: "policy_unknown", botScope: "Unknown/Suspicious", policyType: "block", notes: "Treat unknown or suspicious scrapers conservatively." }
+    ],
+    warnings: []
+  };
+}
+
+export async function loadEnterpriseSettings({ workspaceId }) {
+  const data = await callEnterpriseEndpoint({ workspaceId });
+  return data.enterprise || createLocalEnterpriseSettings();
+}
+
+export async function inviteWorkspaceMember({ workspaceId, email, role }) {
+  return callEnterpriseEndpoint({
+    method: "POST",
+    workspaceId,
+    body: { action: "invite", email, role }
+  });
+}
+
+export async function removeWorkspaceMember({ workspaceId, userId }) {
+  return callEnterpriseEndpoint({
+    method: "POST",
+    workspaceId,
+    body: { action: "remove_member", user_id: userId }
+  });
+}
+
+export async function updateWorkspaceMemberRole({ workspaceId, userId, role }) {
+  return callEnterpriseEndpoint({
+    method: "POST",
+    workspaceId,
+    body: { action: "update_role", user_id: userId, role }
+  });
+}
+
+export async function saveGovernancePolicy({ workspaceId, botScope, policyType, notes }) {
+  const data = await callEnterpriseEndpoint({
+    method: "POST",
+    workspaceId,
+    body: {
+      action: "save_policy",
+      bot_scope: botScope,
+      policy_type: policyType,
+      notes
+    }
+  });
+
+  return data.policy;
+}

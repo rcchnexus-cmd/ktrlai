@@ -43,7 +43,7 @@ export async function createWorkspaceApiKeyRecord(
   await recordAuditEvent(supabase, {
     workspaceId,
     actorId,
-    eventType: auditEventTypes.apiKeyRotation,
+    eventType: revokeExisting ? auditEventTypes.apiKeyRotation : auditEventTypes.apiKeyGeneration,
     metadata: {
       api_key_id: data.id,
       key_prefix: data.key_prefix,

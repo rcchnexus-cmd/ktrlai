@@ -8,9 +8,15 @@ import { getTrackerInstallUrl } from "../config/runtime.js";
 import { useApp } from "../context/AppContext.jsx";
 import {
   buildDnsRecord,
+  createLocalEnterpriseSettings,
+  inviteWorkspaceMember,
+  loadEnterpriseSettings,
   maskApiKey,
   mergeDomainVerificationResult,
+  removeWorkspaceMember,
   rotateApiKeyWithApi,
+  saveGovernancePolicy,
+  updateWorkspaceMemberRole,
   verifyDomainWithApi
 } from "../settings/securityUtils.js";
 
@@ -201,6 +207,13 @@ export default function Settings() {
   const [installHealth, setInstallHealth] = useState(null);
   const [installHealthError, setInstallHealthError] = useState("");
   const [installHealthLoading, setInstallHealthLoading] = useState(false);
+  const [enterprise, setEnterprise] = useState(null);
+  const [enterpriseLoading, setEnterpriseLoading] = useState(false);
+  const [enterpriseMessage, setEnterpriseMessage] = useState("");
+  const [enterpriseMessageType, setEnterpriseMessageType] = useState("success");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("viewer");
+  const [savingPolicyKey, setSavingPolicyKey] = useState("");
 
   useEffect(() => {
     if (!state.settings && !state.loading.settings) {
@@ -251,6 +264,46 @@ export default function Settings() {
     };
   }, [settings?.workspaceId, state.auth.isAuthenticated]);
 
+  useEffect(() => {
+    if (!state.auth.isAuthenticated || !settings?.workspaceId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadEnterprise = async () => {
+      setEnterpriseLoading(true);
+      setEnterpriseMessage("");
+
+      try {
+        const data = await loadEnterpriseSettings({ workspaceId: settings.workspaceId });
+
+        if (isMounted) {
+          setEnterprise(data);
+        }
+      } catch (error) {
+        if (isMounted && error.useMockFallback) {
+          setEnterprise(createLocalEnterpriseSettings());
+          setEnterpriseMessage("Enterprise controls are using local development data.");
+          setEnterpriseMessageType("success");
+        } else if (isMounted) {
+          setEnterpriseMessage(error.message || "Enterprise workspace controls could not be loaded.");
+          setEnterpriseMessageType("error");
+        }
+      } finally {
+        if (isMounted) {
+          setEnterpriseLoading(false);
+        }
+      }
+    };
+
+    loadEnterprise();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [settings?.workspaceId, state.auth.isAuthenticated]);
+
   const settingsError = state.errors.settings;
   const billing = settings?.billing || {};
   const currentPlan = billing.plan || settings?.account?.plan || "Free";
@@ -259,6 +312,20 @@ export default function Settings() {
   const subscriptionStatusKey = String(subscriptionStatus || "free").toLowerCase();
   const hasBillingPortal = Boolean(billing.hasStripeCustomer);
   const showBillingWarning = billingWarningStatuses.has(subscriptionStatusKey);
+  const fallbackWorkspaceRole = String(state.auth.workspace?.role || "viewer").toLowerCase();
+  const fallbackCanManageTeam = fallbackWorkspaceRole === "owner";
+  const fallbackCanManageOperations = fallbackWorkspaceRole === "owner" || fallbackWorkspaceRole === "admin";
+  const enterprisePermissions = enterprise?.permissions || {
+    canManageTeam: fallbackCanManageTeam,
+    canManageOperations: fallbackCanManageOperations,
+    canViewSecurity: fallbackCanManageOperations,
+    canViewBilling: fallbackCanManageOperations
+  };
+  const currentWorkspaceRole = enterprise?.currentMemberRole || fallbackWorkspaceRole || (enterpriseLoading ? "checking role" : "limited");
+  const canManageTeam = Boolean(enterprisePermissions.canManageTeam);
+  const canManageOperations = Boolean(enterprisePermissions.canManageOperations);
+  const canViewSecurity = Boolean(enterprisePermissions.canViewSecurity);
+  const canViewBilling = Boolean(enterprisePermissions.canViewBilling);
 
   const copyValue = async (value, itemKey) => {
     if (!value) {
@@ -408,6 +475,120 @@ export default function Settings() {
     setOpeningBillingPortal(false);
   };
 
+  const reloadEnterprise = async () => {
+    if (!settings?.workspaceId) {
+      return;
+    }
+
+    setEnterpriseLoading(true);
+    try {
+      const data = await loadEnterpriseSettings({ workspaceId: settings.workspaceId });
+      setEnterprise(data);
+    } catch (error) {
+      setEnterpriseMessageType("error");
+      setEnterpriseMessage(error.message || "Enterprise controls could not be refreshed.");
+    } finally {
+      setEnterpriseLoading(false);
+    }
+  };
+
+  const handleInviteMember = async () => {
+    if (!settings?.workspaceId || !inviteEmail.trim()) {
+      setEnterpriseMessageType("error");
+      setEnterpriseMessage("Enter an email address before sending an invitation.");
+      return;
+    }
+
+    setEnterpriseLoading(true);
+    setEnterpriseMessage("");
+
+    try {
+      await inviteWorkspaceMember({
+        workspaceId: settings.workspaceId,
+        email: inviteEmail.trim(),
+        role: inviteRole
+      });
+      setInviteEmail("");
+      setInviteRole("viewer");
+      setEnterpriseMessageType("success");
+      setEnterpriseMessage("Invitation created.");
+      await reloadEnterprise();
+    } catch (error) {
+      setEnterpriseMessageType("error");
+      setEnterpriseMessage(error.message || "Invitation could not be created.");
+    } finally {
+      setEnterpriseLoading(false);
+    }
+  };
+
+  const handleRemoveMember = async (member) => {
+    setEnterpriseLoading(true);
+    setEnterpriseMessage("");
+
+    try {
+      await removeWorkspaceMember({
+        workspaceId: settings.workspaceId,
+        userId: member.userId
+      });
+      setEnterpriseMessageType("success");
+      setEnterpriseMessage("Workspace member removed.");
+      await reloadEnterprise();
+    } catch (error) {
+      setEnterpriseMessageType("error");
+      setEnterpriseMessage(error.message || "Workspace member could not be removed.");
+    } finally {
+      setEnterpriseLoading(false);
+    }
+  };
+
+  const handleRoleChange = async (member, role) => {
+    setEnterpriseLoading(true);
+    setEnterpriseMessage("");
+
+    try {
+      await updateWorkspaceMemberRole({
+        workspaceId: settings.workspaceId,
+        userId: member.userId,
+        role
+      });
+      setEnterpriseMessageType("success");
+      setEnterpriseMessage("Workspace role updated.");
+      await reloadEnterprise();
+    } catch (error) {
+      setEnterpriseMessageType("error");
+      setEnterpriseMessage(error.message || "Workspace role could not be updated.");
+    } finally {
+      setEnterpriseLoading(false);
+    }
+  };
+
+  const handlePolicyChange = async (policy, nextType) => {
+    setSavingPolicyKey(policy.botScope);
+    setEnterpriseMessage("");
+
+    try {
+      const savedPolicy = await saveGovernancePolicy({
+        workspaceId: settings.workspaceId,
+        botScope: policy.botScope,
+        policyType: nextType,
+        notes: policy.notes
+      });
+      setEnterprise((current) => ({
+        ...current,
+        policies: (current?.policies || []).map((item) =>
+          item.botScope === savedPolicy.botScope ? savedPolicy : item
+        )
+      }));
+      setEnterpriseMessageType("success");
+      setEnterpriseMessage("Governance policy updated.");
+    } catch (error) {
+      setEnterpriseMessageType("error");
+      setEnterpriseMessage(error.message || "Governance policy could not be updated.");
+    } finally {
+      setSavingPolicyKey("");
+    }
+  };
+
   const apiKey = settings?.apiKey || {};
   const apiKeyValue = apiKey.key || "";
   const plaintextApiKey = oneTimeApiKey || apiKeyValue;
@@ -481,6 +662,20 @@ export default function Settings() {
         <div className="loadingState">Loading settings...</div>
       ) : (
         <div className="settingsGrid">
+          {!canManageOperations && (
+            <section className="panel largePanel roleAccessNotice">
+              <div>
+                <span className="eyebrow">Workspace role</span>
+                <h2>{currentWorkspaceRole}</h2>
+                <p>
+                  Your role is read-focused. Billing, API keys, domain verification, and security settings are limited
+                  to workspace owners and admins.
+                </p>
+              </div>
+              <StatusBadge status={currentWorkspaceRole} />
+            </section>
+          )}
+          {canViewBilling && (
           <section className="panel largePanel billingSettingsPanel">
             <div className="panelHeader">
               <div>
@@ -569,7 +764,9 @@ export default function Settings() {
               )}
             </div>
           </section>
+          )}
 
+          {canManageOperations && (
           <section className="panel largePanel installWizardPanel" id="install">
             <div className="installHeroHeader">
               <div>
@@ -708,7 +905,9 @@ window.KtrlAI.page();`}</code>
               </article>
             </div>
           </section>
+          )}
 
+          {canManageOperations && (
           <section className="panel" id="api-key">
             <div className="panelHeader">
               <div>
@@ -770,7 +969,9 @@ window.KtrlAI.page();`}</code>
               )}
             </div>
           </section>
+          )}
 
+          {canManageOperations && (
           <section className="panel largePanel">
             <div className="panelHeader">
               <div>
@@ -857,6 +1058,180 @@ window.KtrlAI.page();`}</code>
               </div>
             )}
           </section>
+          )}
+
+          {canViewSecurity && (
+            <section className="panel largePanel enterprisePanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Team Management</span>
+                  <h2>Workspace collaboration</h2>
+                </div>
+                <StatusBadge status={enterpriseLoading ? "Loading" : currentWorkspaceRole} />
+              </div>
+              <p className="enterpriseCopy">
+                Owners manage membership, admins manage operational controls, analysts view analytics, and viewers have read-only access.
+              </p>
+              {canManageTeam && (
+                <div className="inviteMemberCard">
+                  <input
+                    value={inviteEmail}
+                    onChange={(event) => setInviteEmail(event.target.value)}
+                    placeholder="teammate@company.com"
+                    aria-label="Invite email"
+                  />
+                  <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value)} aria-label="Invite role">
+                    <option value="admin">Admin</option>
+                    <option value="analyst">Analyst</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                  <button type="button" className="primaryButton smallButton" onClick={handleInviteMember} disabled={enterpriseLoading}>
+                    Send invite
+                  </button>
+                </div>
+              )}
+              <div className="teamList">
+                {(enterprise?.members || []).map((member) => (
+                  <article key={member.id || member.userId}>
+                    <div>
+                      <strong>{member.name}</strong>
+                      <span>{member.email}</span>
+                    </div>
+                    <StatusBadge status={member.role} />
+                    {canManageTeam && member.role !== "owner" ? (
+                      <div className="teamActions">
+                        <select value={member.role} onChange={(event) => handleRoleChange(member, event.target.value)}>
+                          <option value="admin">Admin</option>
+                          <option value="analyst">Analyst</option>
+                          <option value="viewer">Viewer</option>
+                        </select>
+                        <button type="button" className="secondaryButton smallButton" onClick={() => handleRemoveMember(member)}>
+                          Remove
+                        </button>
+                      </div>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+              {(enterprise?.invitations || []).length > 0 && (
+                <div className="auditMiniList">
+                  <h3>Pending invitations</h3>
+                  {enterprise.invitations.map((invite) => (
+                    <div key={invite.id}>
+                      <span>{invite.email}</span>
+                      <strong>{invite.role}</strong>
+                      <em>{invite.status}</em>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {enterpriseMessage && (
+                <p className={`domainVerificationMessage ${enterpriseMessageType === "error" ? "error" : ""}`} role="status">
+                  {enterpriseMessage}
+                </p>
+              )}
+            </section>
+          )}
+
+          {canViewSecurity && (
+            <section className="panel largePanel enterprisePanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Governance Policies</span>
+                  <h2>AI crawler policy engine</h2>
+                </div>
+              </div>
+              <div className="policyGrid">
+                {(enterprise?.policies || []).map((policy) => (
+                  <article key={policy.id || policy.botScope}>
+                    <div>
+                      <strong>{policy.botScope}</strong>
+                      <p>{policy.notes}</p>
+                    </div>
+                    <select
+                      value={policy.policyType}
+                      onChange={(event) => handlePolicyChange(policy, event.target.value)}
+                      disabled={!canManageOperations || savingPolicyKey === policy.botScope}
+                    >
+                      <option value="allow">Allow</option>
+                      <option value="monitor">Monitor</option>
+                      <option value="restrict">Restrict</option>
+                      <option value="block">Block</option>
+                    </select>
+                  </article>
+                ))}
+              </div>
+              <p className="securityWarning">
+                Policies are governance signals for visibility and workflow. Network-level blocking is not enabled yet.
+              </p>
+            </section>
+          )}
+
+          {canViewSecurity && (
+            <section className="panel largePanel enterprisePanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Audit Logs</span>
+                  <h2>Workspace security activity</h2>
+                </div>
+                <button type="button" className="secondaryButton smallButton" onClick={reloadEnterprise} disabled={enterpriseLoading}>
+                  Refresh
+                </button>
+              </div>
+              {(enterprise?.auditLogs || []).length === 0 ? (
+                <div className="emptyState compact">
+                  <strong>No audit activity yet</strong>
+                  <p>Security, billing, team, policy, domain, and API key changes will appear here.</p>
+                </div>
+              ) : (
+                <div className="tableWrap compactTableWrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Event</th>
+                        <th>Actor</th>
+                        <th>Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {enterprise.auditLogs.map((event) => (
+                        <tr key={event.id}>
+                          <td>{event.eventSummary}</td>
+                          <td>{event.actor}</td>
+                          <td>{formatDateTime(event.timestamp)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          )}
+
+          {canViewSecurity && (
+            <section className="panel enterprisePanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Security</span>
+                  <h2>Enterprise posture</h2>
+                </div>
+              </div>
+              <div className="securityPostureList">
+                <article>
+                  <strong>Server-side role checks</strong>
+                  <span>Workspace mutations require owner or admin authorization.</span>
+                </article>
+                <article>
+                  <strong>Hashed API keys</strong>
+                  <span>Full API keys are shown once and stored as server-side hashes.</span>
+                </article>
+                <article>
+                  <strong>Abuse controls</strong>
+                  <span>Tracker, billing, admin, API key, and domain endpoints include rate limits.</span>
+                </article>
+              </div>
+            </section>
+          )}
 
           <section className="panel">
             <div className="panelHeader">

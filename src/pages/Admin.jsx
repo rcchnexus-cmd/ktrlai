@@ -155,6 +155,7 @@ export default function Admin() {
   const domains = summary.domains || [];
   const payouts = summary.payouts || [];
   const platformAnalytics = summary.platformAnalytics || {};
+  const security = summary.security || {};
 
   return (
     <AppShell title="Admin" eyebrow="Platform Admin">
@@ -178,6 +179,90 @@ export default function Admin() {
           Some admin datasets could not be loaded: {summary.warnings.slice(0, 3).join(" | ")}
         </section>
       ) : null}
+
+      <section className="dashboardGrid adminSecurityGrid">
+        <article className="panel">
+          <div className="panelHeader">
+            <div>
+              <span className="eyebrow">Security</span>
+              <h2>Suspicious workspace signals</h2>
+            </div>
+          </div>
+          <div className="adminAuditList">
+            {(security.suspiciousWorkspaces || []).length === 0 ? (
+              <p>No recent suspicious crawler activity.</p>
+            ) : (
+              security.suspiciousWorkspaces.map((workspace) => (
+                <div key={workspace.workspaceId}>
+                  <span>{workspace.workspaceName}</span>
+                  <strong>{workspace.suspiciousCount}</strong>
+                  <em>Suspicious events</em>
+                </div>
+              ))
+            )}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panelHeader">
+            <div>
+              <span className="eyebrow">Abuse protection</span>
+              <h2>Rate-limit triggers</h2>
+            </div>
+          </div>
+          <div className="adminAuditList">
+            {(security.rateLimitTriggers || []).length === 0 ? (
+              <p>No rate-limit triggers recorded.</p>
+            ) : (
+              security.rateLimitTriggers.slice(0, 8).map((event) => (
+                <div key={event.id}>
+                  <span>{event.workspaceName}</span>
+                  <strong>{statusLabel(event.scope)}</strong>
+                  <em>{formatDateTime(event.createdAt)}</em>
+                </div>
+              ))
+            )}
+          </div>
+        </article>
+        <article className="panel largePanel">
+          <div className="panelHeader">
+            <div>
+              <span className="eyebrow">Audit</span>
+              <h2>Recent security activity</h2>
+            </div>
+          </div>
+          <div className="adminAuditList">
+            {(security.auditActivityFeed || []).length === 0 ? (
+              <p>No enterprise audit activity recorded yet.</p>
+            ) : (
+              security.auditActivityFeed.slice(0, 10).map((event) => (
+                <div key={event.id}>
+                  <span>{event.eventSummary}</span>
+                  <strong>{event.workspaceName}</strong>
+                  <em>{event.actor} - {formatDateTime(event.createdAt)}</em>
+                </div>
+              ))
+            )}
+          </div>
+        </article>
+        <article className="panel">
+          <div className="panelHeader">
+            <div>
+              <span className="eyebrow">Growth</span>
+              <h2>Workspace/user growth</h2>
+            </div>
+          </div>
+          <div className="adminPlanGrid">
+            <article>
+              <span>New users 7d</span>
+              <strong>{security.growth?.usersLast7Days || 0}</strong>
+            </article>
+            <article>
+              <span>New workspaces 7d</span>
+              <strong>{security.growth?.workspacesLast7Days || 0}</strong>
+            </article>
+          </div>
+        </article>
+      </section>
 
       <section className="dashboardGrid adminGrid">
         <article className="panel largePanel">
