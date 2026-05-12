@@ -108,7 +108,7 @@ export async function openBillingPortal({ workspaceId } = {}) {
       };
     }
 
-    const response = await fetch("/api/create-billing-portal-session", {
+    const response = await fetch("/api/billing?action=portal", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -168,7 +168,7 @@ export async function requestPayoutReview({ amountCents, currency = "USD", works
     throw error;
   }
 
-  const response = await fetch("/api/request-payout", {
+  const response = await fetch("/api/billing?action=payout", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

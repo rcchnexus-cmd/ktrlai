@@ -15,7 +15,9 @@ async function requestAdminSummary(search = "") {
     throw new AdminApiError("Sign in with a platform admin account to access this area.", 401);
   }
 
-  const response = await fetch(`/api/admin/summary${search}`, {
+  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  params.set("action", "summary");
+  const response = await fetch(`/api/admin?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`
     }

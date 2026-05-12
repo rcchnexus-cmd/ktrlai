@@ -6,7 +6,7 @@ const viteEnv = import.meta.env || {};
 
 export const stripePublishableKey = viteEnv.VITE_STRIPE_PUBLISHABLE_KEY || "";
 
-export const checkoutEndpoint = "/api/create-checkout-session";
+export const checkoutEndpoint = "/api/billing?action=checkout";
 
 export const billingPlans = [
   {

@@ -1,6 +1,6 @@
-import { requireWorkspaceRole } from "../_auth.js";
-import { sendMissingServerConfig } from "../_runtime.js";
-import { getSupabaseAdmin, isSupabaseAdminConfigured } from "../_supabaseAdmin.js";
+import { requireWorkspaceRole } from "./_auth.js";
+import { sendMissingServerConfig } from "./_runtime.js";
+import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 
 const rangeDays = {
   "7d": 7,

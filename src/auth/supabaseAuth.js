@@ -386,7 +386,7 @@ async function recordSessionAudit(eventType, { workspaceId, accessToken } = {}) 
   }
 
   try {
-    await fetch("/api/audit", {
+    await fetch("/api/app?action=audit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -549,7 +549,7 @@ export async function addDomain(domain, workspaceId = getActiveWorkspaceId()) {
     throw new Error("Enter a valid domain.");
   }
 
-  const response = await fetch("/api/domain", {
+  const response = await fetch("/api/app?action=domain", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

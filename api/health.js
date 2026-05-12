@@ -80,7 +80,7 @@ export default async function handler(req, res) {
       },
       analytics: {
         configured: supabase.reachable,
-        endpoint: "/api/analytics/summary"
+        endpoint: "/api/analytics?action=summary"
       },
       payouts: {
         enabled: process.env.PAYOUT_REQUESTS_ENABLED === "true"

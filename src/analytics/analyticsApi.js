@@ -126,7 +126,8 @@ export async function getWorkspaceAnalyticsSummary({ workspaceId, range = "7d" }
     workspace_id: workspaceId,
     range
   });
-  const response = await fetch(`/api/analytics/summary?${search.toString()}`, {
+  search.set("action", "summary");
+  const response = await fetch(`/api/analytics?${search.toString()}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`
     }
@@ -152,7 +153,8 @@ export async function getWorkspaceInstallHealth({ workspaceId } = {}) {
     workspace_id: workspaceId,
     view: "install_health"
   });
-  const response = await fetch(`/api/analytics/summary?${search.toString()}`, {
+  search.set("action", "summary");
+  const response = await fetch(`/api/analytics?${search.toString()}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`
     }

@@ -152,7 +152,7 @@ export async function verifyDomainWithApi({ domainId, workspaceId }) {
     throw createMockFallbackError("Domain verification endpoint is not available.");
   }
 
-  const response = await fetch("/api/verify-domain", {
+  const response = await fetch("/api/app?action=verify-domain", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -186,7 +186,7 @@ export async function rotateApiKeyWithApi({ workspaceId, action = "rotate" }) {
     throw createMockFallbackError("API key endpoint is not available.");
   }
 
-  const response = await fetch("/api/api-key", {
+  const response = await fetch("/api/app?action=api-key", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -220,7 +220,7 @@ async function callEnterpriseEndpoint({ method = "GET", workspaceId, body } = {}
     throw createMockFallbackError("Enterprise workspace settings are not available.");
   }
 
-  const url = method === "GET" ? `/api/team?workspace_id=${encodeURIComponent(workspaceId)}` : "/api/team";
+  const url = method === "GET" ? `/api/app?action=team&workspace_id=${encodeURIComponent(workspaceId)}` : "/api/app?action=team";
   const response = await fetch(url, {
     method,
     headers: {

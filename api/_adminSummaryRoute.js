@@ -1,8 +1,8 @@
-import { requirePlatformAdmin } from "../_adminAuth.js";
-import { isApiKeyHashingConfigured } from "../_crypto.js";
-import { checkServerRateLimit } from "../_rateLimit.js";
-import { sendMissingServerConfig } from "../_runtime.js";
-import { getSupabaseAdmin, isSupabaseAdminConfigured } from "../_supabaseAdmin.js";
+import { requirePlatformAdmin } from "./_adminAuth.js";
+import { isApiKeyHashingConfigured } from "./_crypto.js";
+import { checkServerRateLimit } from "./_rateLimit.js";
+import { sendMissingServerConfig } from "./_runtime.js";
+import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 
 const rowLimit = 50;
 

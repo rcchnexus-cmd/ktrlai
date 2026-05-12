@@ -19,7 +19,7 @@ comment on column public.domains.status is
   'Domain verification lifecycle: pending, verified, failed, or disabled.';
 
 comment on column public.domains.verified_at is
-  'Timestamp set when /api/verify-domain finds the expected DNS TXT record.';
+  'Timestamp set when /api/app?action=verify-domain finds the expected DNS TXT record.';
 
 comment on column public.domains.last_checked_at is
-  'Timestamp set whenever /api/verify-domain checks DNS for this domain.';
+  'Timestamp set whenever /api/app?action=verify-domain checks DNS for this domain.';
