@@ -1,4 +1,5 @@
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
+import { processAnalyticsRollupJob } from "./_analyticsRollups.js";
 import { jobStatuses, jobTypes } from "./_jobTypes.js";
 import { processQueuedEmailNotification } from "./_notifications.js";
 
@@ -96,10 +97,7 @@ export async function processJob(supabase, job) {
   }
 
   if (job.type === jobTypes.analyticsRollup) {
-    return {
-      ok: true,
-      message: "Analytics rollup placeholder processed. Future materialized rollups can be triggered here.",
-    };
+    return processAnalyticsRollupJob(supabase, payload);
   }
 
   if (job.type === jobTypes.cleanupTask) {

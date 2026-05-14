@@ -159,6 +159,7 @@ export default function Admin() {
   const rateLimiting = security.rateLimiting || {};
   const notifications = summary.notifications || {};
   const jobs = summary.jobs || {};
+  const rollups = platformAnalytics.rollups || {};
 
   return (
     <AppShell title="Admin" eyebrow="Platform Admin">
@@ -477,6 +478,30 @@ export default function Admin() {
               <span>Unknown crawlers</span>
               <strong>{platformAnalytics.unknownCrawlerEvents || 0}</strong>
             </article>
+            <article>
+              <span>Rollup status</span>
+              <strong>{statusLabel(rollups.lastRunStatus || "not run")}</strong>
+            </article>
+            <article>
+              <span>Pending rollups</span>
+              <strong>{rollups.pendingJobs || 0}</strong>
+            </article>
+          </div>
+          <div className="adminAuditList">
+            <h3>Rollup health</h3>
+            <div>
+              <span>Coverage</span>
+              <strong>{rollups.coverageStart && rollups.coverageEnd ? `${rollups.coverageStart} to ${rollups.coverageEnd}` : "No coverage yet"}</strong>
+            </div>
+            <div>
+              <span>Last successful run</span>
+              <strong>{formatDateTime(rollups.lastSuccessfulRunAt)}</strong>
+              <em>{rollups.lastProcessedEvents || 0} events across {rollups.lastProcessedDays || 0} day buckets</em>
+            </div>
+            <div>
+              <span>Failed runs</span>
+              <strong>{rollups.failedRuns || 0}</strong>
+            </div>
           </div>
           <div className="adminAuditList">
             <h3>Top detected AI crawlers</h3>
@@ -765,6 +790,12 @@ export default function Admin() {
             <HealthItem label="Job runner" enabled={health.jobRunnerConfigured} detail={health.queueStatus || "Queue"} />
             <HealthItem label="Tracker endpoint" enabled={health.trackerEndpointStatus === "Ready"} detail={health.trackerEndpointStatus} />
             <HealthItem label="Health endpoint" enabled={Boolean(health.healthEndpointStatus)} detail={health.healthEndpointStatus} />
+            <HealthItem
+              label="Analytics rollups"
+              enabled={Boolean(health.analyticsRollupsConfigured)}
+              detail={health.analyticsRollupCoverage || "Rollup tables"}
+              statusText={statusLabel(health.analyticsRollupStatus || "unknown")}
+            />
             <HealthItem
               label="Rate limits"
               enabled={Boolean(health.rateLimitStore)}

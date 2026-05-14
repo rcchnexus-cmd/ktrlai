@@ -1,4 +1,5 @@
 import { isApiKeyHashingConfigured } from "./_crypto.js";
+import { getRollupHealth } from "./_analyticsRollups.js";
 import { getQueueStats, isJobRunnerSecretConfigured } from "./_jobs.js";
 import { getRateLimitProviderStatus } from "./_rateLimit.js";
 import { isProductionRuntime } from "./_runtime.js";
@@ -59,13 +60,19 @@ export default async function handler(req, res) {
   const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRO_PRICE_ID && process.env.STRIPE_BUSINESS_PRICE_ID);
   const webhookConfigured = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
   const hashingConfigured = isApiKeyHashingConfigured();
-  const queue = supabase.reachable
-    ? await getQueueStats(getSupabaseAdmin())
-    : {
-        configured: false,
-        counts: { queued: 0, processing: 0, completed: 0, failed: 0, dueQueued: 0 },
-        warning: "Supabase must be reachable before queue health can be checked."
-      };
+  const [queue, rollups] = supabase.reachable
+    ? await Promise.all([getQueueStats(getSupabaseAdmin()), getRollupHealth(getSupabaseAdmin())])
+    : [
+        {
+          configured: false,
+          counts: { queued: 0, processing: 0, completed: 0, failed: 0, dueQueued: 0 },
+          warning: "Supabase must be reachable before queue health can be checked."
+        },
+        {
+          configured: false,
+          warning: "Supabase must be reachable before rollup health can be checked."
+        }
+      ];
   const rateLimitProvider = await getRateLimitProviderStatus({ test: true });
   const status = supabase.reachable && hashingConfigured ? "ok" : "degraded";
   const payload = {
@@ -90,7 +97,16 @@ export default async function handler(req, res) {
       },
       analytics: {
         configured: supabase.reachable,
-        endpoint: "/api/analytics?action=summary"
+        endpoint: "/api/analytics?action=summary",
+        rollups: {
+          configured: Boolean(rollups.configured),
+          lastSuccessfulRunAt: rollups.lastSuccessfulRunAt || null,
+          pendingJobs: rollups.pendingJobs || 0,
+          failedRuns: rollups.failedRuns || 0,
+          coverageStart: rollups.coverageStart || null,
+          coverageEnd: rollups.coverageEnd || null,
+          message: rollups.warning || "Analytics rollup health available."
+        }
       },
       payouts: {
         enabled: process.env.PAYOUT_REQUESTS_ENABLED === "true"

@@ -13,10 +13,11 @@ Run these SQL files in order in the Supabase SQL editor before enabling producti
 9. `stripe_webhook_idempotency.sql`
 10. `analytics_engine_migration.sql`
 11. `bot_detection_migration.sql`
-12. `enterprise_security_migration.sql`
-13. `scale_optimization_migration.sql`
-14. `jobs_migration.sql`
-15. `notifications_migration.sql`
+12. `analytics_rollups_migration.sql`
+13. `enterprise_security_migration.sql`
+14. `scale_optimization_migration.sql`
+15. `jobs_migration.sql`
+16. `notifications_migration.sql`
 
 Frontend code must use only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 Serverless functions use `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and any server-only secrets such as `API_KEY_HASH_SECRET`.
@@ -79,5 +80,15 @@ traffic still work. Do not create `VITE_` Redis variables.
 The internal job runner is available at `/api/internal/jobs` and must be called
 with `Authorization: Bearer INTERNAL_JOBS_SECRET` or `x-ktrlai-job-secret`.
 Use Vercel Cron or a private operator trigger to process queued jobs.
+
+Analytics rollups are processed by queued `analytics_rollup` jobs. Seed one from
+the Supabase SQL editor with:
+
+```sql
+insert into public.jobs (type, payload)
+values ('analytics_rollup', '{"daysBack": 2}'::jsonb);
+```
+
+Run the internal job endpoint after seeding, or schedule it with Vercel Cron.
 
 `dist/` and `node_modules/` are generated artifacts and should not be committed. Vercel should install dependencies and run `npm run build`.

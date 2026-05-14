@@ -74,5 +74,14 @@ export function summarizeJobPayload(type, payload = {}) {
     };
   }
 
+  if (type === jobTypes.analyticsRollup) {
+    return {
+      workspaceId: sanitized.workspaceId || "recent workspaces",
+      daysBack: sanitized.daysBack || 2,
+      windowStart: sanitized.windowStart,
+      windowEnd: sanitized.windowEnd,
+    };
+  }
+
   return sanitized;
 }

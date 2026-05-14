@@ -1,4 +1,5 @@
 import { requireWorkspaceRole } from "./_auth.js";
+import { fetchAnalyticsRollups } from "./_analyticsRollups.js";
 import { sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 
@@ -182,6 +183,23 @@ function buildTopPages(pageCounts) {
     }));
 }
 
+function buildTopPagesFromRollups(pageCounts, pageRevenue) {
+  return Array.from(pageCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([page, visits]) => ({
+      page,
+      visits,
+      revenueEstimateCents: Number(pageRevenue.get(page) || visits * 12)
+    }));
+}
+
+function mergeCounts(target, counts = {}) {
+  Object.entries(counts || {}).forEach(([key, value]) => {
+    target[key] = Number(target[key] || 0) + Number(value || 0);
+  });
+}
+
 function getInstallHealth({ totalEvents, latestEvent, eventsToday, domains }) {
   const latestEventAt = latestEvent?.occurred_at || null;
   const verifiedDomains = (domains || []).filter((domain) => String(domain.status || "").toLowerCase() === "verified").length;
@@ -322,6 +340,7 @@ function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window,
     mode: "live",
     workspaceId,
     range,
+    aggregationSource: "raw",
     rangeStart: window.startIso,
     rangeEnd: window.endIso,
     hasRealData: totalEvents > 0,
@@ -364,6 +383,134 @@ function buildAnalyticsPayload({ workspaceId, range, events, totalCount, window,
     },
     truncated: events.length >= (aggregationLimit || maxEventsForServerAggregation)
   };
+}
+
+function buildAnalyticsPayloadFromRollups({ workspaceId, range, rollups, recentEvents, window, latestEvent, eventsToday, domains }) {
+  const dailyBuckets = buildDailyBuckets(window.start, window.days);
+  const botCounts = new Map();
+  const pageCounts = new Map();
+  const pageRevenue = new Map();
+  const statusCounts = new Map();
+  const categoryCounts = {};
+  const aiBotCounts = new Map();
+  const uniqueBots = new Set();
+  const pages = new Set();
+  let totalEvents = 0;
+  let pagesAccessed = 0;
+  let aiBotEvents = 0;
+  let humanEvents = 0;
+  let suspiciousEvents = 0;
+  let highConfidenceTrainingEvents = 0;
+  let confidenceTotal = 0;
+  let confidenceCount = 0;
+  let estimatedCents = 0;
+
+  for (const row of rollups.daily || []) {
+    const bucketKey = String(row.date_bucket || "").slice(0, 10);
+    const bucket = dailyBuckets.get(bucketKey);
+    const count = Number(row.event_count || 0);
+
+    if (bucket) {
+      bucket.value = count;
+    }
+
+    totalEvents += count;
+    pagesAccessed += Number(row.page_count || 0);
+    aiBotEvents += Number(row.ai_bot_count || 0);
+    humanEvents += Number(row.human_event_count || 0);
+    suspiciousEvents += Number(row.suspicious_event_count || 0);
+    highConfidenceTrainingEvents += Number(row.high_confidence_training_count || 0);
+    confidenceTotal += Number(row.confidence_total || 0);
+    confidenceCount += Number(row.confidence_count || 0);
+    estimatedCents += Number(row.estimated_revenue_cents || 0);
+    mergeCounts(categoryCounts, row.category_counts || {});
+  }
+
+  for (const row of rollups.bots || []) {
+    const label = row.bot_type || row.bot_name || "UnknownBot";
+    uniqueBots.add(label);
+    increment(botCounts, label, Number(row.event_count || 0));
+
+    if (row.is_ai_bot) {
+      increment(aiBotCounts, row.bot_name || label, Number(row.event_count || 0));
+    }
+  }
+
+  for (const row of rollups.pages || []) {
+    const page = row.page_label || row.page_key || "Untitled page";
+    pages.add(row.page_key || page);
+    increment(pageCounts, page, Number(row.event_count || 0));
+    increment(pageRevenue, page, Number(row.estimated_revenue_cents || 0));
+  }
+
+  for (const row of rollups.statuses || []) {
+    increment(statusCounts, row.status || "allowed", Number(row.event_count || 0));
+  }
+
+  return {
+    ok: true,
+    mode: "live",
+    workspaceId,
+    range,
+    rangeStart: window.startIso,
+    rangeEnd: window.endIso,
+    aggregationSource: "rollups",
+    hasRealData: totalEvents > 0,
+    totalEvents,
+    uniqueBots: uniqueBots.size,
+    pagesAccessed: pages.size || pagesAccessed,
+    detectedBotTypes: Array.from(uniqueBots).map(cleanBotName).sort(),
+    botDistribution: buildDistribution(botCounts, totalEvents),
+    aiDetection: {
+      aiBotEvents,
+      humanEvents,
+      suspiciousEvents,
+      highConfidenceTrainingEvents,
+      aiTrafficRatio: totalEvents > 0 ? Math.round((aiBotEvents / totalEvents) * 100) : 0,
+      confidenceAverage: confidenceCount > 0 ? Math.round(confidenceTotal / confidenceCount) : 0,
+      categoryCounts,
+      topDetectedAiSystems: Array.from(aiBotCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([name, count]) => ({ name: cleanBotName(name), count }))
+    },
+    trafficOverTime: Array.from(dailyBuckets.values()),
+    recentActivity: (recentEvents || []).slice(0, 20).map(toRecentActivity),
+    topPages: buildTopPagesFromRollups(pageCounts, pageRevenue),
+    allowedBlockedCounts: Object.fromEntries(statusCounts),
+    installHealth: getInstallHealth({
+      totalEvents,
+      latestEvent,
+      eventsToday,
+      domains
+    }),
+    revenueEstimate: {
+      amountCents: estimatedCents,
+      currency: "USD",
+      formatted: new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      }).format(estimatedCents / 100)
+    },
+    truncated: false
+  };
+}
+
+function rollupsCoverLatestEvent(rollups, latestEvent) {
+  const latestDate = latestEvent?.occurred_at ? String(latestEvent.occurred_at).slice(0, 10) : "";
+
+  if (!latestDate) {
+    return true;
+  }
+
+  const latestRollupDate = (rollups.daily || [])
+    .map((row) => String(row.date_bucket || "").slice(0, 10))
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+
+  return Boolean(latestRollupDate && latestRollupDate >= latestDate);
 }
 
 async function fetchActivityRows(supabase, baseQuery, maxRows = maxEventsForServerAggregation) {
@@ -484,6 +631,62 @@ export default async function handler(req, res) {
   }
 
   const aggregationLimit = maxEventsByRange[range] || maxEventsForServerAggregation;
+  const rollupWindow = {
+    startDate: window.startIso.slice(0, 10),
+    endDate: window.endIso.slice(0, 10)
+  };
+  const [
+    rollups,
+    recentResult,
+    latestResult,
+    eventsTodayResult,
+    domainsResult
+  ] = await Promise.all([
+    fetchAnalyticsRollups(supabase, {
+      workspaceId,
+      startDate: rollupWindow.startDate,
+      endDate: rollupWindow.endDate
+    }),
+    fetchActivityRows(supabase, baseQuery, 20),
+    supabase
+      .from("activity_logs")
+      .select("id, occurred_at")
+      .eq("workspace_id", workspaceId)
+      .order("occurred_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("activity_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId)
+      .gte("occurred_at", todayStart.toISOString()),
+    supabase
+      .from("domains")
+      .select("id, status")
+      .eq("workspace_id", workspaceId)
+  ]);
+
+  if (!recentResult.error && !latestResult.error && !eventsTodayResult.error && !domainsResult.error && rollups.ok) {
+    const rollupTotal = (rollups.daily || []).reduce((total, row) => total + Number(row.event_count || 0), 0);
+    const hasFreshUnrolledRows = rollupTotal === 0 && (recentResult.data || []).length > 0;
+    const hasLatestCoverage = rollupsCoverLatestEvent(rollups, latestResult.data);
+
+    if (!hasFreshUnrolledRows && hasLatestCoverage) {
+      return res.status(200).json(
+        buildAnalyticsPayloadFromRollups({
+          workspaceId,
+          range,
+          rollups,
+          recentEvents: recentResult.data || [],
+          window,
+          latestEvent: latestResult.data,
+          eventsToday: eventsTodayResult.count || 0,
+          domains: domainsResult.data || []
+        })
+      );
+    }
+  }
+
   const [
     { count, error: countError },
     { data, error },

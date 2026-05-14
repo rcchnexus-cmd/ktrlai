@@ -1,4 +1,5 @@
 import { requirePlatformAdmin } from "./_adminAuth.js";
+import { getRollupHealth } from "./_analyticsRollups.js";
 import { isApiKeyHashingConfigured } from "./_crypto.js";
 import { getEmailProviderStatus } from "./_emailProvider.js";
 import { getQueueStats, getRecentJobs, isJobRunnerSecretConfigured } from "./_jobs.js";
@@ -331,13 +332,15 @@ async function buildAdminSummary(supabase) {
   const notificationEvents = notificationEventsResult.rows;
   const emailProviderStatus = getEmailProviderStatus();
   const rateLimitProviderStatus = await getRateLimitProviderStatus();
-  const [queueStats, recentJobs] = await Promise.all([
+  const [queueStats, recentJobs, rollupHealth] = await Promise.all([
     getQueueStats(supabase),
-    getRecentJobs(supabase, { limit: rowLimit })
+    getRecentJobs(supabase, { limit: rowLimit }),
+    getRollupHealth(supabase)
   ]);
 
   addWarning(queueStats.warning);
   addWarning(recentJobs.warning);
+  addWarning(rollupHealth.warning);
   const usersById = buildLookup(users);
   const workspacesById = buildLookup(workspaces);
   const workspaceCountByUser = new Map();
@@ -460,7 +463,18 @@ async function buildAdminSummary(supabase) {
           status: event.status || "allowed",
           timestamp: toIso(event.occurred_at)
         };
-      })
+      }),
+      rollups: {
+        configured: rollupHealth.configured,
+        lastRunStatus: rollupHealth.lastRunStatus,
+        lastSuccessfulRunAt: rollupHealth.lastSuccessfulRunAt,
+        pendingJobs: rollupHealth.pendingJobs,
+        failedRuns: rollupHealth.failedRuns,
+        coverageStart: rollupHealth.coverageStart,
+        coverageEnd: rollupHealth.coverageEnd,
+        lastProcessedEvents: rollupHealth.lastProcessedEvents,
+        lastProcessedDays: rollupHealth.lastProcessedDays
+      }
     },
     security: {
       suspiciousWorkspaces: Array.from(suspiciousByWorkspace.entries())
@@ -661,6 +675,12 @@ async function buildAdminSummary(supabase) {
       queueStatus: queueStats.warning ? "Needs migration" : "Ready",
       trackerEndpointStatus: isApiKeyHashingConfigured() ? "Ready" : "Missing API key hash secret",
       healthEndpointStatus: "Available at /api/health",
+      analyticsRollupsConfigured: rollupHealth.configured,
+      analyticsRollupStatus: rollupHealth.lastRunStatus || "unknown",
+      analyticsRollupCoverage:
+        rollupHealth.coverageStart && rollupHealth.coverageEnd
+          ? `${rollupHealth.coverageStart} to ${rollupHealth.coverageEnd}`
+          : "No rollup coverage yet",
       rateLimitStore:
         rateLimitProviderStatus.provider === "upstash"
           ? "Upstash Redis shared fixed window"
