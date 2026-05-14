@@ -3,6 +3,8 @@ import {
   getSupportEmailAddress,
   sendEmail,
 } from "./_emailProvider.js";
+import { enqueueJob } from "./_jobs.js";
+import { jobTypes } from "./_jobTypes.js";
 
 export const notificationEventTypes = {
   welcome: "welcome",
@@ -133,6 +135,34 @@ async function logNotificationEvent(
   }
 
   return { ok: true, id: data?.id || null };
+}
+
+async function updateNotificationEvent(
+  supabase,
+  notificationEventId,
+  { status, provider, providerMessageId, errorMessage, metadata, sentAt } = {},
+) {
+  if (!supabase || !notificationEventId) {
+    return { ok: false, skipped: true, reason: "missing_notification_event_id" };
+  }
+
+  const { error } = await supabase
+    .from("notification_events")
+    .update({
+      ...(status ? { status } : {}),
+      ...(provider ? { provider } : {}),
+      ...(providerMessageId ? { provider_message_id: providerMessageId } : {}),
+      error_message: errorMessage || null,
+      ...(metadata ? { metadata: sanitizeMetadata(metadata) } : {}),
+      sent_at: sentAt || null,
+    })
+    .eq("id", notificationEventId);
+
+  if (error) {
+    return { ok: false, error: safeErrorMessage(error) };
+  }
+
+  return { ok: true };
 }
 
 async function hasRecentNotification(supabase, { workspaceId, type, recipientEmail, hours }) {
@@ -290,13 +320,70 @@ export async function sendNotification(
       continue;
     }
 
-    const result = await sendEmail({ to: recipient, subject, html, text, type, workspaceId, userId });
-    const status = result.ok && !result.skipped ? "sent" : result.ok ? "skipped" : "failed";
-    await logNotificationEvent(supabase, {
+    const queuedEvent = await logNotificationEvent(supabase, {
       workspaceId,
       userId,
       type,
       recipientEmail: recipient,
+      status: "queued",
+      provider: getEmailProviderName(),
+      metadata,
+    });
+
+    const job = await enqueueJob(supabase, {
+      type: jobTypes.sendEmail,
+      payload: {
+        notificationEventId: queuedEvent.id || null,
+        workspaceId,
+        userId,
+        recipientEmail: recipient,
+        notificationType: type,
+        subject,
+        html,
+        text,
+        metadata,
+      },
+      maxAttempts: 3,
+    });
+
+    if (!job.ok && queuedEvent.id) {
+      await updateNotificationEvent(supabase, queuedEvent.id, {
+        status: "failed",
+        provider: getEmailProviderName(),
+        errorMessage: "Notification job could not be queued.",
+        metadata: { ...metadata, queueError: job.errorMessage || job.reason },
+      });
+    }
+
+    results.push({
+      ok: job.ok,
+      queued: job.ok,
+      recipient,
+      status: job.ok ? "queued" : "failed",
+      jobId: job.job?.id || null,
+      reason: job.reason || null,
+    });
+  }
+
+  return { ok: results.every((result) => result.ok), results };
+}
+
+export async function processQueuedEmailNotification(supabase, payload = {}) {
+  const notificationEventId = payload.notificationEventId || null;
+  const metadata = payload.metadata || {};
+  const result = await sendEmail({
+    to: payload.recipientEmail,
+    subject: payload.subject,
+    html: payload.html,
+    text: payload.text,
+    type: payload.notificationType,
+    workspaceId: payload.workspaceId,
+    userId: payload.userId,
+  });
+  const status = result.ok && !result.skipped ? "sent" : result.ok ? "skipped" : "failed";
+
+  if (notificationEventId) {
+    await updateNotificationEvent(supabase, notificationEventId, {
       status,
       provider: result.provider || getEmailProviderName(),
       providerMessageId: result.providerMessageId,
@@ -304,10 +391,11 @@ export async function sendNotification(
       metadata: { ...metadata, providerMetadata: result.metadata },
       sentAt: status === "sent" ? new Date().toISOString() : null,
     });
-    results.push({ ...result, recipient, status });
   }
 
-  return { ok: results.every((result) => result.ok), results };
+  return result.ok
+    ? { ok: true, status, provider: result.provider || getEmailProviderName() }
+    : { ok: false, status, errorMessage: result.errorMessage || result.reason || "Email provider failed." };
 }
 
 export async function sendWelcomeEmail(supabase, { workspaceId, userId, email, name, workspaceName }) {

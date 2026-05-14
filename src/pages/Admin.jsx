@@ -157,6 +157,7 @@ export default function Admin() {
   const platformAnalytics = summary.platformAnalytics || {};
   const security = summary.security || {};
   const notifications = summary.notifications || {};
+  const jobs = summary.jobs || {};
 
   return (
     <AppShell title="Admin" eyebrow="Platform Admin">
@@ -649,6 +650,62 @@ export default function Admin() {
           </div>
         </article>
 
+        <article className="panel">
+          <div className="panelHeader">
+            <div>
+              <span className="eyebrow">Queue</span>
+              <h2>Background jobs</h2>
+            </div>
+            <StatusBadge status={jobs.runnerSecretConfigured ? "Protected" : "Needs secret"} />
+          </div>
+          <div className="adminPlanGrid">
+            <article>
+              <span>Queued</span>
+              <strong>{jobs.counts?.queued || 0}</strong>
+            </article>
+            <article>
+              <span>Processing</span>
+              <strong>{jobs.counts?.processing || 0}</strong>
+            </article>
+            <article>
+              <span>Completed</span>
+              <strong>{jobs.counts?.completed || 0}</strong>
+            </article>
+            <article>
+              <span>Failed</span>
+              <strong>{jobs.counts?.failed || 0}</strong>
+            </article>
+          </div>
+          <div className="adminAuditList">
+            <h3>Recent job failures</h3>
+            {(jobs.recentFailures || []).length === 0 ? (
+              <p>No failed jobs recorded.</p>
+            ) : (
+              jobs.recentFailures.slice(0, 6).map((job) => (
+                <div key={job.id}>
+                  <span>{statusLabel(job.type)}</span>
+                  <strong>{job.attempts}/{job.maxAttempts} attempts</strong>
+                  <em>{formatDateTime(job.failedAt)}</em>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="adminAuditList">
+            <h3>Recent jobs</h3>
+            {(jobs.recentJobs || []).length === 0 ? (
+              <p>No queued jobs yet.</p>
+            ) : (
+              jobs.recentJobs.slice(0, 6).map((job) => (
+                <div key={job.id}>
+                  <span>{statusLabel(job.type)}</span>
+                  <strong>{statusLabel(job.status)}</strong>
+                  <em>{job.attempts}/{job.maxAttempts} attempts</em>
+                </div>
+              ))
+            )}
+          </div>
+        </article>
+
         <article className="panel largePanel">
           <div className="panelHeader">
             <div>
@@ -661,6 +718,7 @@ export default function Admin() {
             <HealthItem label="Stripe checkout" enabled={health.stripeConfigPresent} detail="Secret and price IDs" />
             <HealthItem label="Stripe webhook" enabled={health.stripeWebhookConfigured} detail="Signature verification" />
             <HealthItem label="Email provider" enabled={health.emailProviderConfigured} detail={health.emailProvider || "noop"} />
+            <HealthItem label="Job runner" enabled={health.jobRunnerConfigured} detail={health.queueStatus || "Queue"} />
             <HealthItem label="Tracker endpoint" enabled={health.trackerEndpointStatus === "Ready"} detail={health.trackerEndpointStatus} />
             <HealthItem label="Health endpoint" enabled={Boolean(health.healthEndpointStatus)} detail={health.healthEndpointStatus} />
             <HealthItem label="Rate limits" enabled={Boolean(health.rateLimitStore)} detail={health.rateLimitStore} />

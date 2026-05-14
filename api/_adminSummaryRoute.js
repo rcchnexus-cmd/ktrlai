@@ -1,6 +1,7 @@
 import { requirePlatformAdmin } from "./_adminAuth.js";
 import { isApiKeyHashingConfigured } from "./_crypto.js";
 import { getEmailProviderStatus } from "./_emailProvider.js";
+import { getQueueStats, getRecentJobs, isJobRunnerSecretConfigured } from "./_jobs.js";
 import { checkServerRateLimit } from "./_rateLimit.js";
 import { sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
@@ -322,6 +323,13 @@ async function buildAdminSummary(supabase) {
   const enterpriseAuditEvents = enterpriseAuditResult.rows;
   const notificationEvents = notificationEventsResult.rows;
   const emailProviderStatus = getEmailProviderStatus();
+  const [queueStats, recentJobs] = await Promise.all([
+    getQueueStats(supabase),
+    getRecentJobs(supabase, { limit: rowLimit })
+  ]);
+
+  addWarning(queueStats.warning);
+  addWarning(recentJobs.warning);
   const usersById = buildLookup(users);
   const workspacesById = buildLookup(workspaces);
   const workspaceCountByUser = new Map();
@@ -590,12 +598,20 @@ async function buildAdminSummary(supabase) {
         sentAt: toIso(event.sent_at)
       }))
     },
+    jobs: {
+      runnerSecretConfigured: isJobRunnerSecretConfigured(),
+      counts: queueStats.counts,
+      recentFailures: queueStats.recentFailures,
+      recentJobs: recentJobs.rows
+    },
     systemHealth: {
       supabaseConnected: true,
       stripeConfigPresent: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRO_PRICE_ID && process.env.STRIPE_BUSINESS_PRICE_ID),
       stripeWebhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
       emailProviderConfigured: emailProviderStatus.configured,
       emailProvider: emailProviderStatus.provider,
+      jobRunnerConfigured: isJobRunnerSecretConfigured(),
+      queueStatus: queueStats.warning ? "Needs migration" : "Ready",
       trackerEndpointStatus: isApiKeyHashingConfigured() ? "Ready" : "Missing API key hash secret",
       healthEndpointStatus: "Available at /api/health",
       rateLimitStore: "In-memory per serverless instance",
@@ -608,6 +624,7 @@ async function buildAdminSummary(supabase) {
         STRIPE_WEBHOOK_SECRET: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
         STRIPE_PRO_PRICE_ID: Boolean(process.env.STRIPE_PRO_PRICE_ID),
         STRIPE_BUSINESS_PRICE_ID: Boolean(process.env.STRIPE_BUSINESS_PRICE_ID),
+        INTERNAL_JOBS_SECRET: isJobRunnerSecretConfigured(),
         EMAIL_PROVIDER: Boolean(process.env.EMAIL_PROVIDER),
         EMAIL_FROM: Boolean(process.env.EMAIL_FROM),
         SUPPORT_EMAIL: Boolean(process.env.SUPPORT_EMAIL)

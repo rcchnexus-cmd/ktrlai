@@ -1,4 +1,5 @@
 import { isApiKeyHashingConfigured } from "./_crypto.js";
+import { getQueueStats, isJobRunnerSecretConfigured } from "./_jobs.js";
 import { isProductionRuntime } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 
@@ -57,6 +58,13 @@ export default async function handler(req, res) {
   const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRO_PRICE_ID && process.env.STRIPE_BUSINESS_PRICE_ID);
   const webhookConfigured = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
   const hashingConfigured = isApiKeyHashingConfigured();
+  const queue = supabase.reachable
+    ? await getQueueStats(getSupabaseAdmin())
+    : {
+        configured: false,
+        counts: { queued: 0, processing: 0, completed: 0, failed: 0, dueQueued: 0 },
+        warning: "Supabase must be reachable before queue health can be checked."
+      };
   const status = supabase.reachable && hashingConfigured ? "ok" : "degraded";
   const payload = {
     ok: status === "ok",
@@ -84,6 +92,13 @@ export default async function handler(req, res) {
       },
       payouts: {
         enabled: process.env.PAYOUT_REQUESTS_ENABLED === "true"
+      },
+      jobs: {
+        configured: queue.configured && isJobRunnerSecretConfigured(),
+        endpoint: "/api/internal/jobs",
+        runnerSecretConfigured: isJobRunnerSecretConfigured(),
+        counts: queue.counts,
+        message: queue.warning || "Queue table reachable."
       }
     }
   };
