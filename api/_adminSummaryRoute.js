@@ -2,7 +2,7 @@ import { requirePlatformAdmin } from "./_adminAuth.js";
 import { isApiKeyHashingConfigured } from "./_crypto.js";
 import { getEmailProviderStatus } from "./_emailProvider.js";
 import { getQueueStats, getRecentJobs, isJobRunnerSecretConfigured } from "./_jobs.js";
-import { checkServerRateLimit } from "./_rateLimit.js";
+import { checkServerRateLimit, getRateLimitProviderStatus, recordRateLimitTrigger, rateLimitExceededResponse } from "./_rateLimit.js";
 import { sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 
@@ -193,6 +193,7 @@ async function buildAdminSummary(supabase) {
     eventsPrevious7Days,
     activityLast7DaysResult,
     rateLimitEventsResult,
+    abuseCountersResult,
     enterpriseAuditResult,
     notificationEventsResult,
     failedNotificationsCount,
@@ -268,6 +269,10 @@ async function buildAdminSummary(supabase) {
       order: "created_at",
       limit: rowLimit
     }),
+    safeSelect(supabase, "abuse_counters", "id, workspace_id, counter_key, counter_scope, count, window_start, window_end, updated_at, metadata", {
+      order: "updated_at",
+      limit: rowLimit
+    }),
     safeSelect(supabase, "audit_logs", "id, workspace_id, actor_user_id, event_type, event_summary, timestamp, metadata", {
       order: "timestamp",
       limit: rowLimit
@@ -302,6 +307,7 @@ async function buildAdminSummary(supabase) {
     eventsPrevious7Days,
     activityLast7DaysResult,
     rateLimitEventsResult,
+    abuseCountersResult,
     enterpriseAuditResult,
     notificationEventsResult,
     failedNotificationsCount,
@@ -320,9 +326,11 @@ async function buildAdminSummary(supabase) {
   const stripeEvents = stripeEventsResult.rows;
   const activityLast7Days = activityLast7DaysResult.rows;
   const rateLimitEvents = rateLimitEventsResult.rows;
+  const abuseCounters = abuseCountersResult.rows;
   const enterpriseAuditEvents = enterpriseAuditResult.rows;
   const notificationEvents = notificationEventsResult.rows;
   const emailProviderStatus = getEmailProviderStatus();
+  const rateLimitProviderStatus = await getRateLimitProviderStatus();
   const [queueStats, recentJobs] = await Promise.all([
     getQueueStats(supabase),
     getRecentJobs(supabase, { limit: rowLimit })
@@ -404,6 +412,12 @@ async function buildAdminSummary(supabase) {
   const confirmedRevenueCents = earnings
     .filter((entry) => entry.status === "confirmed")
     .reduce((total, entry) => total + safeNumber(entry.amount_cents), 0);
+  const rateLimitScopes = new Map();
+  const rateLimitWorkspaces = new Map();
+  rateLimitEvents.forEach((event) => {
+    increment(rateLimitScopes, event.scope || "unknown");
+    increment(rateLimitWorkspaces, event.workspace_id || "platform");
+  });
 
   return {
     overview: {
@@ -470,8 +484,41 @@ async function buildAdminSummary(supabase) {
         workspaceName: workspacesById.get(event.workspace_id)?.name || "Platform",
         scope: event.scope,
         reason: event.reason,
+        provider: event.metadata?.provider || "memory",
         createdAt: toIso(event.created_at)
       })),
+      rateLimiting: {
+        provider: rateLimitProviderStatus.provider,
+        redisConfigured: rateLimitProviderStatus.redisConfigured,
+        redisReachable: rateLimitProviderStatus.redisReachable,
+        fallbackMode: rateLimitProviderStatus.fallbackMode,
+        algorithm: rateLimitProviderStatus.algorithm,
+        topScopes: Array.from(rateLimitScopes.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8)
+          .map(([scope, count]) => ({ scope, count })),
+        topWorkspaces: Array.from(rateLimitWorkspaces.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8)
+          .map(([workspaceId, count]) => ({
+            workspaceId,
+            workspaceName: workspacesById.get(workspaceId)?.name || (workspaceId === "platform" ? "Platform" : "Unknown workspace"),
+            count
+          })),
+        abuseCounters: abuseCounters
+          .sort((a, b) => safeNumber(b.count) - safeNumber(a.count))
+          .slice(0, 12)
+          .map((counter) => ({
+            id: counter.id,
+            workspaceName: workspacesById.get(counter.workspace_id)?.name || "Platform",
+            scope: counter.counter_scope,
+            count: safeNumber(counter.count),
+            provider: counter.metadata?.provider || "memory",
+            windowStart: toIso(counter.window_start),
+            windowEnd: toIso(counter.window_end),
+            updatedAt: toIso(counter.updated_at)
+          }))
+      },
       auditActivityFeed: enterpriseAuditEvents.map((event) => ({
         id: event.id,
         workspaceName: workspacesById.get(event.workspace_id)?.name || "Unknown workspace",
@@ -614,7 +661,13 @@ async function buildAdminSummary(supabase) {
       queueStatus: queueStats.warning ? "Needs migration" : "Ready",
       trackerEndpointStatus: isApiKeyHashingConfigured() ? "Ready" : "Missing API key hash secret",
       healthEndpointStatus: "Available at /api/health",
-      rateLimitStore: "In-memory per serverless instance",
+      rateLimitStore:
+        rateLimitProviderStatus.provider === "upstash"
+          ? "Upstash Redis shared fixed window"
+          : "In-memory per serverless instance",
+      rateLimitProvider: rateLimitProviderStatus.provider,
+      redisRateLimitConfigured: rateLimitProviderStatus.redisConfigured,
+      redisRateLimitReachable: rateLimitProviderStatus.redisReachable,
       payoutsEnabled: process.env.PAYOUT_REQUESTS_ENABLED === "true",
       requiredEnv: {
         SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
@@ -627,7 +680,10 @@ async function buildAdminSummary(supabase) {
         INTERNAL_JOBS_SECRET: isJobRunnerSecretConfigured(),
         EMAIL_PROVIDER: Boolean(process.env.EMAIL_PROVIDER),
         EMAIL_FROM: Boolean(process.env.EMAIL_FROM),
-        SUPPORT_EMAIL: Boolean(process.env.SUPPORT_EMAIL)
+        SUPPORT_EMAIL: Boolean(process.env.SUPPORT_EMAIL),
+        RATE_LIMIT_PROVIDER: Boolean(process.env.RATE_LIMIT_PROVIDER),
+        UPSTASH_REDIS_REST_URL: Boolean(process.env.UPSTASH_REDIS_REST_URL),
+        UPSTASH_REDIS_REST_TOKEN: Boolean(process.env.UPSTASH_REDIS_REST_TOKEN)
       }
     },
     warnings
@@ -649,15 +705,24 @@ export default async function handler(req, res) {
     return sendMissingServerConfig(res);
   }
 
-  const rateLimit = checkServerRateLimit(req, {
+  const rateLimit = await checkServerRateLimit(req, {
     scope: "admin_summary",
     workspaceId: "platform",
+    action: req.query?.scope === "access" ? "access" : "summary",
+    route: "/api/admin",
     max: 90,
     message: "Too many admin requests. Please retry shortly."
   });
 
   if (!rateLimit.ok) {
-    return res.status(429).json({ ok: false, message: rateLimit.message });
+    await recordRateLimitTrigger(getSupabaseAdmin(), {
+      workspaceId: null,
+      scope: "admin_summary",
+      reason: "admin_summary_limit",
+      metadata: { provider: rateLimit.provider, reset_at: rateLimit.resetAt }
+    });
+
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   const supabase = getSupabaseAdmin();

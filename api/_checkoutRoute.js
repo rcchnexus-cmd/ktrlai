@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { requireWorkspaceRole } from "./_auth.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 import { allowLocalMockFallback, getAppUrl, sendMissingServerConfig } from "./_runtime.js";
-import { checkServerRateLimit, recordRateLimitTrigger } from "./_rateLimit.js";
+import { checkServerRateLimit, recordRateLimitTrigger, rateLimitExceededResponse } from "./_rateLimit.js";
 
 const BILLING_CHECKOUT_DISABLED_MESSAGE =
   "Billing is not configured. Add Stripe secret key and plan price IDs before enabling checkout.";
@@ -60,9 +60,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: "workspaceId is required." });
   }
 
-  const rateLimit = checkServerRateLimit(req, {
+  const rateLimit = await checkServerRateLimit(req, {
     scope: "billing_checkout",
     workspaceId,
+    action: normalizedPlan,
+    route: "/api/billing",
     max: 25,
     message: "Too many billing requests. Please retry shortly."
   });
@@ -72,11 +74,12 @@ export default async function handler(req, res) {
       await recordRateLimitTrigger(getSupabaseAdmin(), {
         workspaceId,
         scope: "billing_checkout",
-        reason: "billing_checkout_limit"
+        reason: "billing_checkout_limit",
+        metadata: { provider: rateLimit.provider, plan: normalizedPlan, reset_at: rateLimit.resetAt }
       });
     }
 
-    return res.status(429).json({ ok: false, message: rateLimit.message });
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   if (!isSupabaseAdminConfigured()) {

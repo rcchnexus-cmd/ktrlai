@@ -3,7 +3,7 @@ import { requireWorkspaceRole } from "./_auth.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
-import { checkServerRateLimit, recordRateLimitTrigger } from "./_rateLimit.js";
+import { checkServerRateLimit, recordRateLimitTrigger, rateLimitExceededResponse } from "./_rateLimit.js";
 
 const propagationMessage = "TXT record not found yet. DNS can take a few minutes to propagate.";
 
@@ -92,9 +92,11 @@ export default async function handler(req, res) {
     });
   }
 
-  const rateLimit = checkServerRateLimit(req, {
+  const rateLimit = await checkServerRateLimit(req, {
     scope: "verify_domain",
     workspaceId,
+    action: "verify",
+    route: "/api/app",
     max: 45,
     message: "Too many domain verification attempts. Please retry shortly."
   });
@@ -104,11 +106,12 @@ export default async function handler(req, res) {
       await recordRateLimitTrigger(getSupabaseAdmin(), {
         workspaceId,
         scope: "verify_domain",
-        reason: "domain_verification_limit"
+        reason: "domain_verification_limit",
+        metadata: { provider: rateLimit.provider, domain_id: domainId, reset_at: rateLimit.resetAt }
       });
     }
 
-    return res.status(429).json({ ok: false, message: rateLimit.message });
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   if (!isSupabaseAdminConfigured()) {

@@ -1,6 +1,6 @@
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
 import { requireWorkspaceRole } from "./_auth.js";
-import { checkServerRateLimit } from "./_rateLimit.js";
+import { checkServerRateLimit, rateLimitExceededResponse } from "./_rateLimit.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 
@@ -49,15 +49,17 @@ export default async function handler(req, res) {
     return res.status(202).json({ ok: true, mode: "mock", message: "Audit event accepted in local development mode." });
   }
 
-  const rateLimit = checkServerRateLimit(req, {
+  const rateLimit = await checkServerRateLimit(req, {
     scope: "audit",
     workspaceId,
+    action: eventType,
+    route: "/api/app",
     max: 60,
     message: "Too many audit events. Please retry shortly."
   });
 
   if (!rateLimit.ok) {
-    return res.status(429).json({ ok: false, message: rateLimit.message });
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   const supabase = getSupabaseAdmin();

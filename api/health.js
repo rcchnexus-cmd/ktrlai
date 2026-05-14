@@ -1,5 +1,6 @@
 import { isApiKeyHashingConfigured } from "./_crypto.js";
 import { getQueueStats, isJobRunnerSecretConfigured } from "./_jobs.js";
+import { getRateLimitProviderStatus } from "./_rateLimit.js";
 import { isProductionRuntime } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 
@@ -65,6 +66,7 @@ export default async function handler(req, res) {
         counts: { queued: 0, processing: 0, completed: 0, failed: 0, dueQueued: 0 },
         warning: "Supabase must be reachable before queue health can be checked."
       };
+  const rateLimitProvider = await getRateLimitProviderStatus({ test: true });
   const status = supabase.reachable && hashingConfigured ? "ok" : "degraded";
   const payload = {
     ok: status === "ok",
@@ -92,6 +94,13 @@ export default async function handler(req, res) {
       },
       payouts: {
         enabled: process.env.PAYOUT_REQUESTS_ENABLED === "true"
+      },
+      rateLimit: {
+        provider: rateLimitProvider.provider,
+        redisConfigured: rateLimitProvider.redisConfigured,
+        redisReachable: rateLimitProvider.redisReachable,
+        fallbackMode: rateLimitProvider.fallbackMode,
+        algorithm: rateLimitProvider.algorithm
       },
       jobs: {
         configured: queue.configured && isJobRunnerSecretConfigured(),

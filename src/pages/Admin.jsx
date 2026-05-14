@@ -156,6 +156,7 @@ export default function Admin() {
   const payouts = summary.payouts || [];
   const platformAnalytics = summary.platformAnalytics || {};
   const security = summary.security || {};
+  const rateLimiting = security.rateLimiting || {};
   const notifications = summary.notifications || {};
   const jobs = summary.jobs || {};
 
@@ -210,8 +211,24 @@ export default function Admin() {
               <span className="eyebrow">Abuse protection</span>
               <h2>Rate-limit triggers</h2>
             </div>
+            <StatusBadge status={rateLimiting.provider === "upstash" ? "Redis shared" : "Memory fallback"} />
+          </div>
+          <div className="adminPlanGrid">
+            <article>
+              <span>Provider</span>
+              <strong>{rateLimiting.provider || health.rateLimitProvider || "memory"}</strong>
+            </article>
+            <article>
+              <span>Redis</span>
+              <strong>{rateLimiting.redisConfigured ? "Configured" : "Not configured"}</strong>
+            </article>
+            <article>
+              <span>Algorithm</span>
+              <strong>{rateLimiting.algorithm || "fixed-window"}</strong>
+            </article>
           </div>
           <div className="adminAuditList">
+            <h3>Recent triggers</h3>
             {(security.rateLimitTriggers || []).length === 0 ? (
               <p>No rate-limit triggers recorded.</p>
             ) : (
@@ -219,7 +236,34 @@ export default function Admin() {
                 <div key={event.id}>
                   <span>{event.workspaceName}</span>
                   <strong>{statusLabel(event.scope)}</strong>
-                  <em>{formatDateTime(event.createdAt)}</em>
+                  <em>{event.provider || "memory"} - {formatDateTime(event.createdAt)}</em>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="adminAuditList">
+            <h3>Abuse counters</h3>
+            {(rateLimiting.abuseCounters || []).length === 0 ? (
+              <p>No abuse counters recorded.</p>
+            ) : (
+              rateLimiting.abuseCounters.slice(0, 6).map((counter) => (
+                <div key={counter.id}>
+                  <span>{counter.workspaceName}</span>
+                  <strong>{statusLabel(counter.scope)} - {counter.count}</strong>
+                  <em>{counter.provider || "memory"} - {formatDateTime(counter.updatedAt)}</em>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="adminAuditList">
+            <h3>Top limited scopes</h3>
+            {(rateLimiting.topScopes || []).length === 0 ? (
+              <p>No limited scopes yet.</p>
+            ) : (
+              rateLimiting.topScopes.slice(0, 5).map((scope) => (
+                <div key={scope.scope}>
+                  <span>{statusLabel(scope.scope)}</span>
+                  <strong>{scope.count}</strong>
                 </div>
               ))
             )}
@@ -721,7 +765,12 @@ export default function Admin() {
             <HealthItem label="Job runner" enabled={health.jobRunnerConfigured} detail={health.queueStatus || "Queue"} />
             <HealthItem label="Tracker endpoint" enabled={health.trackerEndpointStatus === "Ready"} detail={health.trackerEndpointStatus} />
             <HealthItem label="Health endpoint" enabled={Boolean(health.healthEndpointStatus)} detail={health.healthEndpointStatus} />
-            <HealthItem label="Rate limits" enabled={Boolean(health.rateLimitStore)} detail={health.rateLimitStore} />
+            <HealthItem
+              label="Rate limits"
+              enabled={Boolean(health.rateLimitStore)}
+              detail={health.rateLimitStore}
+              statusText={health.rateLimitProvider === "upstash" ? "Redis shared" : "Memory fallback"}
+            />
             <HealthItem
               label="Payouts"
               enabled={health.payoutsEnabled}

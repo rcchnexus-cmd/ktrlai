@@ -12,7 +12,7 @@ import {
   sendTeamInviteEmail,
   updateWorkspaceNotificationPreferences
 } from "./_notifications.js";
-import { checkServerRateLimit } from "./_rateLimit.js";
+import { checkServerRateLimit, rateLimitExceededResponse } from "./_rateLimit.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 
@@ -251,14 +251,16 @@ export default async function handler(req, res) {
     });
   }
 
-  const rateLimit = checkServerRateLimit(req, {
+  const rateLimit = await checkServerRateLimit(req, {
     scope: "team",
     workspaceId,
+    action: req.method.toLowerCase(),
+    route: "/api/app",
     max: req.method === "GET" ? 90 : 30
   });
 
   if (!rateLimit.ok) {
-    return res.status(429).json({ ok: false, message: rateLimit.message });
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   const supabase = getSupabaseAdmin();

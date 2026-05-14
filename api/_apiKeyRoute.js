@@ -4,7 +4,7 @@ import { requireWorkspaceRole } from "./_auth.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 import { allowLocalMockFallback, getAppUrl, sendMissingServerConfig } from "./_runtime.js";
 import { enforceWorkspaceResourceLimit } from "./_planLimits.js";
-import { checkServerRateLimit, recordRateLimitTrigger } from "./_rateLimit.js";
+import { checkServerRateLimit, recordRateLimitTrigger, rateLimitExceededResponse } from "./_rateLimit.js";
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -62,9 +62,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, message: "Unsupported API key action." });
   }
 
-  const rateLimit = checkServerRateLimit(req, {
+  const rateLimit = await checkServerRateLimit(req, {
     scope: "api_key",
     workspaceId,
+    action,
+    route: "/api/app",
     max: 30,
     message: "Too many API key requests. Please retry shortly."
   });
@@ -74,11 +76,12 @@ export default async function handler(req, res) {
       await recordRateLimitTrigger(getSupabaseAdmin(), {
         workspaceId,
         scope: "api_key",
-        reason: "api_key_mutation_limit"
+        reason: "api_key_mutation_limit",
+        metadata: { provider: rateLimit.provider, action, reset_at: rateLimit.resetAt }
       });
     }
 
-    return res.status(429).json({ ok: false, message: rateLimit.message });
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   if (!isSupabaseAdminConfigured() || !isApiKeyHashingConfigured()) {

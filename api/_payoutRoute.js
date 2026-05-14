@@ -3,7 +3,7 @@ import { requireWorkspaceRole } from "./_auth.js";
 import { buildStripeConnectPayoutPlan } from "./_payouts.js";
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
-import { checkServerRateLimit, recordRateLimitTrigger } from "./_rateLimit.js";
+import { checkServerRateLimit, recordRateLimitTrigger, rateLimitExceededResponse } from "./_rateLimit.js";
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -39,9 +39,11 @@ export default async function handler(req, res) {
     });
   }
 
-  const rateLimit = checkServerRateLimit(req, {
+  const rateLimit = await checkServerRateLimit(req, {
     scope: "request_payout",
     workspaceId,
+    action: "request",
+    route: "/api/billing",
     max: 12,
     message: "Too many payout requests. Please retry shortly."
   });
@@ -51,11 +53,12 @@ export default async function handler(req, res) {
       await recordRateLimitTrigger(getSupabaseAdmin(), {
         workspaceId,
         scope: "request_payout",
-        reason: "payout_request_limit"
+        reason: "payout_request_limit",
+        metadata: { provider: rateLimit.provider, reset_at: rateLimit.resetAt }
       });
     }
 
-    return res.status(429).json({ ok: false, message: rateLimit.message });
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   if (!isSupabaseAdminConfigured()) {

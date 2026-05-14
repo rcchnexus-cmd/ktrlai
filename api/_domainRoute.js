@@ -3,7 +3,7 @@ import { auditEventTypes, recordAuditEvent } from "./_audit.js";
 import { enforceWorkspaceResourceLimit } from "./_planLimits.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
-import { checkServerRateLimit, recordRateLimitTrigger } from "./_rateLimit.js";
+import { checkServerRateLimit, recordRateLimitTrigger, rateLimitExceededResponse } from "./_rateLimit.js";
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -65,9 +65,11 @@ export default async function handler(req, res) {
     });
   }
 
-  const rateLimit = checkServerRateLimit(req, {
+  const rateLimit = await checkServerRateLimit(req, {
     scope: "domain",
     workspaceId,
+    action: "create",
+    route: "/api/app",
     max: 40,
     message: "Too many domain requests. Please retry shortly."
   });
@@ -77,11 +79,12 @@ export default async function handler(req, res) {
       await recordRateLimitTrigger(getSupabaseAdmin(), {
         workspaceId,
         scope: "domain",
-        reason: "domain_mutation_limit"
+        reason: "domain_mutation_limit",
+        metadata: { provider: rateLimit.provider, hostname, reset_at: rateLimit.resetAt }
       });
     }
 
-    return res.status(429).json({ ok: false, message: rateLimit.message });
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   if (!isSupabaseAdminConfigured()) {

@@ -1,5 +1,6 @@
 import { getQueueStats, requireInternalJobSecret } from "../_jobs.js";
 import { processQueuedJobs } from "../_jobRunner.js";
+import { checkServerRateLimit, recordRateLimitTrigger, rateLimitExceededResponse } from "../_rateLimit.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "../_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "../_supabaseAdmin.js";
 
@@ -24,6 +25,28 @@ export default async function handler(req, res) {
 
   if (!requireInternalJobSecret(req, res)) {
     return;
+  }
+
+  const rateLimit = await checkServerRateLimit(req, {
+    scope: "internal_jobs",
+    workspaceId: "platform",
+    action: req.method.toLowerCase(),
+    route: "/api/internal/jobs",
+    max: req.method === "GET" ? 120 : 60,
+    message: "Too many internal job runner requests. Please retry shortly.",
+  });
+
+  if (!rateLimit.ok) {
+    if (isSupabaseAdminConfigured()) {
+      await recordRateLimitTrigger(getSupabaseAdmin(), {
+        workspaceId: null,
+        scope: "internal_jobs",
+        reason: "internal_jobs_limit",
+        metadata: { provider: rateLimit.provider, reset_at: rateLimit.resetAt }
+      });
+    }
+
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   if (!isSupabaseAdminConfigured()) {

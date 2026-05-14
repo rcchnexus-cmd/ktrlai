@@ -270,7 +270,9 @@ export default async function handler(req, res) {
     });
   }
 
-  const rateLimit = checkRateLimit(req, body.workspaceId);
+  const rateLimit = await checkRateLimit(req, body.workspaceId, {
+    apiKeyPrefix: getApiKeyPrefix(body.apiKey)
+  });
 
   if (!rateLimit.ok) {
     if (isSupabaseAdminConfigured()) {
@@ -280,6 +282,8 @@ export default async function handler(req, res) {
         reason: "tracker_burst_limit",
         metadata: {
           message: rateLimit.message,
+          provider: rateLimit.provider,
+          reset_at: rateLimit.resetAt,
           retry_after_seconds: rateLimit.retryAfterSeconds
         }
       });
@@ -288,7 +292,11 @@ export default async function handler(req, res) {
     return res.status(429).json({
       ok: false,
       message: rateLimit.message,
-      retryAfterSeconds: rateLimit.retryAfterSeconds
+      limit: rateLimit.limit,
+      remaining: rateLimit.remaining,
+      resetAt: rateLimit.resetAt,
+      retryAfterSeconds: rateLimit.retryAfterSeconds,
+      provider: rateLimit.provider
     });
   }
 

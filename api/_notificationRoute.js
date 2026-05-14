@@ -1,5 +1,5 @@
 import { requireWorkspaceRole } from "./_auth.js";
-import { checkServerRateLimit } from "./_rateLimit.js";
+import { checkServerRateLimit, rateLimitExceededResponse } from "./_rateLimit.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 import { notificationEventTypes, sendWelcomeEmail } from "./_notifications.js";
@@ -59,14 +59,16 @@ export default async function handler(req, res) {
     });
   }
 
-  const rateLimit = checkServerRateLimit(req, {
+  const rateLimit = await checkServerRateLimit(req, {
     scope: "notification",
     workspaceId,
+    action: type,
+    route: "/api/app",
     max: 20
   });
 
   if (!rateLimit.ok) {
-    return res.status(429).json({ ok: false, message: rateLimit.message });
+    return res.status(429).json(rateLimitExceededResponse(rateLimit));
   }
 
   const supabase = getSupabaseAdmin();

@@ -56,6 +56,9 @@ Add these in Vercel Project Settings before enabling private-beta backend flows:
 - `STRIPE_BUSINESS_PRICE_ID`
 - `PAYOUT_REQUESTS_ENABLED=false`
 - `INTERNAL_JOBS_SECRET`
+- `RATE_LIMIT_PROVIDER=upstash` when using Upstash Redis shared rate limits
+- `UPSTASH_REDIS_REST_URL` when using Upstash Redis
+- `UPSTASH_REDIS_REST_TOKEN` when using Upstash Redis
 - `EMAIL_PROVIDER`
 - `EMAIL_FROM`
 - `SUPPORT_EMAIL`
@@ -66,6 +69,12 @@ Add these in Vercel Project Settings before enabling private-beta backend flows:
 `PAYOUT_REQUESTS_ENABLED` must remain `false` until Stripe Connect onboarding, payout review, and live payout execution are implemented.
 
 Email provider keys are server-only. Do not create `VITE_` email provider variables.
+
+Rate limiting uses a shared Upstash Redis fixed-window limiter when
+`RATE_LIMIT_PROVIDER=upstash`, `UPSTASH_REDIS_REST_URL`, and
+`UPSTASH_REDIS_REST_TOKEN` are configured. If those values are missing, the API
+falls back to in-memory counters so local development and emergency production
+traffic still work. Do not create `VITE_` Redis variables.
 
 The internal job runner is available at `/api/internal/jobs` and must be called
 with `Authorization: Bearer INTERNAL_JOBS_SECRET` or `x-ktrlai-job-secret`.

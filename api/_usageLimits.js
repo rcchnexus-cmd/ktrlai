@@ -33,10 +33,12 @@ export function validateTrackingPayloadShape(body) {
   return failedCheck ? { ok: false, message: failedCheck[1] } : { ok: true };
 }
 
-export function checkRateLimit(req, workspaceId) {
+export async function checkRateLimit(req, workspaceId, { apiKeyPrefix = "" } = {}) {
   return checkServerRateLimit(req, {
     scope: "track",
     workspaceId,
+    apiKeyPrefix,
+    route: "/api/track",
     max: 120,
     message: "Tracker rate limit exceeded. Please retry shortly."
   });
