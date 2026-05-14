@@ -6,6 +6,12 @@ import {
   requireWorkspaceRole
 } from "./_auth.js";
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
+import {
+  getWorkspaceNotificationPreferences,
+  notificationPreferenceDefaults,
+  sendTeamInviteEmail,
+  updateWorkspaceNotificationPreferences
+} from "./_notifications.js";
 import { checkServerRateLimit } from "./_rateLimit.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
@@ -72,6 +78,7 @@ function restrictedEnterpriseWorkspace(memberRole) {
     invitations: [],
     auditLogs: [],
     policies: [],
+    notificationPreferences: notificationPreferenceDefaults,
     warnings: []
   };
 }
@@ -139,6 +146,7 @@ async function loadEnterpriseWorkspace(supabase, { workspaceId, memberRole }) {
 
   const profiles = new Map(profilesResult.rows.map((profile) => [profile.id, profile]));
   const policies = policiesResult.rows.length ? policiesResult.rows.map(mapPolicy) : defaultPolicies();
+  const notificationPreferences = await getWorkspaceNotificationPreferences(supabase, workspaceId);
 
   return {
     currentMemberRole: normalizeWorkspaceRole(memberRole),
@@ -183,6 +191,7 @@ async function loadEnterpriseWorkspace(supabase, { workspaceId, memberRole }) {
       };
     }),
     policies,
+    notificationPreferences,
     warnings
   };
 }
@@ -236,6 +245,7 @@ export default async function handler(req, res) {
         invitations: [],
         auditLogs: [],
         policies: defaultPolicies(),
+        notificationPreferences: notificationPreferenceDefaults,
         warnings: ["Local development enterprise data is using in-memory placeholders."]
       }
     });
@@ -289,7 +299,7 @@ export default async function handler(req, res) {
     });
   }
 
-  if (action === "save_policy" && !canManageOperations(readAuth.member.role)) {
+  if (["save_policy", "save_notification_preferences"].includes(action) && !canManageOperations(readAuth.member.role)) {
     return res.status(403).json({
       ok: false,
       mode: "live",
@@ -331,6 +341,14 @@ export default async function handler(req, res) {
       actorId: readAuth.user.id,
       eventType: auditEventTypes.invitationCreated,
       metadata: { email, role, invitation_id: data.id }
+    });
+
+    await sendTeamInviteEmail(supabase, {
+      workspaceId,
+      email,
+      role,
+      inviterEmail: readAuth.user.email,
+      invitationId: data.id
     });
 
     return res.status(201).json({ ok: true, mode: "live", invitation: data });
@@ -432,6 +450,44 @@ export default async function handler(req, res) {
     });
 
     return res.status(200).json({ ok: true, mode: "live", policy: mapPolicy(data) });
+  }
+
+  if (action === "save_notification_preferences") {
+    const preferences = {
+      ...notificationPreferenceDefaults,
+      ...(body.preferences || {})
+    };
+
+    let savedPreferences;
+
+    try {
+      savedPreferences = await updateWorkspaceNotificationPreferences(supabase, workspaceId, {
+        emailNotifications: Boolean(preferences.emailNotifications),
+        installVerified: Boolean(preferences.installVerified),
+        billingAlerts: Boolean(preferences.billingAlerts),
+        suspiciousCrawlerAlerts: Boolean(preferences.suspiciousCrawlerAlerts),
+        teamInviteEmails: Boolean(preferences.teamInviteEmails)
+      });
+    } catch {
+      return res.status(500).json({
+        ok: false,
+        mode: "live",
+        message: "Notification preferences could not be saved. Confirm the notifications migration has been applied."
+      });
+    }
+
+    await recordAuditEvent(supabase, {
+      workspaceId,
+      actorId: readAuth.user.id,
+      eventType: auditEventTypes.securitySettingChanged,
+      metadata: { setting: "notification_preferences" }
+    });
+
+    return res.status(200).json({
+      ok: true,
+      mode: "live",
+      notificationPreferences: savedPreferences
+    });
   }
 
   return res.status(400).json({ ok: false, message: "Unsupported team action." });

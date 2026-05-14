@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
+import { sendBillingActivatedEmail, sendPaymentFailedEmail } from "./_notifications.js";
 import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
 
@@ -167,6 +168,13 @@ async function syncSubscriptionToSupabase({
     }
   });
 
+  if (["active", "trialing"].includes(String(updates.subscription_status || "").toLowerCase()) && updates.plan !== "Free") {
+    await sendBillingActivatedEmail(supabase, {
+      workspaceId: resolvedWorkspaceId,
+      plan: updates.plan
+    });
+  }
+
   return { ok: true, synced: true, workspace: data };
 }
 
@@ -279,6 +287,11 @@ async function handleInvoicePaymentFailed(supabase, invoice) {
         invoice_status: invoice.status || null,
         amount_due: invoice.amount_due || null
       }
+    });
+
+    await sendPaymentFailedEmail(supabase, {
+      workspaceId,
+      amountDue: invoice.amount_due || null
     });
   }
 

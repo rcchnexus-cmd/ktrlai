@@ -1,6 +1,7 @@
 import apiKeyHandler from "./_apiKeyRoute.js";
 import auditHandler from "./_auditRoute.js";
 import domainHandler from "./_domainRoute.js";
+import notificationHandler from "./_notificationRoute.js";
 import teamHandler from "./_teamRoute.js";
 import verifyDomainHandler from "./_verifyDomainRoute.js";
 
@@ -8,6 +9,7 @@ const handlers = {
   "api-key": apiKeyHandler,
   audit: auditHandler,
   domain: domainHandler,
+  notification: notificationHandler,
   team: teamHandler,
   "verify-domain": verifyDomainHandler
 };

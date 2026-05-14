@@ -16,6 +16,7 @@ import { allowLocalMockFallback, sendMissingServerConfig } from "./_runtime.js";
 import { recordRateLimitTrigger } from "./_rateLimit.js";
 import { evaluateAiPolicy } from "./_policyEngine.js";
 import { auditEventTypes, recordAuditEvent } from "./_audit.js";
+import { sendInstallVerifiedEmail, sendSuspiciousCrawlerEmail } from "./_notifications.js";
 
 const activityStatuses = new Set(["allowed", "blocked", "restricted", "paid_access", "summaries_only"]);
 
@@ -400,6 +401,8 @@ export default async function handler(req, res) {
     });
   }
 
+  const shouldSendInstallVerified = Number(usageState.eventsUsed || 0) === 0;
+
   eventPayload.domain_id = await resolveDomainId(supabase, {
     workspaceId: eventPayload.workspace_id,
     hostname: parsedUrl.hostname
@@ -435,6 +438,21 @@ export default async function handler(req, res) {
         confidence_score: detection.confidence_score,
         page_path: eventPayload.page_path
       }
+    });
+    await sendSuspiciousCrawlerEmail(supabase, {
+      workspaceId: eventPayload.workspace_id,
+      activityLogId: insertedEvent.id,
+      botName: eventPayload.bot_name,
+      pagePath: eventPayload.page_path,
+      confidenceScore: detection.confidence_score
+    });
+  }
+
+  if (shouldSendInstallVerified) {
+    await sendInstallVerifiedEmail(supabase, {
+      workspaceId: eventPayload.workspace_id,
+      activityLogId: insertedEvent.id,
+      pagePath: eventPayload.page_path
     });
   }
 

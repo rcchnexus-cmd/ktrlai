@@ -9,6 +9,13 @@ Run these SQL files in order in the Supabase SQL editor before enabling producti
 5. `api_key_hashing_migration.sql`
 6. `domain_verification_migration.sql`
 7. `pre_production_hardening.sql`
+8. `admin_dashboard_migration.sql`
+9. `stripe_webhook_idempotency.sql`
+10. `analytics_engine_migration.sql`
+11. `bot_detection_migration.sql`
+12. `enterprise_security_migration.sql`
+13. `scale_optimization_migration.sql`
+14. `notifications_migration.sql`
 
 Frontend code must use only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 Serverless functions use `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and any server-only secrets such as `API_KEY_HASH_SECRET`.
@@ -47,7 +54,15 @@ Add these in Vercel Project Settings before enabling private-beta backend flows:
 - `STRIPE_PRO_PRICE_ID`
 - `STRIPE_BUSINESS_PRICE_ID`
 - `PAYOUT_REQUESTS_ENABLED=false`
+- `EMAIL_PROVIDER`
+- `EMAIL_FROM`
+- `SUPPORT_EMAIL`
+- `RESEND_API_KEY` if using Resend
+- `SENDGRID_API_KEY` if using SendGrid later
+- `POSTMARK_SERVER_TOKEN` if using Postmark later
 
 `PAYOUT_REQUESTS_ENABLED` must remain `false` until Stripe Connect onboarding, payout review, and live payout execution are implemented.
+
+Email provider keys are server-only. Do not create `VITE_` email provider variables.
 
 `dist/` and `node_modules/` are generated artifacts and should not be committed. Vercel should install dependencies and run `npm run build`.

@@ -16,6 +16,7 @@ export const auditEventTypes = {
   memberRemoved: "workspace_member_removed",
   memberRoleChanged: "workspace_member_role_changed",
   governancePolicyChanged: "governance_policy_changed",
+  securitySettingChanged: "security_setting_changed",
   trackerInstallVerified: "tracker_install_verified",
   suspiciousCrawlerDetected: "suspicious_crawler_detected",
   rateLimitTriggered: "rate_limit_triggered"
@@ -35,6 +36,7 @@ function summarizeEvent(eventType, metadata = {}) {
     [auditEventTypes.memberRemoved]: "Workspace member removed",
     [auditEventTypes.memberRoleChanged]: "Workspace member role changed",
     [auditEventTypes.governancePolicyChanged]: "Governance policy updated",
+    [auditEventTypes.securitySettingChanged]: "Security setting updated",
     [auditEventTypes.trackerInstallVerified]: "Tracker installation verified",
     [auditEventTypes.suspiciousCrawlerDetected]: "Suspicious crawler detected",
     [auditEventTypes.rateLimitTriggered]: "Rate limit triggered"

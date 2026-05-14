@@ -5,6 +5,14 @@ const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
 const maskGlyph = "\u2022";
 const concealedApiKeyMask = `ktrl_live_${maskGlyph.repeat(10)}`;
 
+export const notificationPreferenceDefaults = {
+  emailNotifications: true,
+  installVerified: true,
+  billingAlerts: true,
+  suspiciousCrawlerAlerts: true,
+  teamInviteEmails: true
+};
+
 function randomString(length) {
   const cryptoApi = typeof globalThis !== "undefined" ? globalThis.crypto : null;
 
@@ -281,6 +289,7 @@ export function createLocalEnterpriseSettings() {
       { id: "policy_google_extended", botScope: "Google-Extended", policyType: "restrict", notes: "Restrict training-style access unless licensed." },
       { id: "policy_unknown", botScope: "Unknown/Suspicious", policyType: "block", notes: "Treat unknown or suspicious scrapers conservatively." }
     ],
+    notificationPreferences: notificationPreferenceDefaults,
     warnings: []
   };
 }
@@ -327,4 +336,17 @@ export async function saveGovernancePolicy({ workspaceId, botScope, policyType, 
   });
 
   return data.policy;
+}
+
+export async function saveNotificationPreferences({ workspaceId, preferences }) {
+  const data = await callEnterpriseEndpoint({
+    method: "POST",
+    workspaceId,
+    body: {
+      action: "save_notification_preferences",
+      preferences
+    }
+  });
+
+  return data.notificationPreferences || notificationPreferenceDefaults;
 }

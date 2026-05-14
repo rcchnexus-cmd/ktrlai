@@ -3,6 +3,7 @@ import {
   createDomainVerification,
   createWorkspaceApiKey,
   markDomainVerified,
+  notificationPreferenceDefaults,
   normalizeDomainInput
 } from "../settings/securityUtils.js";
 
@@ -290,7 +291,8 @@ const settings = {
     name: "Avery Stone",
     email: "avery@northstar.media",
     plan: "Business"
-  }
+  },
+  notificationPreferences: notificationPreferenceDefaults
 };
 
 export const mockApi = {

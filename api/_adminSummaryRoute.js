@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "./_adminAuth.js";
 import { isApiKeyHashingConfigured } from "./_crypto.js";
+import { getEmailProviderStatus } from "./_emailProvider.js";
 import { checkServerRateLimit } from "./_rateLimit.js";
 import { sendMissingServerConfig } from "./_runtime.js";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js";
@@ -192,6 +193,8 @@ async function buildAdminSummary(supabase) {
     activityLast7DaysResult,
     rateLimitEventsResult,
     enterpriseAuditResult,
+    notificationEventsResult,
+    failedNotificationsCount,
     newUsersLast7Days,
     newWorkspacesLast7Days
   ] = await Promise.all([
@@ -268,6 +271,11 @@ async function buildAdminSummary(supabase) {
       order: "timestamp",
       limit: rowLimit
     }),
+    safeSelect(supabase, "notification_events", "id, workspace_id, user_id, type, recipient_email, status, provider, provider_message_id, error_message, created_at, sent_at", {
+      order: "created_at",
+      limit: rowLimit
+    }),
+    safeCount(supabase, "notification_events", [(query) => query.eq("status", "failed")]),
     safeCount(supabase, "profiles", [(query) => query.gte("created_at", sevenDaysAgo)]),
     safeCount(supabase, "workspaces", [(query) => query.gte("created_at", sevenDaysAgo)])
   ]);
@@ -294,6 +302,8 @@ async function buildAdminSummary(supabase) {
     activityLast7DaysResult,
     rateLimitEventsResult,
     enterpriseAuditResult,
+    notificationEventsResult,
+    failedNotificationsCount,
     newUsersLast7Days,
     newWorkspacesLast7Days
   ].forEach((result) => addWarning(result.warning));
@@ -310,6 +320,8 @@ async function buildAdminSummary(supabase) {
   const activityLast7Days = activityLast7DaysResult.rows;
   const rateLimitEvents = rateLimitEventsResult.rows;
   const enterpriseAuditEvents = enterpriseAuditResult.rows;
+  const notificationEvents = notificationEventsResult.rows;
+  const emailProviderStatus = getEmailProviderStatus();
   const usersById = buildLookup(users);
   const workspacesById = buildLookup(workspaces);
   const workspaceCountByUser = new Map();
@@ -557,10 +569,33 @@ async function buildAdminSummary(supabase) {
       status: request.status || "requested",
       createdAt: toIso(request.created_at)
     })),
+    notifications: {
+      providerConfigured: emailProviderStatus.configured,
+      provider: emailProviderStatus.provider,
+      failedCount: failedNotificationsCount.count,
+      lastSentNotification:
+        notificationEvents.find((event) => event.status === "sent")?.sent_at ||
+        notificationEvents.find((event) => event.status === "sent")?.created_at ||
+        null,
+      recentEvents: notificationEvents.map((event) => ({
+        id: event.id,
+        workspaceName: workspacesById.get(event.workspace_id)?.name || "Unknown workspace",
+        userEmail: usersById.get(event.user_id)?.email || "",
+        type: event.type,
+        status: event.status,
+        provider: event.provider,
+        recipientEmail: event.recipient_email,
+        errorMessage: event.error_message ? "Notification delivery issue recorded." : "",
+        createdAt: toIso(event.created_at),
+        sentAt: toIso(event.sent_at)
+      }))
+    },
     systemHealth: {
       supabaseConnected: true,
       stripeConfigPresent: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRO_PRICE_ID && process.env.STRIPE_BUSINESS_PRICE_ID),
       stripeWebhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+      emailProviderConfigured: emailProviderStatus.configured,
+      emailProvider: emailProviderStatus.provider,
       trackerEndpointStatus: isApiKeyHashingConfigured() ? "Ready" : "Missing API key hash secret",
       healthEndpointStatus: "Available at /api/health",
       rateLimitStore: "In-memory per serverless instance",
@@ -572,7 +607,10 @@ async function buildAdminSummary(supabase) {
         STRIPE_SECRET_KEY: Boolean(process.env.STRIPE_SECRET_KEY),
         STRIPE_WEBHOOK_SECRET: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
         STRIPE_PRO_PRICE_ID: Boolean(process.env.STRIPE_PRO_PRICE_ID),
-        STRIPE_BUSINESS_PRICE_ID: Boolean(process.env.STRIPE_BUSINESS_PRICE_ID)
+        STRIPE_BUSINESS_PRICE_ID: Boolean(process.env.STRIPE_BUSINESS_PRICE_ID),
+        EMAIL_PROVIDER: Boolean(process.env.EMAIL_PROVIDER),
+        EMAIL_FROM: Boolean(process.env.EMAIL_FROM),
+        SUPPORT_EMAIL: Boolean(process.env.SUPPORT_EMAIL)
       }
     },
     warnings

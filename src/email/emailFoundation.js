@@ -3,7 +3,16 @@ export const emailEventTypes = Object.freeze({
   installVerified: "install_verified",
   billingActivated: "billing_activated",
   paymentFailed: "payment_failed",
-  suspiciousCrawlerDetected: "suspicious_crawler_detected"
+  suspiciousCrawlerDetected: "suspicious_crawler_detected",
+  teamInvite: "team_invite"
+});
+
+export const notificationPreferenceDefaults = Object.freeze({
+  emailNotifications: true,
+  installVerified: true,
+  billingAlerts: true,
+  suspiciousCrawlerAlerts: true,
+  teamInviteEmails: true
 });
 
 export function createNoopEmailProvider() {
@@ -32,7 +41,8 @@ export function createEmailService(provider = createNoopEmailProvider()) {
     installVerified: (payload) => queueEvent(emailEventTypes.installVerified, payload),
     billingActivated: (payload) => queueEvent(emailEventTypes.billingActivated, payload),
     paymentFailed: (payload) => queueEvent(emailEventTypes.paymentFailed, payload),
-    suspiciousCrawlerDetected: (payload) => queueEvent(emailEventTypes.suspiciousCrawlerDetected, payload)
+    suspiciousCrawlerDetected: (payload) => queueEvent(emailEventTypes.suspiciousCrawlerDetected, payload),
+    teamInvite: (payload) => queueEvent(emailEventTypes.teamInvite, payload)
   };
 }
 
@@ -59,6 +69,10 @@ export function buildEmailMessage(eventType, payload = {}) {
     [emailEventTypes.suspiciousCrawlerDetected]: {
       subject: "Suspicious crawler activity detected",
       preview: `KtrlAI detected suspicious access patterns for ${workspaceName}.`
+    },
+    [emailEventTypes.teamInvite]: {
+      subject: `You're invited to ${workspaceName} on KtrlAI`,
+      preview: "A teammate invited you to join a KtrlAI workspace."
     }
   };
 

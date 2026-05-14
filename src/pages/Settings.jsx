@@ -13,9 +13,11 @@ import {
   loadEnterpriseSettings,
   maskApiKey,
   mergeDomainVerificationResult,
+  notificationPreferenceDefaults,
   removeWorkspaceMember,
   rotateApiKeyWithApi,
   saveGovernancePolicy,
+  saveNotificationPreferences,
   updateWorkspaceMemberRole,
   verifyDomainWithApi
 } from "../settings/securityUtils.js";
@@ -214,6 +216,9 @@ export default function Settings() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
   const [savingPolicyKey, setSavingPolicyKey] = useState("");
+  const [savingNotifications, setSavingNotifications] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationMessageType, setNotificationMessageType] = useState("success");
 
   useEffect(() => {
     if (!state.settings && !state.loading.settings) {
@@ -329,6 +334,10 @@ export default function Settings() {
   const canManageOperations = Boolean(enterprisePermissions.canManageOperations);
   const canViewSecurity = Boolean(enterprisePermissions.canViewSecurity);
   const canViewBilling = Boolean(enterprisePermissions.canViewBilling);
+  const notificationPreferences = {
+    ...notificationPreferenceDefaults,
+    ...(enterprise?.notificationPreferences || {})
+  };
 
   const copyValue = async (value, itemKey) => {
     if (!value) {
@@ -589,6 +598,48 @@ export default function Settings() {
       setEnterpriseMessage(error.message || "Governance policy could not be updated.");
     } finally {
       setSavingPolicyKey("");
+    }
+  };
+
+  const handleNotificationPreferenceChange = async (preferenceKey, enabled) => {
+    if (!settings?.workspaceId) {
+      setNotificationMessageType("error");
+      setNotificationMessage("A workspace is required before updating notifications.");
+      return;
+    }
+
+    const nextPreferences = {
+      ...notificationPreferences,
+      [preferenceKey]: enabled
+    };
+
+    setSavingNotifications(preferenceKey);
+    setNotificationMessage("");
+    setEnterprise((current) => ({
+      ...(current || createLocalEnterpriseSettings()),
+      notificationPreferences: nextPreferences
+    }));
+
+    try {
+      const savedPreferences = await saveNotificationPreferences({
+        workspaceId: settings.workspaceId,
+        preferences: nextPreferences
+      });
+      setEnterprise((current) => ({
+        ...(current || createLocalEnterpriseSettings()),
+        notificationPreferences: savedPreferences
+      }));
+      setNotificationMessageType("success");
+      setNotificationMessage("Notification preferences updated.");
+    } catch (error) {
+      setEnterprise((current) => ({
+        ...(current || createLocalEnterpriseSettings()),
+        notificationPreferences
+      }));
+      setNotificationMessageType("error");
+      setNotificationMessage(error.message || "Notification preferences could not be saved.");
+    } finally {
+      setSavingNotifications("");
     }
   };
 
@@ -1233,6 +1284,72 @@ window.KtrlAI.page();`}</code>
                   <span>Tracker, billing, admin, API key, and domain endpoints include rate limits.</span>
                 </article>
               </div>
+            </section>
+          )}
+
+          {canViewSecurity && (
+            <section className="panel enterprisePanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Notifications</span>
+                  <h2>Email preferences</h2>
+                </div>
+                <StatusBadge status={notificationPreferences.emailNotifications ? "Enabled" : "Paused"} />
+              </div>
+              <p className="enterpriseCopy">
+                Control customer-facing workspace emails for installation, billing, crawler alerts, and team invites.
+              </p>
+              <div className="toggleList">
+                {[
+                  {
+                    key: "emailNotifications",
+                    title: "Email notifications",
+                    detail: "Master switch for workspace email delivery."
+                  },
+                  {
+                    key: "installVerified",
+                    title: "Install verified alerts",
+                    detail: "Send an email when the tracker receives its first live event."
+                  },
+                  {
+                    key: "billingAlerts",
+                    title: "Billing alerts",
+                    detail: "Notify owners and admins about active billing and failed payments."
+                  },
+                  {
+                    key: "suspiciousCrawlerAlerts",
+                    title: "Suspicious crawler alerts",
+                    detail: "Rate-limited alerts when high-confidence suspicious crawler traffic is detected."
+                  },
+                  {
+                    key: "teamInviteEmails",
+                    title: "Team invitation emails",
+                    detail: "Email invited teammates when owners create workspace invitations."
+                  }
+                ].map((item) => (
+                  <label className="toggleRow" key={item.key}>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <span>{item.detail}</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(notificationPreferences[item.key])}
+                      disabled={!canManageOperations || Boolean(savingNotifications)}
+                      onChange={(event) => handleNotificationPreferenceChange(item.key, event.target.checked)}
+                      aria-label={item.title}
+                    />
+                  </label>
+                ))}
+              </div>
+              {!canManageOperations && (
+                <p className="securityWarning">Only workspace owners and admins can update notification preferences.</p>
+              )}
+              {notificationMessage && (
+                <p className={`domainVerificationMessage ${notificationMessageType === "error" ? "error" : ""}`} role="status">
+                  {notificationMessage}
+                </p>
+              )}
             </section>
           )}
 

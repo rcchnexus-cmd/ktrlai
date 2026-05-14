@@ -156,6 +156,7 @@ export default function Admin() {
   const payouts = summary.payouts || [];
   const platformAnalytics = summary.platformAnalytics || {};
   const security = summary.security || {};
+  const notifications = summary.notifications || {};
 
   return (
     <AppShell title="Admin" eyebrow="Platform Admin">
@@ -610,6 +611,44 @@ export default function Admin() {
           </div>
         </article>
 
+        <article className="panel">
+          <div className="panelHeader">
+            <div>
+              <span className="eyebrow">Notifications</span>
+              <h2>Email delivery</h2>
+            </div>
+            <StatusBadge status={notifications.providerConfigured ? "Configured" : "Not configured"} />
+          </div>
+          <div className="adminPlanGrid">
+            <article>
+              <span>Provider</span>
+              <strong>{notifications.provider || "noop"}</strong>
+            </article>
+            <article>
+              <span>Failed notifications</span>
+              <strong>{notifications.failedCount || 0}</strong>
+            </article>
+            <article>
+              <span>Last sent</span>
+              <strong>{formatDateTime(notifications.lastSentNotification)}</strong>
+            </article>
+          </div>
+          <div className="adminAuditList">
+            <h3>Recent notification events</h3>
+            {(notifications.recentEvents || []).length === 0 ? (
+              <p>No notification events recorded yet.</p>
+            ) : (
+              notifications.recentEvents.slice(0, 8).map((event) => (
+                <div key={event.id}>
+                  <span>{statusLabel(event.type)}</span>
+                  <strong>{event.workspaceName}</strong>
+                  <em>{statusLabel(event.status)} - {formatDateTime(event.createdAt)}</em>
+                </div>
+              ))
+            )}
+          </div>
+        </article>
+
         <article className="panel largePanel">
           <div className="panelHeader">
             <div>
@@ -621,6 +660,7 @@ export default function Admin() {
             <HealthItem label="Supabase" enabled={health.supabaseConnected} detail="Server admin client" />
             <HealthItem label="Stripe checkout" enabled={health.stripeConfigPresent} detail="Secret and price IDs" />
             <HealthItem label="Stripe webhook" enabled={health.stripeWebhookConfigured} detail="Signature verification" />
+            <HealthItem label="Email provider" enabled={health.emailProviderConfigured} detail={health.emailProvider || "noop"} />
             <HealthItem label="Tracker endpoint" enabled={health.trackerEndpointStatus === "Ready"} detail={health.trackerEndpointStatus} />
             <HealthItem label="Health endpoint" enabled={Boolean(health.healthEndpointStatus)} detail={health.healthEndpointStatus} />
             <HealthItem label="Rate limits" enabled={Boolean(health.rateLimitStore)} detail={health.rateLimitStore} />

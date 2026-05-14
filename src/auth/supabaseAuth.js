@@ -402,6 +402,28 @@ async function recordSessionAudit(eventType, { workspaceId, accessToken } = {}) 
   }
 }
 
+async function sendSessionNotification(type, { workspaceId, accessToken } = {}) {
+  if (!workspaceId || !accessToken) {
+    return;
+  }
+
+  try {
+    await fetch("/api/app?action=notification", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        workspace_id: workspaceId,
+        type
+      })
+    });
+  } catch {
+    // Customer communication should never block account creation or login recovery.
+  }
+}
+
 export async function restoreSession() {
   if (!isSupabaseConfigured && allowLocalMockFallback) {
     return toMockSession(mockAuth.getSession());
@@ -502,6 +524,10 @@ export async function signup(credentials = {}) {
 
   const nextSession = await bootstrapAfterSessionReady(session, { domain, name: credentials.name });
   await recordSessionAudit("login", {
+    workspaceId: nextSession.workspaceId,
+    accessToken: session.access_token
+  });
+  await sendSessionNotification("welcome", {
     workspaceId: nextSession.workspaceId,
     accessToken: session.access_token
   });
