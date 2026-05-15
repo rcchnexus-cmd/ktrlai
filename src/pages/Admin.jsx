@@ -113,7 +113,7 @@ export default function Admin() {
 
   if (status === "loading") {
     return (
-      <AppShell title="Admin" eyebrow="Platform Admin">
+      <AppShell title="Infrastructure Operations" eyebrow="Platform">
         <div className="loadingState">Loading platform controls...</div>
       </AppShell>
     );
@@ -121,7 +121,7 @@ export default function Admin() {
 
   if (status === "denied") {
     return (
-      <AppShell title="Access denied" eyebrow="Platform Admin">
+      <AppShell title="Access denied" eyebrow="Platform">
         <div className="emptyState">
           <strong>Access denied</strong>
           <p>{message || "This area is limited to KtrlAI platform administrators."}</p>
@@ -132,7 +132,7 @@ export default function Admin() {
 
   if (status === "error") {
     return (
-      <AppShell title="Admin unavailable" eyebrow="Platform Admin">
+      <AppShell title="Infrastructure unavailable" eyebrow="Platform">
         <div className="emptyState">
           <strong>Admin controls could not be loaded</strong>
           <p>{message}</p>
@@ -162,12 +162,12 @@ export default function Admin() {
   const rollups = platformAnalytics.rollups || {};
 
   return (
-    <AppShell title="Admin" eyebrow="Platform Admin">
+    <AppShell title="Infrastructure Operations" eyebrow="Platform">
       <section className="adminHero panel">
         <div>
-          <span className="eyebrow">Internal Control System</span>
-          <h2>KtrlAI platform operations</h2>
-          <p>Monitor users, workspaces, ingestion, billing readiness, and payout review state from a separate operator-only surface.</p>
+          <span className="eyebrow">Operator console</span>
+          <h2>KtrlAI infrastructure operations</h2>
+          <p>Monitor platform health, ingestion, queue, Redis/rate limits, rollups, billing state, audit activity, and workspace risk from an operator-only surface.</p>
         </div>
         <StatusBadge status={health.payoutsEnabled ? "Payouts enabled" : "Payouts disabled"} />
       </section>

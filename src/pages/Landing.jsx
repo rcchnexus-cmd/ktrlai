@@ -7,28 +7,38 @@ import { billingPlans, normalizePlan } from "../billing/stripeConfig.js";
 import { openBillingPortal, startBillingCheckout } from "../billing/billingApi.js";
 import { useApp } from "../context/AppContext.jsx";
 
-const trust = ["Verified bot intelligence", "Dataset licensing", "AI crawler controls", "Source visibility"];
-const teams = ["Northstar", "Atlas Labs", "SignalPress", "HelioData", "Orbital Cloud"];
+const trust = ["API keys", "Audit logs", "Rate limits", "Rollups", "Governance policies"];
+const teams = ["Publishers", "SEO teams", "SaaS teams", "Content platforms", "Enterprise operators"];
 
 const whatKtrlAiDoes = [
-  "Track AI bots visiting your content",
-  "Control which AI systems can access your data",
-  "Monetize AI-driven traffic and dataset usage"
+  "See which AI systems access your site",
+  "Set rules for AI crawlers and training access",
+  "Prepare content usage for licensing and commercial terms"
 ];
 
 const howItWorks = [
-  ["install", "Install tracking script", "Add one lightweight script and verify the domains you want KtrlAI to govern."],
-  ["signal", "Monitor AI activity in real time", "See bot identity, pages accessed, policy outcome, and usage patterns as events arrive."],
-  ["revenue", "Control access and monetize usage", "Set access rules, allow approved AI systems, and attach commercial terms when value is created."]
+  ["install", "Install tracker", "Add one lightweight script and connect the domains you want KtrlAI to monitor."],
+  ["signal", "Detect AI crawlers", "Identify AI systems, suspicious scrapers, search bots, and normal browser traffic."],
+  ["shield", "Set governance policies", "Choose which crawlers are allowed, monitored, restricted, or ready for paid access."],
+  ["audit", "Analyze activity", "Review paths, operators, source mix, policy decisions, and usage trends."],
+  ["revenue", "Prepare licensing readiness", "Track content value and prepare future terms for AI access and dataset usage."]
 ];
 
 const features = [
-  ["signal", "AI access intelligence", "See which AI systems read, summarize, cite, or train on your content."],
-  ["shield", "Policy enforcement", "Set rules for trusted bots, unknown crawlers, summary access, and training use."],
-  ["revenue", "Monetization rails", "Turn permitted AI access into crawl fees, dataset licenses, and partner revenue."],
-  ["training", "Training governance", "Choose which documents, style signals, and personalization layers models may use."],
-  ["audit", "Audit-ready logs", "Keep a clean record of bot identity, pages accessed, policy result, and value created."],
-  ["install", "Fast installation", "Drop in the tracker script, verify domains, and start seeing AI activity in minutes."]
+  ["signal", "Crawler intelligence", "See which AI systems, search engines, and scrapers access your web properties."],
+  ["shield", "Governance policies", "Set rules for approved bots, unknown crawlers, summaries, and training use."],
+  ["revenue", "Licensing readiness", "Prepare crawl fees, dataset licenses, and partner terms when value is created."],
+  ["training", "Training permissions", "Choose what content and style signals models may use."],
+  ["audit", "Audit-ready records", "Keep a clean record of identity, paths, decisions, and operational events."],
+  ["install", "Production installation", "Use API keys, domain verification, rate limits, and tracker health checks."]
+];
+
+const useCases = [
+  ["Publishers", "Monitor AI crawlers, protect premium content, and prepare licensing conversations."],
+  ["SEO agencies", "Show clients how AI answer engines and crawlers interact with their sites."],
+  ["SaaS companies", "Track docs, changelog, and knowledge-base access from AI systems."],
+  ["Content platforms", "Govern large content libraries and detect unusual scraping pressure."],
+  ["Enterprise teams", "Give security, legal, and growth teams shared evidence around AI access."]
 ];
 
 function FeatureGlyph({ type }) {
@@ -89,36 +99,36 @@ function DashboardPreview() {
         <div className="mockupContent">
           <div className="mockupHeader">
             <div>
-              <span>AI visibility score</span>
-              <strong>94%</strong>
+              <span>Ingestion status</span>
+              <strong>Live</strong>
             </div>
-            <em>Live</em>
+            <em>Control plane</em>
           </div>
           <div className="mockupGrid">
             <article>
-              <span>Total AI visits</span>
+              <span>AI requests</span>
               <strong>128k</strong>
             </article>
             <article>
-              <span>Revenue</span>
-              <strong>$24.8k</strong>
+              <span>Policies</span>
+              <strong>18</strong>
             </article>
             <article>
-              <span>Trusted bots</span>
+              <span>Operators</span>
               <strong>42</strong>
             </article>
           </div>
           <div className="mockupPanels">
             <div className="mockupChartPanel">
               <div className="mockupPanelHeader">
-                <strong>AI traffic</strong>
+                <strong>Traffic trend</strong>
                 <span>7d</span>
               </div>
               <TrafficChart data={traffic} />
             </div>
             <div className="mockupSidePanel">
               <div className="mockupPanelHeader">
-                <strong>Access mix</strong>
+                <strong>Operator mix</strong>
                 <span>Live</span>
               </div>
               <DistributionChart data={distribution} />
@@ -197,18 +207,17 @@ export default function Landing() {
       <main>
         <section className="heroSection" data-reveal>
           <div className="heroCopy">
-            <div className="heroPill">Control layer for AI access, training, and monetization</div>
-            <h1>Control how AI uses your content.</h1>
+            <div className="heroPill">AI access governance for the open web</div>
+            <h1>Control how AI systems access your website.</h1>
             <p>
-              Track AI bots visiting your site, decide which systems can access your data, and monetize approved AI
-              usage from one governance platform.
+              KtrlAI helps website owners monitor AI crawlers, govern access, and prepare for future content licensing.
             </p>
             <div className="heroActions">
               <RouteLink to="/visibility" className="primaryButton heroPrimaryCta">
-                Check My Site Free
+                Check site visibility
               </RouteLink>
               <RouteLink to="/dashboard" className="secondaryButton">
-                View Dashboard
+                View operations console
               </RouteLink>
             </div>
           </div>
@@ -216,7 +225,7 @@ export default function Landing() {
         </section>
 
         <section className="authorityStrip" aria-label="Trusted by modern teams" data-reveal>
-          <span>Trusted by modern teams</span>
+          <span>Built for operators of the open web</span>
           <div>
             {teams.map((team, index) => (
               <strong key={team} data-reveal style={{ "--reveal-index": index }}>
@@ -237,10 +246,10 @@ export default function Landing() {
         <section className="section productIntro twoColumn" data-reveal>
           <div>
             <span className="eyebrow">What is KtrlAI?</span>
-            <h2>AI governance infrastructure for websites, publishers, and data-rich businesses.</h2>
+            <h2>Infrastructure for monitoring and governing AI crawler access.</h2>
             <p className="introStatement">
-              KtrlAI helps teams track, control, and monetize AI access to their content so the AI-powered internet has
-              a real permissions and revenue layer.
+              KtrlAI gives publishers, SaaS companies, SEO teams, content platforms, and enterprises a control plane
+              for AI traffic across their websites.
             </p>
           </div>
           <div className="checkList">
@@ -254,7 +263,7 @@ export default function Landing() {
 
         <section className="section solutionBand" data-reveal>
           <span className="eyebrow">How it works</span>
-          <h2>Go from invisible AI traffic to a governed content channel in three steps.</h2>
+          <h2>From invisible AI access to governed traffic operations.</h2>
           <div className="workflow onboardingWorkflow">
             {howItWorks.map(([icon, title, body], index) => (
               <article key={title} data-reveal style={{ "--reveal-index": index }}>
@@ -270,23 +279,23 @@ export default function Landing() {
         <section className="section twoColumn" data-reveal>
           <div>
             <span className="eyebrow">The problem</span>
-            <h2>AI traffic is becoming a business channel without a control plane.</h2>
+            <h2>AI systems access websites without clear visibility, rules, or commercial terms.</h2>
           </div>
           <div className="stackedCopy">
             <p>
-              AI systems crawl, summarize, cite, cache, and train on public content, often without clean visibility into
-              identity, intent, or economic value.
+              AI systems crawl, summarize, cite, cache, and train on public websites. Most teams cannot clearly see
+              which systems visited, what they used, or whether access matched business policy.
             </p>
             <p>
-              Robots files were designed for search-era crawlers. KtrlAI gives modern teams the policy, telemetry, and
-              licensing surface they need for AI-era distribution.
+              Traditional robots controls were designed for search-era crawlers. KtrlAI adds the telemetry, governance,
+              and licensing readiness needed for AI-era distribution.
             </p>
           </div>
         </section>
 
         <section className="section solutionBand" data-reveal>
           <span className="eyebrow">The solution</span>
-          <h2>Observe every AI touchpoint, decide what is allowed, and capture value when models use your work.</h2>
+          <h2>Monitor access, govern crawler behavior, and prepare for future content licensing.</h2>
           <div className="workflow">
             {["Detect", "Classify", "Control", "Price", "Audit"].map((step, index) => (
               <article key={step} data-reveal style={{ "--reveal-index": index }}>
@@ -304,10 +313,25 @@ export default function Landing() {
           </div>
         </section>
 
+        <section className="section useCaseSection" data-reveal>
+          <div className="sectionHeader">
+            <span className="eyebrow">Who it is for</span>
+            <h2>For teams responsible for content visibility, traffic quality, and data control.</h2>
+          </div>
+          <div className="useCaseGrid">
+            {useCases.map(([title, body], index) => (
+              <article key={title} data-reveal style={{ "--reveal-index": index }}>
+                <strong>{title}</strong>
+                <p>{body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="section" data-reveal>
           <div className="sectionHeader">
-            <span className="eyebrow">Platform</span>
-            <h2>Everything content owners need to manage AI access.</h2>
+            <span className="eyebrow">Infrastructure</span>
+            <h2>The operating layer for AI crawler governance.</h2>
           </div>
           <div className="featureGrid">
             {features.map(([icon, title, body], index) => (
@@ -323,31 +347,31 @@ export default function Landing() {
         <section className="section productPreview" data-reveal>
           <div>
             <span className="eyebrow">Product preview</span>
-            <h2>A command center for the AI-driven internet.</h2>
+            <h2>A sober control plane for AI traffic and governance evidence.</h2>
             <p>
-              KtrlAI connects AI visibility, control policies, usage analytics, training permissions, and revenue
-              settings in one operating surface.
+              KtrlAI connects crawler detection, governance policies, activity logs, domain verification, API keys,
+              and licensing readiness in one operating surface.
             </p>
             <RouteLink to="/dashboard" className="secondaryButton">
-              Explore the app
+              Open operations console
             </RouteLink>
           </div>
           <div className="previewMatrix">
             <article data-reveal style={{ "--reveal-index": 0 }}>
               <strong>42</strong>
-              <span>verified AI bots</span>
+              <span>detected operators</span>
             </article>
             <article data-reveal style={{ "--reveal-index": 1 }}>
               <strong>3.8k</strong>
-              <span>pages governed</span>
+              <span>governed paths</span>
             </article>
             <article data-reveal style={{ "--reveal-index": 2 }}>
               <strong>$24.8k</strong>
-              <span>AI revenue</span>
+              <span>licensing estimate</span>
             </article>
             <article data-reveal style={{ "--reveal-index": 3 }}>
-              <strong>99.9%</strong>
-              <span>policy uptime</span>
+              <strong>Ready</strong>
+              <span>tracker health</span>
             </article>
           </div>
         </section>
@@ -366,11 +390,11 @@ export default function Landing() {
         </section>
 
         <section className="section solutionBand companyMission" id="about" data-reveal>
-          <span className="eyebrow">About KtrlAI</span>
-          <h2>We are building infrastructure for the AI-powered internet.</h2>
+          <span className="eyebrow">Private beta</span>
+          <h2>Help define the governance layer for AI access to the open web.</h2>
           <p>
-            KtrlAI exists to give creators, publishers, and businesses control over how their content and data are used
-            by AI systems. Our mission is to make AI access transparent, permissioned, and economically fair.
+            KtrlAI is built for teams that need evidence, controls, and licensing readiness before AI crawler traffic
+            becomes another unmanaged business channel.
           </p>
           <div className="missionStats" aria-label="Company principles">
             <span>Visibility first</span>
@@ -382,18 +406,18 @@ export default function Landing() {
         <section className="section splitBand" data-reveal>
           <article data-reveal style={{ "--reveal-index": 0 }}>
             <span className="eyebrow">Monetization</span>
-            <h2>Turn AI demand into a revenue line.</h2>
+            <h2>Prepare content access for licensing.</h2>
             <p>
               Configure paid access for crawler usage, answer summaries, and dataset licensing. Model projected revenue
               before turning on enforcement.
             </p>
             <RouteLink to="/monetization" className="primaryButton smallButton">
-              Enable paid AI access
+              Review licensing
             </RouteLink>
           </article>
           <article data-reveal style={{ "--reveal-index": 1 }}>
             <span className="eyebrow">AI training permissions</span>
-            <h2>Decide what models can learn from.</h2>
+            <h2>Define what models may learn from.</h2>
             <p>
               Upload approved datasets, restrict sensitive content, and manage privacy levels for writing style,
               personalization, and licensing workflows.

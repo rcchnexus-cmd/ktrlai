@@ -4,24 +4,57 @@ import ProductHint from "./ProductHint.jsx";
 import { RouteLink, useNavigation } from "../navigation.jsx";
 import { useApp } from "../context/AppContext.jsx";
 
-const appRoutes = [
-  { to: "/dashboard", label: "Dashboard", icon: "D" },
-  { to: "/activity", label: "AI Activity", icon: "A" },
-  { to: "/control", label: "Control Center", icon: "C" },
-  { to: "/visibility", label: "AI Visibility", icon: "V" },
-  { to: "/analytics", label: "Analytics", icon: "#" },
-  { to: "/monetization", label: "Monetization", icon: "$" },
-  { to: "/training", label: "AI Training", icon: "T" },
-  { to: "/settings", label: "Settings", icon: "*" }
+const navGroups = [
+  {
+    label: "Monitor",
+    routes: [
+      { to: "/dashboard", label: "Operations", icon: "O" },
+      { to: "/activity", label: "Live Stream", icon: "L" },
+      { to: "/analytics", label: "Traffic Intelligence", icon: "T" },
+      { to: "/visibility", label: "Visibility", icon: "V" }
+    ]
+  },
+  {
+    label: "Govern",
+    routes: [
+      { to: "/control", label: "Governance", icon: "G" },
+      { to: "/training", label: "Training Policy", icon: "P" },
+      { to: "/monetization", label: "Licensing", icon: "$" }
+    ]
+  },
+  {
+    label: "Configure",
+    routes: [
+      { to: "/settings", label: "Configuration", icon: "C" },
+      { to: "/settings#billing", label: "Billing", icon: "B" },
+      { to: "/settings#team", label: "Team", icon: "M" },
+      { to: "/settings#security", label: "Security", icon: "S" }
+    ]
+  }
 ];
 
-const adminRoute = { to: "/admin", label: "Platform Admin", icon: "K" };
+const adminGroup = {
+  label: "Platform",
+  routes: [{ to: "/admin", label: "Infrastructure Admin", icon: "I" }]
+};
+
+function routePath(to) {
+  return to.split("#")[0];
+}
+
+function isRouteActive(currentPath, to) {
+  if (to.includes("#")) {
+    return false;
+  }
+
+  return currentPath === routePath(to);
+}
 
 export default function AppShell({ title, eyebrow, children, action }) {
   const { path, navigate } = useNavigation();
   const { state, actions } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const sidebarRoutes = state.auth.isPlatformAdmin ? [...appRoutes, adminRoute] : appRoutes;
+  const sidebarGroups = state.auth.isPlatformAdmin ? [...navGroups, adminGroup] : navGroups;
 
   const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
   const toggleSidebar = useCallback(() => setIsSidebarOpen((isOpen) => !isOpen), []);
@@ -49,21 +82,27 @@ export default function AppShell({ title, eyebrow, children, action }) {
           <Logo />
         </div>
         <nav className="sidebarNav" aria-label="Application navigation">
-          {sidebarRoutes.map((route) => (
-            <RouteLink
-              key={route.to}
-              to={route.to}
-              className={path === route.to ? "sidebarLink active" : "sidebarLink"}
-              onClick={closeSidebar}
-            >
-              <span>{route.icon}</span>
-              {route.label}
-            </RouteLink>
+          {sidebarGroups.map((group) => (
+            <div className="sidebarGroup" key={group.label}>
+              <span className="sidebarGroupLabel">{group.label}</span>
+              {group.routes.map((route) => (
+                <RouteLink
+                  key={route.to}
+                  to={route.to}
+                  className={isRouteActive(path, route.to) ? "sidebarLink active" : "sidebarLink"}
+                  onClick={closeSidebar}
+                >
+                  <span>{route.icon}</span>
+                  {route.label}
+                </RouteLink>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="sidebarFooter">
-          <span>{state.auth.user?.plan || "Free"} plan</span>
+          <span>{state.auth.workspace?.name || "Workspace"}</span>
           <strong>{state.auth.user?.email || "northstar.media"}</strong>
+          <em>{state.auth.user?.plan || "Free"} plan</em>
           <button type="button" className="logoutButton" onClick={handleLogout}>
             Log out
           </button>

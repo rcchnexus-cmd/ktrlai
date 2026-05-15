@@ -26,7 +26,7 @@ export default function Training() {
   };
 
   return (
-    <AppShell title="AI Training" eyebrow="Model permissions">
+    <AppShell title="Training Policy" eyebrow="Govern">
       {!training ? (
         <div className="loadingState">Loading training permissions...</div>
       ) : (
@@ -35,7 +35,7 @@ export default function Training() {
             <div className="panelHeader">
               <div>
                 <span className="eyebrow">Permissions</span>
-                <h2>Control what models may learn</h2>
+                <h2>Control what systems may learn</h2>
               </div>
             </div>
             <div className="toggleList">

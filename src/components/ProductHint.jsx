@@ -3,8 +3,8 @@ import { RouteLink } from "../navigation.jsx";
 
 const hints = {
   "/dashboard": {
-    title: "Dashboard overview",
-    body: "This is your command center for live AI access, install health, crawler activity, and revenue signals.",
+    title: "Operations overview",
+    body: "Monitor live AI access, tracker health, crawler activity, governance posture, and licensing readiness from one console.",
     to: "/settings#install",
     cta: "Finish setup"
   },
@@ -15,14 +15,14 @@ const hints = {
     cta: "Open docs"
   },
   "/analytics": {
-    title: "Analytics explained",
-    body: "Analytics switch from sample preview to live data as soon as your workspace receives tracker events.",
+    title: "Traffic intelligence",
+    body: "Analytics switch from sample preview to live crawler evidence as soon as your workspace receives tracker events.",
     to: "/docs/analytics",
     cta: "Learn detection"
   },
   "/activity": {
-    title: "AI detection feed",
-    body: "Each event is enriched with bot identity, category, confidence, and suspicious traffic signals.",
+    title: "Live event stream",
+    body: "Each access event is enriched with operator identity, category, confidence, and suspicious traffic signals.",
     to: "/docs/analytics",
     cta: "How it works"
   }

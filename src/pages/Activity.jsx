@@ -4,6 +4,20 @@ import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
 import { RouteLink } from "../navigation.jsx";
 
+function getEventSeverity(row) {
+  const text = `${row.status || ""} ${row.category || ""} ${row.type || ""}`.toLowerCase();
+
+  if (/block|deny|failed|suspicious|scraper/.test(text)) {
+    return "Attention";
+  }
+
+  if (/allow|verified|success|trusted/.test(text)) {
+    return "Normal";
+  }
+
+  return "Monitor";
+}
+
 export default function Activity() {
   const { state, actions } = useApp();
   const [search, setSearch] = useState("");
@@ -53,7 +67,7 @@ export default function Activity() {
   const hasActivityRows = state.activity.length > 0;
 
   return (
-    <AppShell title="AI Activity" eyebrow="Access logs">
+    <AppShell title="Live AI Activity Stream" eyebrow="Monitor">
       <section className="panel liveIngestionPanel">
         <div className="liveIngestionHeader">
           <div>
@@ -113,11 +127,11 @@ export default function Activity() {
       ) : isInitialLoading ? (
         <div className="loadingState">Loading AI activity logs...</div>
       ) : (
-        <section className="panel">
+        <section className="panel activityStreamPanel">
           <div className="panelHeader">
             <div>
-              <span className="eyebrow">Filtered logs</span>
-              <h2>{filtered.length} AI events</h2>
+              <span className="eyebrow">Event stream</span>
+              <h2>{filtered.length} access events</h2>
             </div>
           </div>
           {filtered.length === 0 ? (
@@ -131,34 +145,32 @@ export default function Activity() {
             </div>
           ) : (
             <div className="tableWrap">
-              <table>
+              <table className="activityLogTable">
                 <thead>
                   <tr>
-                    <th>Bot</th>
-                    <th>Type</th>
+                    <th>Time</th>
+                    <th>Operator</th>
+                    <th>Path</th>
                     <th>Category</th>
-                    <th>Confidence</th>
-                    <th>Page</th>
+                    <th>Risk</th>
                     <th>Status</th>
+                    <th>Policy</th>
                     <th>Region</th>
-                    <th>Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((row) => (
                     <tr key={row.id}>
+                      <td>{row.date} {row.time}</td>
                       <td>{row.bot}</td>
-                      <td>{row.type}</td>
-                      <td>{row.category || "Legacy"}</td>
-                      <td>{row.confidenceScore ? `${row.confidenceScore}%` : "N/A"}</td>
                       <td>{row.page}</td>
+                      <td>{row.category || "Legacy"}</td>
+                      <td>{getEventSeverity(row)}</td>
                       <td>
                         <StatusBadge status={row.status} />
                       </td>
+                      <td>{row.confidenceScore ? `${row.confidenceScore}% confidence` : row.type}</td>
                       <td>{row.region}</td>
-                      <td>
-                        {row.date} {row.time}
-                      </td>
                     </tr>
                   ))}
                 </tbody>

@@ -93,11 +93,12 @@ export default function Dashboard() {
     (insight) => /suspicious|scrap/i.test(`${insight.label} ${insight.detail}`)
   );
   const topAiSystem = dashboard?.botDistribution?.[0];
+  const governedShare = dashboard?.kpis?.find((kpi) => /page|govern|access/i.test(kpi.label));
 
   return (
     <AppShell
-      title="Operations"
-      eyebrow="AI traffic control plane"
+      title="AI Operations Center"
+      eyebrow="Monitor"
       action={
         <RouteLink to="/visibility" className="primaryButton smallButton">
           Check site
@@ -128,26 +129,53 @@ export default function Dashboard() {
             <StatusBadge status={dataLabel} />
             <span>{dataDetail}</span>
           </section>
+          <section className="opsStatusRail" aria-label="Workspace infrastructure status">
+            <article>
+              <span>Workspace</span>
+              <strong>{state.auth.workspace?.name || "Demo Workspace"}</strong>
+              <em>{state.auth.user?.plan || "Free"} plan</em>
+            </article>
+            <article>
+              <span>Tracker</span>
+              <strong>{getInstallStatusLabel(installHealth.status)}</strong>
+              <em>{installHealth.sdkInstalled ? "SDK detected" : "Awaiting SDK"}</em>
+            </article>
+            <article>
+              <span>Last event</span>
+              <strong>{formatInstallDate(installHealth.lastEventAt)}</strong>
+              <em>{installHealth.eventsToday || 0} today</em>
+            </article>
+            <article>
+              <span>Governance</span>
+              <strong>{verifiedDomainCount > 0 ? "Ready" : "Needs domain"}</strong>
+              <em>{verifiedDomainCount || 0} verified domains</em>
+            </article>
+            <article>
+              <span>Rollups</span>
+              <strong>{dashboard.source === "live" ? "Live data" : "Preview"}</strong>
+              <em>Summary acceleration ready</em>
+            </article>
+          </section>
           <section className="opsCommandGrid" aria-label="AI traffic operations summary">
             <article className="opsCommandCard primary">
-              <span>AI request state</span>
+              <span>AI requests</span>
               <strong>{aiRequestKpi?.value ?? "0"}</strong>
               <p>{aiRequestKpi?.label || "Tracked AI requests"}</p>
             </article>
             <article className="opsCommandCard">
-              <span>Governance posture</span>
-              <strong>{verifiedDomainCount > 0 ? "Controlled" : "Setup required"}</strong>
-              <p>{verifiedDomainCount > 0 ? `${verifiedDomainCount} verified domain${verifiedDomainCount === 1 ? "" : "s"}` : "Verify a domain to enforce workspace policy."}</p>
+              <span>AI systems detected</span>
+              <strong>{dashboard.botDistribution?.length || 0}</strong>
+              <p>{topAiSystem?.label ? `${topAiSystem.label} is currently the top operator.` : "Operators appear after live crawler events."}</p>
             </article>
             <article className="opsCommandCard">
-              <span>Risk signal</span>
+              <span>Suspicious pressure</span>
               <strong>{suspiciousInsight?.value ?? "0"}</strong>
               <p>{suspiciousInsight?.detail || "Suspicious crawler activity will surface here."}</p>
             </article>
             <article className="opsCommandCard">
-              <span>Top AI system</span>
-              <strong>{topAiSystem?.label || "Pending"}</strong>
-              <p>{topAiSystem ? `${topAiSystem.value}% of observed crawler mix` : "Awaiting enough live events."}</p>
+              <span>Governed requests</span>
+              <strong>{governedShare?.value ?? "0"}</strong>
+              <p>{verifiedDomainCount > 0 ? `${verifiedDomainCount} verified domain${verifiedDomainCount === 1 ? "" : "s"} under policy.` : "Verify a domain to enforce workspace policy."}</p>
             </article>
           </section>
           <section className="installHealthPanel panel" aria-label="Tracker installation health">
@@ -214,11 +242,65 @@ export default function Dashboard() {
               <DistributionChart data={dashboard.botDistribution} />
             </article>
           </section>
+          <section className="dashboardGrid">
+            <article className="panel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Governance snapshot</span>
+                  <h2>Policy readiness</h2>
+                </div>
+                <StatusBadge status={verifiedDomainCount > 0 ? "Ready" : "Pending"} />
+              </div>
+              <div className="infraHealthList">
+                <div>
+                  <span>Domain verification</span>
+                  <strong>{verifiedDomainCount > 0 ? "Verified" : "Connect domain"}</strong>
+                  <em>{verifiedDomainCount || 0} domains ready for policy decisions</em>
+                </div>
+                <div>
+                  <span>Crawler policies</span>
+                  <strong>Monitor first</strong>
+                  <em>Governance decisions are visible before enforcement</em>
+                </div>
+                <div>
+                  <span>Licensing readiness</span>
+                  <strong>Prepared</strong>
+                  <em>Usage evidence can support future content terms</em>
+                </div>
+              </div>
+            </article>
+            <article className="panel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">System health</span>
+                  <h2>Ingestion infrastructure</h2>
+                </div>
+                <StatusBadge status={installHealth.status === "active" ? "Healthy" : "Pending"} />
+              </div>
+              <div className="infraHealthList">
+                <div>
+                  <span>Ingestion</span>
+                  <strong>{installHealth.sdkInstalled ? "Receiving" : "Waiting"}</strong>
+                  <em>Tracker endpoint and payload validation ready</em>
+                </div>
+                <div>
+                  <span>Queue and jobs</span>
+                  <strong>Ready</strong>
+                  <em>Background processing foundation available</em>
+                </div>
+                <div>
+                  <span>Rate limits</span>
+                  <strong>Protected</strong>
+                  <em>Workspace and route abuse controls enabled</em>
+                </div>
+              </div>
+            </article>
+          </section>
           <section className="panel">
             <div className="panelHeader">
               <div>
-                <span className="eyebrow">Live feed</span>
-                <h2>Recent AI activity</h2>
+                <span className="eyebrow">Live stream</span>
+                <h2>Recent AI access events</h2>
               </div>
               <RouteLink to="/activity" className="textLink">
                 View all
@@ -234,23 +316,25 @@ export default function Dashboard() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Bot</th>
-                      <th>Page</th>
-                      <th>Status</th>
-                      <th>Tokens</th>
                       <th>Time</th>
+                      <th>Operator</th>
+                      <th>Page</th>
+                      <th>Category</th>
+                      <th>Status</th>
+                      <th>Evidence</th>
                     </tr>
                   </thead>
                   <tbody>
                     {dashboard.recentActivity.map((row) => (
                       <tr key={row.id}>
+                        <td>{row.time}</td>
                         <td>{row.bot}</td>
                         <td>{row.page}</td>
+                        <td>{row.category || "AI crawler"}</td>
                         <td>
                           <StatusBadge status={row.status} />
                         </td>
                         <td>{row.tokens}</td>
-                        <td>{row.time}</td>
                       </tr>
                     ))}
                   </tbody>

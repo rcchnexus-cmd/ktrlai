@@ -701,7 +701,7 @@ export default function Settings() {
       : "Rotate an API key to reveal a full live tracker credential. After refresh, only the masked key is shown.";
 
   return (
-    <AppShell title="Settings" eyebrow="Workspace">
+    <AppShell title="Control Plane Configuration" eyebrow="Configure">
       {settingsError ? (
         <div className="emptyState">
           <strong>Settings could not be loaded</strong>
@@ -716,6 +716,25 @@ export default function Settings() {
         <div className="loadingState">Loading settings...</div>
       ) : (
         <div className="settingsGrid">
+          <section className="settingsConfigRail" aria-label="Control plane configuration sections">
+            {[
+              ["Workspace", "#account", "Identity and plan context"],
+              ["Installation", "#install", "SDK and event collection"],
+              ["API Keys", "#api-key", "Tracker credentials"],
+              ["Domains", "#domains", "DNS verification"],
+              ["Governance", "#governance", "Crawler policies"],
+              ["Notifications", "#notifications", "Workspace alerts"],
+              ["Team Access", "#team", "Roles and invitations"],
+              ["Billing", "#billing", "Plan and subscription"],
+              ["Security Posture", "#security", "Enterprise controls"],
+              ["Audit Logs", "#audit", "Workspace changes"]
+            ].map(([label, href, detail]) => (
+              <a href={href} key={label}>
+                <strong>{label}</strong>
+                <span>{detail}</span>
+              </a>
+            ))}
+          </section>
           {!canManageOperations && (
             <section className="panel largePanel roleAccessNotice">
               <div>
@@ -730,7 +749,7 @@ export default function Settings() {
             </section>
           )}
           {canViewBilling && (
-          <section className="panel largePanel billingSettingsPanel">
+          <section className="panel largePanel billingSettingsPanel" id="billing">
             <div className="panelHeader">
               <div>
                 <span className="eyebrow">Billing</span>
@@ -1026,7 +1045,7 @@ window.KtrlAI.page();`}</code>
           )}
 
           {canManageOperations && (
-          <section className="panel largePanel">
+          <section className="panel largePanel" id="domains">
             <div className="panelHeader">
               <div>
                 <span className="eyebrow">Domains</span>
@@ -1115,7 +1134,7 @@ window.KtrlAI.page();`}</code>
           )}
 
           {canViewSecurity && (
-            <section className="panel largePanel enterprisePanel">
+            <section className="panel largePanel enterprisePanel" id="team">
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">Team Management</span>
@@ -1188,11 +1207,11 @@ window.KtrlAI.page();`}</code>
           )}
 
           {canViewSecurity && (
-            <section className="panel largePanel enterprisePanel">
+            <section className="panel largePanel enterprisePanel" id="governance">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Governance Policies</span>
-                  <h2>AI crawler policy engine</h2>
+                    <span className="eyebrow">Governance</span>
+                    <h2>Crawler policy engine</h2>
                 </div>
               </div>
               <div className="policyGrid">
@@ -1222,7 +1241,7 @@ window.KtrlAI.page();`}</code>
           )}
 
           {canViewSecurity && (
-            <section className="panel largePanel enterprisePanel">
+            <section className="panel largePanel enterprisePanel" id="audit">
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">Audit Logs</span>
@@ -1263,7 +1282,7 @@ window.KtrlAI.page();`}</code>
           )}
 
           {canViewSecurity && (
-            <section className="panel enterprisePanel">
+            <section className="panel enterprisePanel" id="security">
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">Security</span>
@@ -1306,7 +1325,7 @@ window.KtrlAI.page();`}</code>
           )}
 
           {canViewSecurity && (
-            <section className="panel enterprisePanel">
+            <section className="panel enterprisePanel" id="notifications">
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">Notifications</span>
@@ -1371,7 +1390,7 @@ window.KtrlAI.page();`}</code>
             </section>
           )}
 
-          <section className="panel">
+          <section className="panel" id="account">
             <div className="panelHeader">
               <div>
                 <span className="eyebrow">Account</span>

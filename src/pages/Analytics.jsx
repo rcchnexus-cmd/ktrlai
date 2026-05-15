@@ -18,9 +18,15 @@ export default function Analytics() {
   const analyticsError = state.errors.analytics;
   const dataLabel = analytics?.sourceLabel || "Awaiting tracking data";
   const dataDetail = analytics?.sourceDetail || "Install your tracker to start seeing live AI access analytics.";
+  const totalEvents = analytics?.trend?.reduce((sum, item) => sum + Number(item.value || 0), 0) || 0;
+  const topOperator = analytics?.topDetectedAiSystems?.[0]?.name || analytics?.botFrequency?.[0]?.bot || "Pending";
+  const topOperatorCount = analytics?.topDetectedAiSystems?.[0]?.count || analytics?.botFrequency?.[0]?.requests || 0;
+  const topPage = analytics?.topPages?.[0]?.page || "No path yet";
+  const governedBreakdown = analytics?.detectionInsights?.find((insight) => /blocked|allowed|governed|policy/i.test(insight.label));
+  const suspiciousInsight = analytics?.detectionInsights?.find((insight) => /suspicious|scrap/i.test(`${insight.label} ${insight.detail}`));
 
   return (
-    <AppShell title="Analytics" eyebrow="Usage intelligence">
+    <AppShell title="Traffic Intelligence" eyebrow="Monitor">
       {analyticsError ? (
         <div className="emptyState">
           <strong>Analytics could not be loaded</strong>
@@ -42,6 +48,28 @@ export default function Analytics() {
             <StatusBadge status={dataLabel} />
             <span>{dataDetail}</span>
           </section>
+          <section className="opsCommandGrid trafficIntelGrid" aria-label="Traffic intelligence summary">
+            <article className="opsCommandCard primary">
+              <span>Total requests</span>
+              <strong>{totalEvents}</strong>
+              <p>Events in the selected analytics window.</p>
+            </article>
+            <article className="opsCommandCard">
+              <span>Top operator</span>
+              <strong>{topOperator}</strong>
+              <p>{topOperatorCount ? `${topOperatorCount} requests observed.` : "Operator activity appears after live events."}</p>
+            </article>
+            <article className="opsCommandCard">
+              <span>Suspicious activity</span>
+              <strong>{suspiciousInsight?.value ?? "0"}</strong>
+              <p>{suspiciousInsight?.detail || "Crawler pressure and scraping signals are tracked here."}</p>
+            </article>
+            <article className="opsCommandCard">
+              <span>Highest-impact path</span>
+              <strong>{topPage}</strong>
+              <p>{governedBreakdown?.detail || "Governance and traffic evidence are grouped by content path."}</p>
+            </article>
+          </section>
           {analytics.detectionInsights?.length ? (
             <section className="detectionInsightGrid" aria-label="AI detection analytics">
               {analytics.detectionInsights.map((insight) => (
@@ -58,7 +86,7 @@ export default function Analytics() {
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">Usage trends</span>
-                  <h2>AI requests by period</h2>
+                  <h2>Operator traffic by period</h2>
                 </div>
               </div>
               <TrafficChart data={analytics.trend} />
@@ -66,7 +94,7 @@ export default function Analytics() {
             <article className="panel">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Traffic sources</span>
+                  <span className="eyebrow">Source breakdown</span>
                   <h2>Source mix</h2>
                 </div>
               </div>
@@ -77,8 +105,8 @@ export default function Analytics() {
             <article className="panel">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Bot frequency</span>
-                  <h2>Requests by bot</h2>
+                  <span className="eyebrow">Operator frequency</span>
+                  <h2>Requests by crawler</h2>
                 </div>
               </div>
               <MiniBars data={analytics.botFrequency.map((item) => ({ label: item.bot.split("-")[0], value: item.requests }))} />
@@ -86,7 +114,7 @@ export default function Analytics() {
             <article className="panel">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Detection</span>
+                  <span className="eyebrow">AI systems</span>
                   <h2>Top detected AI systems</h2>
                 </div>
               </div>
@@ -109,8 +137,8 @@ export default function Analytics() {
             <article className="panel largePanel">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Top pages</span>
-                  <h2>Highest value content</h2>
+                  <span className="eyebrow">Top paths</span>
+                  <h2>Highest-impact content</h2>
                 </div>
               </div>
               {analytics.topPages.length === 0 ? (

@@ -52,9 +52,9 @@ export default function Monetization() {
   };
 
   return (
-    <AppShell title="Monetization" eyebrow="AI revenue">
+    <AppShell title="Licensing Readiness" eyebrow="Govern">
       {!monetization ? (
-        <div className="loadingState">Loading monetization settings...</div>
+        <div className="loadingState">Loading licensing settings...</div>
       ) : (
         <>
           <section className="metricGrid">
@@ -66,7 +66,7 @@ export default function Monetization() {
             <div className="panelHeader">
               <div>
                 <span className="eyebrow">Earnings ledger</span>
-                <h2>AI access earnings</h2>
+                <h2>Content access earnings</h2>
               </div>
               <button
                 type="button"
