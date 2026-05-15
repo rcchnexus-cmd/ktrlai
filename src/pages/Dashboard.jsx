@@ -88,11 +88,16 @@ export default function Dashboard() {
         ? "Waiting for first event"
         : rawInstallHealth.trackerHealth
   };
+  const aiRequestKpi = dashboard?.kpis?.find((kpi) => /visit|request|traffic/i.test(kpi.label)) || dashboard?.kpis?.[0];
+  const suspiciousInsight = dashboard?.detectionInsights?.find(
+    (insight) => /suspicious|scrap/i.test(`${insight.label} ${insight.detail}`)
+  );
+  const topAiSystem = dashboard?.botDistribution?.[0];
 
   return (
     <AppShell
-      title="Dashboard"
-      eyebrow="AI command center"
+      title="Operations"
+      eyebrow="AI traffic control plane"
       action={
         <RouteLink to="/visibility" className="primaryButton smallButton">
           Check site
@@ -122,6 +127,28 @@ export default function Dashboard() {
           <section className={`dataModeNotice ${dashboard.source || "empty"}`} aria-label="Dashboard data status">
             <StatusBadge status={dataLabel} />
             <span>{dataDetail}</span>
+          </section>
+          <section className="opsCommandGrid" aria-label="AI traffic operations summary">
+            <article className="opsCommandCard primary">
+              <span>AI request state</span>
+              <strong>{aiRequestKpi?.value ?? "0"}</strong>
+              <p>{aiRequestKpi?.label || "Tracked AI requests"}</p>
+            </article>
+            <article className="opsCommandCard">
+              <span>Governance posture</span>
+              <strong>{verifiedDomainCount > 0 ? "Controlled" : "Setup required"}</strong>
+              <p>{verifiedDomainCount > 0 ? `${verifiedDomainCount} verified domain${verifiedDomainCount === 1 ? "" : "s"}` : "Verify a domain to enforce workspace policy."}</p>
+            </article>
+            <article className="opsCommandCard">
+              <span>Risk signal</span>
+              <strong>{suspiciousInsight?.value ?? "0"}</strong>
+              <p>{suspiciousInsight?.detail || "Suspicious crawler activity will surface here."}</p>
+            </article>
+            <article className="opsCommandCard">
+              <span>Top AI system</span>
+              <strong>{topAiSystem?.label || "Pending"}</strong>
+              <p>{topAiSystem ? `${topAiSystem.value}% of observed crawler mix` : "Awaiting enough live events."}</p>
+            </article>
           </section>
           <section className="installHealthPanel panel" aria-label="Tracker installation health">
             <div className="panelHeader">

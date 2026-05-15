@@ -1271,17 +1271,35 @@ window.KtrlAI.page();`}</code>
                 </div>
               </div>
               <div className="securityPostureList">
-                <article>
-                  <strong>Server-side role checks</strong>
-                  <span>Workspace mutations require owner or admin authorization.</span>
+                <article className="securityPostureItem">
+                  <span className="securityPostureIcon" aria-hidden="true" />
+                  <div className="securityPostureContent">
+                    <div className="securityPostureTitleRow">
+                      <strong>Server-side role checks</strong>
+                      <span className="securityPostureStatus">Enabled</span>
+                    </div>
+                    <p>Workspace mutations require owner or admin authorization.</p>
+                  </div>
                 </article>
-                <article>
-                  <strong>Hashed API keys</strong>
-                  <span>Full API keys are shown once and stored as server-side hashes.</span>
+                <article className="securityPostureItem">
+                  <span className="securityPostureIcon" aria-hidden="true" />
+                  <div className="securityPostureContent">
+                    <div className="securityPostureTitleRow">
+                      <strong>Hashed API keys</strong>
+                      <span className="securityPostureStatus">Enabled</span>
+                    </div>
+                    <p>Full API keys are shown once and stored as server-side hashes.</p>
+                  </div>
                 </article>
-                <article>
-                  <strong>Abuse controls</strong>
-                  <span>Tracker, billing, admin, API key, and domain endpoints include rate limits.</span>
+                <article className="securityPostureItem">
+                  <span className="securityPostureIcon" aria-hidden="true" />
+                  <div className="securityPostureContent">
+                    <div className="securityPostureTitleRow">
+                      <strong>Abuse controls</strong>
+                      <span className="securityPostureStatus">Enabled</span>
+                    </div>
+                    <p>Tracker, billing, admin, API key, and domain endpoints include rate limits.</p>
+                  </div>
                 </article>
               </div>
             </section>
