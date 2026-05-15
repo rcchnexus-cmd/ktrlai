@@ -3405,8 +3405,7 @@ code {
 }
 
 .teamList article,
-.policyGrid article,
-.securityPostureList article {
+.policyGrid article {
   display: grid;
   align-items: center;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -3419,14 +3418,12 @@ code {
 }
 
 .teamList strong,
-.policyGrid strong,
-.securityPostureList strong {
+.policyGrid strong {
   display: block;
   color: var(--text);
 }
 
-.teamList span,
-.securityPostureList span {
+.teamList span {
   display: block;
   margin-top: 5px;
   color: var(--muted);
@@ -3454,6 +3451,44 @@ code {
   margin-top: 5px;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.securityPostureList {
+  gap: 14px;
+}
+
+.securityPostureList article {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.38fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 18px 28px;
+  min-width: 0;
+  padding: 18px 20px;
+  background:
+    linear-gradient(135deg, rgba(91, 140, 255, 0.045), rgba(155, 109, 255, 0.018)),
+    rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.14);
+}
+
+.securityPostureList strong {
+  display: block;
+  min-width: 0;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.securityPostureList span {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+  overflow-wrap: break-word;
 }
 
 .auditMiniList {
@@ -4280,7 +4315,8 @@ code {
 
   .inviteMemberCard,
   .teamList article,
-  .policyGrid article {
+  .policyGrid article,
+  .securityPostureList article {
     grid-template-columns: 1fr;
   }
 
