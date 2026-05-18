@@ -113,7 +113,7 @@ export default function Admin() {
 
   if (status === "loading") {
     return (
-      <AppShell title="Infrastructure Operations" eyebrow="Platform">
+      <AppShell title="Infrastructure" eyebrow="Platform">
         <div className="loadingState">Loading platform controls...</div>
       </AppShell>
     );
@@ -162,7 +162,7 @@ export default function Admin() {
   const rollups = platformAnalytics.rollups || {};
 
   return (
-    <AppShell title="Infrastructure Operations" eyebrow="Platform">
+      <AppShell title="Infrastructure" eyebrow="Platform">
       <section className="adminHero panel">
         <div>
           <span className="eyebrow">Operator console</span>

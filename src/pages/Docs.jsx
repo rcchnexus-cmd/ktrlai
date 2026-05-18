@@ -198,7 +198,7 @@ window.KtrlAI.page();`
             </article>
             <article>
               <strong>How do I know it is live?</strong>
-              <p>Settings shows tracker health, last event received, and events today. Dashboard switches to live data once events arrive.</p>
+              <p>Configuration shows tracker health, last event received, and events today. Operations switches to live data once events arrive.</p>
             </article>
           </section>
         </>

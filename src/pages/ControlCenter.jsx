@@ -31,7 +31,7 @@ export default function ControlCenter() {
   };
 
   return (
-    <AppShell title="Governance Control Plane" eyebrow="Govern">
+    <AppShell title="Governance" eyebrow="Control Plane">
       {!controls ? (
         <div className="loadingState">Loading control policies...</div>
       ) : (

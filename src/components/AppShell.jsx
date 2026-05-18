@@ -24,18 +24,13 @@ const navGroups = [
   },
   {
     label: "Configure",
-    routes: [
-      { to: "/settings", label: "Configuration", icon: "C" },
-      { to: "/settings#billing", label: "Billing", icon: "B" },
-      { to: "/settings#team", label: "Team", icon: "M" },
-      { to: "/settings#security", label: "Security", icon: "S" }
-    ]
+    routes: [{ to: "/settings", label: "Configuration", icon: "C" }]
   }
 ];
 
 const adminGroup = {
   label: "Platform",
-  routes: [{ to: "/admin", label: "Infrastructure Admin", icon: "I" }]
+  routes: [{ to: "/admin", label: "Infrastructure", icon: "I" }]
 };
 
 function routePath(to) {

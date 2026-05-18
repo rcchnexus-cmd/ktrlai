@@ -658,12 +658,12 @@ body.appDrawerOpen {
 .heroSection {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(420px, 0.92fr) minmax(500px, 1.08fr);
+  grid-template-columns: minmax(420px, 0.95fr) minmax(440px, 0.9fr);
   align-items: center;
   width: min(1200px, calc(100% - 40px));
   margin: 0 auto;
-  gap: 42px;
-  padding: 54px 0 34px;
+  gap: 40px;
+  padding: 44px 0 28px;
 }
 
 .heroSection::after {
@@ -715,15 +715,26 @@ body.appDrawerOpen {
 
 .heroSection h1 {
   max-width: 620px;
-  font-size: clamp(40px, 4.6vw, 58px);
-  line-height: 1.06;
+  font-size: clamp(38px, 4.1vw, 52px);
+  line-height: 1.08;
   letter-spacing: 0;
 }
 
 .heroSection p {
   max-width: 560px;
-  font-size: 18px;
-  line-height: 1.65;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.heroInfrastructureNote {
+  max-width: 580px;
+  padding: 12px 14px;
+  color: var(--muted-strong);
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
 }
 
 .heroMockup,
@@ -746,13 +757,128 @@ body.appDrawerOpen {
 
 .heroMockup {
   overflow: hidden;
-  min-height: 470px;
+  min-height: 390px;
   transform: none;
   animation: none;
   transition:
     transform 240ms ease,
     border-color 240ms ease,
     box-shadow 240ms ease;
+}
+
+.infrastructurePreview {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.026);
+}
+
+.infraPreviewHeader,
+.infraEventHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.infraPreviewHeader span,
+.infraEventHeader span,
+.infraPreviewGrid span,
+.infraFlow span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 820;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.infraPreviewHeader strong {
+  color: #bbf7d0;
+  font-size: 12px;
+}
+
+.infraFlow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 26px minmax(0, 1fr) 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.infraFlow article,
+.infraPreviewGrid article {
+  min-width: 0;
+  padding: 13px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+}
+
+.infraFlowLine {
+  height: 1px;
+  min-width: 0;
+  background: rgba(148, 163, 184, 0.28);
+}
+
+.infraFlow strong,
+.infraPreviewGrid strong,
+.infraEventList strong {
+  display: block;
+  min-width: 0;
+  margin-top: 6px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.infraFlow em,
+.infraPreviewGrid em,
+.infraEventList em {
+  display: block;
+  min-width: 0;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.4;
+}
+
+.infraPreviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.infraEventList {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.infraEventList > div:not(.infraEventHeader) {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) minmax(0, 1.1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.infraEventList > div:not(.infraEventHeader) span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.infraEventList b {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 760;
 }
 
 .heroMockup:hover {
@@ -974,7 +1100,7 @@ body.appDrawerOpen {
 
 .trustStrip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   width: min(1200px, calc(100% - 40px));
   margin: 0 auto;
   border: 1px solid var(--border);
@@ -1030,7 +1156,7 @@ body.appDrawerOpen {
 }
 
 .trustStrip span {
-  padding: 18px;
+  padding: 13px 14px;
   color: var(--muted-strong);
   text-align: center;
   border-right: 1px solid var(--border);
@@ -1043,7 +1169,7 @@ body.appDrawerOpen {
 .section {
   width: min(1200px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 82px 0 0;
+  padding: 68px 0 0;
 }
 
 .section h2 {
@@ -1684,15 +1810,15 @@ body.appDrawerOpen {
 
 .sidebarLink span {
   display: inline-grid;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   place-items: center;
-  color: var(--text);
-  font-size: 11px;
+  color: var(--muted-strong);
+  font-size: 10px;
   font-weight: 800;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.055);
-  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 5px;
 }
 
 .sidebarLink:hover,
@@ -1782,7 +1908,7 @@ body.appDrawerOpen {
 
 .topbar h1 {
   margin-top: 4px;
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1.08;
   overflow-wrap: anywhere;
 }
@@ -2138,15 +2264,19 @@ body.appDrawerOpen {
 
 .opsCommandGrid {
   display: grid;
-  grid-template-columns: 1.15fr repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1.15fr repeat(4, minmax(0, 1fr));
   gap: 12px;
   min-width: 0;
+}
+
+.trafficIntelGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .opsStatusRail,
 .governanceStatusGrid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1px;
   min-width: 0;
   overflow: hidden;
@@ -2330,6 +2460,61 @@ body.appDrawerOpen {
 
 .activityStreamPanel .tableWrap table {
   min-width: 820px;
+}
+
+.eventStreamList {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  overflow-x: auto;
+  background: var(--line-soft);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  -webkit-overflow-scrolling: touch;
+}
+
+.eventStreamHeader,
+.eventStreamRow {
+  display: grid;
+  grid-template-columns: 108px minmax(130px, 0.95fr) minmax(180px, 1.25fr) minmax(120px, 0.75fr) 86px 112px minmax(130px, 0.8fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 880px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.024);
+}
+
+.eventStreamHeader {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 820;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.eventStreamRow {
+  color: var(--muted-strong);
+  font-size: 13px;
+}
+
+.eventStreamRow strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.eventStreamRow em {
+  min-width: 0;
+  color: var(--muted-strong);
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventStreamRow b {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 760;
 }
 
 .activityLogTable th:first-child,
@@ -3952,7 +4137,7 @@ code {
   inset: 0;
   content: "";
   pointer-events: none;
-  opacity: 0.32;
+  opacity: 0.12;
   background:
     radial-gradient(circle at 12% 0%, rgba(91, 140, 255, 0.11), transparent 34%),
     radial-gradient(circle at 86% 10%, rgba(155, 109, 255, 0.08), transparent 32%);
@@ -3967,27 +4152,29 @@ code {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 14px;
   min-width: 0;
 }
 
 .setupGuideHeader h2 {
   margin-top: 5px;
-  font-size: clamp(20px, 2.4vw, 26px);
+  font-size: 18px;
   line-height: 1.1;
 }
 
 .setupGuideHeader p {
-  max-width: 760px;
-  margin-top: 10px;
+  max-width: 680px;
+  margin-top: 7px;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .setupProgress {
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 94px;
-  height: 94px;
+  width: 64px;
+  height: 64px;
   background: rgba(255, 255, 255, 0.045);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
@@ -4008,7 +4195,7 @@ code {
 
 .setupProgress strong {
   color: var(--text);
-  font-size: 24px;
+  font-size: 18px;
   line-height: 1;
 }
 
@@ -4021,8 +4208,8 @@ code {
 }
 
 .setupProgressBar {
-  height: 8px;
-  margin: 22px 0 18px;
+  height: 6px;
+  margin: 14px 0 12px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.055);
   border-radius: 999px;
@@ -4039,15 +4226,15 @@ code {
 .setupStepList {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 8px;
 }
 
 .setupStepList article {
   display: grid;
   grid-template-rows: auto 1fr auto auto;
-  gap: 12px;
+  gap: 9px;
   min-width: 0;
-  padding: 16px;
+  padding: 12px;
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -4084,9 +4271,9 @@ code {
 }
 
 .setupStepList p {
-  margin-top: 6px;
-  font-size: 13px;
-  line-height: 1.55;
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .setupStepList .smallButton {
@@ -4502,6 +4689,14 @@ code {
     animation: none;
   }
 
+  .infraFlow {
+    grid-template-columns: 1fr;
+  }
+
+  .infraFlowLine {
+    display: none;
+  }
+
   .mockupPanels {
     grid-template-columns: 1fr;
   }
@@ -4757,7 +4952,7 @@ code {
   }
 
   .heroSection h1 {
-    font-size: clamp(36px, 10.5vw, 42px);
+    font-size: clamp(32px, 9vw, 38px);
     line-height: 1.08;
   }
 
@@ -4802,7 +4997,7 @@ code {
   }
 
   .topbar h1 {
-    font-size: 28px;
+    font-size: 24px;
     line-height: 1.1;
   }
 
@@ -4861,12 +5056,13 @@ code {
   .providerGrid,
   .metricGrid,
   .installHealthGrid,
-  .installHealthGrid.compact,
-  .installSteps,
-  .developerDocs,
-  .previewMatrix,
-  .footerGrid,
-  .domainList {
+    .installHealthGrid.compact,
+    .installSteps,
+    .developerDocs,
+    .infraPreviewGrid,
+    .previewMatrix,
+    .footerGrid,
+    .domainList {
     grid-template-columns: 1fr;
   }
 
@@ -5047,7 +5243,7 @@ code {
   }
 
   .heroSection h1 {
-    font-size: clamp(34px, 10.2vw, 40px);
+    font-size: clamp(31px, 9.5vw, 36px);
   }
 
   .heroSection p {
@@ -5055,7 +5251,17 @@ code {
     line-height: 1.62;
   }
 
+  .infraEventList > div:not(.infraEventHeader) {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .infraEventList em,
+  .infraEventList b {
+    grid-column: 2;
+  }
+
   .mockupContent,
+  .infrastructurePreview,
   .panel,
   .featureCard,
   .pricingCard,
@@ -5165,7 +5371,7 @@ code {
   }
 
   .heroSection h1 {
-    font-size: 32px;
+    font-size: 30px;
   }
 
   .section h2,

@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import AppShell from "../components/AppShell.jsx";
-import MetricCard from "../components/MetricCard.jsx";
 import SetupGuide from "../components/SetupGuide.jsx";
 import { DistributionChart, TrafficChart } from "../components/Charts.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
@@ -97,7 +96,7 @@ export default function Dashboard() {
 
   return (
     <AppShell
-      title="AI Operations Center"
+      title="Operations"
       eyebrow="Monitor"
       action={
         <RouteLink to="/visibility" className="primaryButton smallButton">
@@ -107,11 +106,11 @@ export default function Dashboard() {
     >
       {dashboardError ? (
         <div className="emptyState">
-          <strong>Dashboard analytics could not be loaded</strong>
+          <strong>Operations data could not be loaded</strong>
           <p>{dashboardError}</p>
           <div className="emptyStateActions">
             <button type="button" className="secondaryButton smallButton" onClick={actions.loadDashboard}>
-              Retry dashboard
+              Retry operations
             </button>
             <RouteLink to="/settings#install" className="primaryButton smallButton">
               Check install
@@ -125,15 +124,15 @@ export default function Dashboard() {
           {shouldShowOnboarding && (
             <SetupGuide settings={state.settings} dashboard={dashboard} />
           )}
-          <section className={`dataModeNotice ${dashboard.source || "empty"}`} aria-label="Dashboard data status">
+          <section className={`dataModeNotice ${dashboard.source || "empty"}`} aria-label="Operations data status">
             <StatusBadge status={dataLabel} />
             <span>{dataDetail}</span>
           </section>
           <section className="opsStatusRail" aria-label="Workspace infrastructure status">
             <article>
-              <span>Workspace</span>
-              <strong>{state.auth.workspace?.name || "Demo Workspace"}</strong>
-              <em>{state.auth.user?.plan || "Free"} plan</em>
+              <span>Plan</span>
+              <strong>{state.auth.user?.plan || "Free"}</strong>
+              <em>{state.auth.workspace?.name || "Workspace"}</em>
             </article>
             <article>
               <span>Tracker</span>
@@ -146,14 +145,19 @@ export default function Dashboard() {
               <em>{installHealth.eventsToday || 0} today</em>
             </article>
             <article>
-              <span>Governance</span>
-              <strong>{verifiedDomainCount > 0 ? "Ready" : "Needs domain"}</strong>
-              <em>{verifiedDomainCount || 0} verified domains</em>
+              <span>Rate limits</span>
+              <strong>Active</strong>
+              <em>Redis-ready abuse controls</em>
             </article>
             <article>
               <span>Rollups</span>
-              <strong>{dashboard.source === "live" ? "Live data" : "Preview"}</strong>
-              <em>Summary acceleration ready</em>
+              <strong>{dashboard.source === "live" ? "Healthy" : "Ready"}</strong>
+              <em>Analytics acceleration</em>
+            </article>
+            <article>
+              <span>Policies</span>
+              <strong>{verifiedDomainCount > 0 ? "Active" : "Pending"}</strong>
+              <em>{verifiedDomainCount || 0} verified domains</em>
             </article>
           </section>
           <section className="opsCommandGrid" aria-label="AI traffic operations summary">
@@ -177,133 +181,20 @@ export default function Dashboard() {
               <strong>{governedShare?.value ?? "0"}</strong>
               <p>{verifiedDomainCount > 0 ? `${verifiedDomainCount} verified domain${verifiedDomainCount === 1 ? "" : "s"} under policy.` : "Verify a domain to enforce workspace policy."}</p>
             </article>
+            <article className="opsCommandCard">
+              <span>Top operator</span>
+              <strong>{topAiSystem?.label || "Pending"}</strong>
+              <p>{topAiSystem?.value ? `${topAiSystem.value}% of detected crawler mix.` : "Top operator appears after live traffic."}</p>
+            </article>
           </section>
-          <section className="installHealthPanel panel" aria-label="Tracker installation health">
+          <section className="panel activityStreamPanel">
             <div className="panelHeader">
               <div>
-                <span className="eyebrow">Install health</span>
-                <h2>{installHealth.trackerHealth}</h2>
-              </div>
-              <StatusBadge status={getInstallStatusLabel(installHealth.status)} />
-            </div>
-            <div className="installHealthGrid compact">
-              <article>
-                <span>SDK installed</span>
-                <strong>{installHealth.sdkInstalled ? "Detected" : "Not detected"}</strong>
-              </article>
-              <article>
-                <span>Last event</span>
-                <strong>{formatInstallDate(installHealth.lastEventAt)}</strong>
-              </article>
-              <article>
-                <span>Events today</span>
-                <strong>{installHealth.eventsToday || 0}</strong>
-              </article>
-              <article>
-                <span>Active domains</span>
-                <strong>{installHealth.activeDomains || 0}</strong>
-              </article>
-            </div>
-          </section>
-          <section className="metricGrid">
-            {dashboard.kpis.map((kpi) => (
-              <MetricCard key={kpi.label} {...kpi} />
-            ))}
-          </section>
-          {dashboard.detectionInsights?.length ? (
-            <section className="detectionInsightGrid" aria-label="AI bot detection intelligence">
-              {dashboard.detectionInsights.map((insight) => (
-                <article className={`detectionInsight ${insight.tone || "neutral"}`} key={insight.label}>
-                  <span>{insight.label}</span>
-                  <strong>{insight.value}</strong>
-                  <em>{insight.detail}</em>
-                </article>
-              ))}
-            </section>
-          ) : null}
-          <section className="dashboardGrid">
-            <article className="panel largePanel">
-              <div className="panelHeader">
-                <div>
-                  <span className="eyebrow">Trend</span>
-                  <h2>AI traffic over time</h2>
-                </div>
-                <em>7 days</em>
-              </div>
-              <TrafficChart data={dashboard.traffic} />
-            </article>
-            <article className="panel">
-              <div className="panelHeader">
-                <div>
-                  <span className="eyebrow">Mix</span>
-                  <h2>Bot distribution</h2>
-                </div>
-              </div>
-              <DistributionChart data={dashboard.botDistribution} />
-            </article>
-          </section>
-          <section className="dashboardGrid">
-            <article className="panel">
-              <div className="panelHeader">
-                <div>
-                  <span className="eyebrow">Governance snapshot</span>
-                  <h2>Policy readiness</h2>
-                </div>
-                <StatusBadge status={verifiedDomainCount > 0 ? "Ready" : "Pending"} />
-              </div>
-              <div className="infraHealthList">
-                <div>
-                  <span>Domain verification</span>
-                  <strong>{verifiedDomainCount > 0 ? "Verified" : "Connect domain"}</strong>
-                  <em>{verifiedDomainCount || 0} domains ready for policy decisions</em>
-                </div>
-                <div>
-                  <span>Crawler policies</span>
-                  <strong>Monitor first</strong>
-                  <em>Governance decisions are visible before enforcement</em>
-                </div>
-                <div>
-                  <span>Licensing readiness</span>
-                  <strong>Prepared</strong>
-                  <em>Usage evidence can support future content terms</em>
-                </div>
-              </div>
-            </article>
-            <article className="panel">
-              <div className="panelHeader">
-                <div>
-                  <span className="eyebrow">System health</span>
-                  <h2>Ingestion infrastructure</h2>
-                </div>
-                <StatusBadge status={installHealth.status === "active" ? "Healthy" : "Pending"} />
-              </div>
-              <div className="infraHealthList">
-                <div>
-                  <span>Ingestion</span>
-                  <strong>{installHealth.sdkInstalled ? "Receiving" : "Waiting"}</strong>
-                  <em>Tracker endpoint and payload validation ready</em>
-                </div>
-                <div>
-                  <span>Queue and jobs</span>
-                  <strong>Ready</strong>
-                  <em>Background processing foundation available</em>
-                </div>
-                <div>
-                  <span>Rate limits</span>
-                  <strong>Protected</strong>
-                  <em>Workspace and route abuse controls enabled</em>
-                </div>
-              </div>
-            </article>
-          </section>
-          <section className="panel">
-            <div className="panelHeader">
-              <div>
-                <span className="eyebrow">Live stream</span>
-                <h2>Recent AI access events</h2>
+                <span className="eyebrow">Live AI access feed</span>
+                <h2>Latest crawler events</h2>
               </div>
               <RouteLink to="/activity" className="textLink">
-                View all
+                View stream
               </RouteLink>
             </div>
             {dashboard.recentActivity.length === 0 ? (
@@ -313,15 +204,15 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="tableWrap">
-                <table>
+                <table className="activityLogTable">
                   <thead>
                     <tr>
                       <th>Time</th>
                       <th>Operator</th>
-                      <th>Page</th>
+                      <th>Path</th>
                       <th>Category</th>
-                      <th>Status</th>
-                      <th>Evidence</th>
+                      <th>Action</th>
+                      <th>Risk</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -334,13 +225,98 @@ export default function Dashboard() {
                         <td>
                           <StatusBadge status={row.status} />
                         </td>
-                        <td>{row.tokens}</td>
+                        <td>{/block|deny|failed/i.test(row.status) ? "Attention" : "Monitor"}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
+          </section>
+          <section className="dashboardGrid opsTwoColumn">
+            <article className="panel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Governance snapshot</span>
+                  <h2>Policy readiness</h2>
+                </div>
+                <StatusBadge status={verifiedDomainCount > 0 ? "Ready" : "Pending"} />
+              </div>
+              <div className="infraHealthList">
+                <div>
+                  <span>Monitored crawlers</span>
+                  <strong>{dashboard.botDistribution?.length || 0}</strong>
+                  <em>Known operators tracked by workspace evidence</em>
+                </div>
+                <div>
+                  <span>Restricted crawlers</span>
+                  <strong>{suspiciousInsight?.value ?? "0"}</strong>
+                  <em>Suspicious or restricted traffic requiring review</em>
+                </div>
+                <div>
+                  <span>Licensing readiness</span>
+                  <strong>Prepared</strong>
+                  <em>Usage evidence can support future content terms</em>
+                </div>
+              </div>
+            </article>
+            <article className="panel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">System health</span>
+                  <h2>Infrastructure state</h2>
+                </div>
+                <StatusBadge status={installHealth.status === "active" ? "Healthy" : "Pending"} />
+              </div>
+              <div className="infraHealthList">
+                <div>
+                  <span>Ingestion</span>
+                  <strong>{installHealth.sdkInstalled ? "Receiving" : "Waiting"}</strong>
+                  <em>Tracker endpoint and payload validation ready</em>
+                </div>
+                <div>
+                  <span>Queue</span>
+                  <strong>Ready</strong>
+                  <em>Background processing foundation available</em>
+                </div>
+                <div>
+                  <span>Redis</span>
+                  <strong>Active</strong>
+                  <em>Rate-limit provider is ready for shared enforcement</em>
+                </div>
+                <div>
+                  <span>Rollups</span>
+                  <strong>{dashboard.source === "live" ? "Healthy" : "Ready"}</strong>
+                  <em>Summary analytics are rollup-ready</em>
+                </div>
+                <div>
+                  <span>Notifications</span>
+                  <strong>Ready</strong>
+                  <em>Workspace alerts can be queued safely</em>
+                </div>
+              </div>
+            </article>
+          </section>
+          <section className="dashboardGrid opsTwoColumn">
+            <article className="panel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Trend</span>
+                  <h2>AI traffic over time</h2>
+                </div>
+                <em>7 days</em>
+              </div>
+              <TrafficChart data={dashboard.traffic} />
+            </article>
+            <article className="panel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Operator mix</span>
+                  <h2>Detected crawler distribution</h2>
+                </div>
+              </div>
+              <DistributionChart data={dashboard.botDistribution} />
+            </article>
           </section>
         </>
       )}

@@ -2,17 +2,17 @@ import Logo from "./Logo.jsx";
 import { RouteLink } from "../navigation.jsx";
 
 const columns = [
-  ["Product", ["Dashboard", "AI Activity", "Control Center", "AI Visibility", "Docs"]],
+  ["Product", ["Operations", "Live Stream", "Governance", "Visibility", "Docs"]],
   ["Pricing", ["Free", "Pro", "Business", "Compare plans"]],
   ["Company", ["About", "Contact", "Security", "Help"]],
   ["Legal", ["Privacy", "Terms", "Security", "Contact"]]
 ];
 
 const routeFor = {
-  Dashboard: "/dashboard",
-  "AI Activity": "/activity",
-  "Control Center": "/control",
-  "AI Visibility": "/visibility",
+  Operations: "/dashboard",
+  "Live Stream": "/activity",
+  Governance: "/control",
+  Visibility: "/visibility",
   Docs: "/docs",
   Help: "/help",
   Free: "/#pricing",
@@ -32,7 +32,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footerBrand">
         <Logo linked={false} />
-        <p>Visibility, control, and monetization for the AI-driven internet.</p>
+        <p>AI crawler visibility, governance, and licensing readiness for website owners.</p>
       </div>
       <div className="footerGrid">
         {columns.map(([title, links]) => (

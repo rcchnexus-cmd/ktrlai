@@ -701,7 +701,7 @@ export default function Settings() {
       : "Rotate an API key to reveal a full live tracker credential. After refresh, only the masked key is shown.";
 
   return (
-    <AppShell title="Control Plane Configuration" eyebrow="Configure">
+    <AppShell title="Configuration" eyebrow="Control Plane">
       {settingsError ? (
         <div className="emptyState">
           <strong>Settings could not be loaded</strong>

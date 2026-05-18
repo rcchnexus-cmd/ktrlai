@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import MarketingNav from "../components/MarketingNav.jsx";
 import Footer from "../components/Footer.jsx";
 import { RouteLink } from "../navigation.jsx";
-import { DistributionChart, TrafficChart } from "../components/Charts.jsx";
 import { billingPlans, normalizePlan } from "../billing/stripeConfig.js";
 import { openBillingPortal, startBillingCheckout } from "../billing/billingApi.js";
 import { useApp } from "../context/AppContext.jsx";
 
-const trust = ["API keys", "Audit logs", "Rate limits", "Rollups", "Governance policies"];
+const trust = ["API keys", "Audit logs", "Redis rate limiting", "Rollup analytics", "Notifications", "Jobs/queues", "Governance policies"];
 const teams = ["Publishers", "SEO teams", "SaaS teams", "Content platforms", "Enterprise operators"];
 
 const whatKtrlAiDoes = [
@@ -17,11 +16,10 @@ const whatKtrlAiDoes = [
 ];
 
 const howItWorks = [
-  ["install", "Install tracker", "Add one lightweight script and connect the domains you want KtrlAI to monitor."],
+  ["install", "Install tracker", "Add a lightweight script and connect the domains you want KtrlAI to monitor."],
   ["signal", "Detect AI crawlers", "Identify AI systems, suspicious scrapers, search bots, and normal browser traffic."],
-  ["shield", "Set governance policies", "Choose which crawlers are allowed, monitored, restricted, or ready for paid access."],
-  ["audit", "Analyze activity", "Review paths, operators, source mix, policy decisions, and usage trends."],
-  ["revenue", "Prepare licensing readiness", "Track content value and prepare future terms for AI access and dataset usage."]
+  ["shield", "Govern access", "Set policies for allowed, monitored, restricted, block-ready, or charge-ready access."],
+  ["audit", "Review intelligence", "See accessed paths, operators, source mix, policy decisions, and usage trends."]
 ];
 
 const features = [
@@ -60,90 +58,68 @@ function FeatureGlyph({ type }) {
   );
 }
 
-function DashboardPreview() {
-  const traffic = [
-    { label: "Mon", value: 30 },
-    { label: "Tue", value: 48 },
-    { label: "Wed", value: 42 },
-    { label: "Thu", value: 72 },
-    { label: "Fri", value: 86 },
-    { label: "Sat", value: 65 }
-  ];
-
-  const distribution = [
-    { label: "Answer engines", value: 38, color: "#5B8CFF" },
-    { label: "Training crawlers", value: 24, color: "#9B6DFF" },
-    { label: "Search AI", value: 22, color: "#4ADE80" }
-  ];
-
+function InfrastructurePreview() {
   const previewActivity = [
-    ["ChatGPT-User", "Allowed", "18.4k"],
-    ["PerplexityBot", "Summary", "9.2k"],
-    ["ClaudeBot", "Blocked", "0"]
+    ["12:04", "ChatGPT-User", "/pricing", "Monitor"],
+    ["12:02", "PerplexityBot", "/guides/api", "Restrict"],
+    ["11:58", "ClaudeBot", "/blog/licensing", "Allow"]
   ];
 
   return (
-    <div className="heroMockup" aria-label="KtrlAI dashboard preview">
-      <div className="mockupChrome">
-        <span />
-        <span />
-        <span />
+    <div className="heroMockup infrastructurePreview" aria-label="KtrlAI infrastructure preview">
+      <div className="infraPreviewHeader">
+        <span>AI access control plane</span>
+        <strong>Live infrastructure ready</strong>
       </div>
-      <div className="mockupBody">
-        <div className="mockupSidebar">
-          <span />
-          <span />
-          <span />
-          <span />
+      <div className="infraFlow">
+        <article>
+          <span>Website</span>
+          <strong>docs.company.com</strong>
+          <em>Tracker installed</em>
+        </article>
+        <div className="infraFlowLine" aria-hidden="true" />
+        <article>
+          <span>KtrlAI</span>
+          <strong>Detect + govern</strong>
+          <em>Policies and evidence</em>
+        </article>
+        <div className="infraFlowLine" aria-hidden="true" />
+        <article>
+          <span>AI systems</span>
+          <strong>Allowed / monitored</strong>
+          <em>Licensing ready</em>
+        </article>
+      </div>
+      <div className="infraPreviewGrid">
+        <article>
+          <span>AI requests</span>
+          <strong>128k</strong>
+          <em>Observed this month</em>
+        </article>
+        <article>
+          <span>Policies</span>
+          <strong>18</strong>
+          <em>Active governance rules</em>
+        </article>
+        <article>
+          <span>Suspicious</span>
+          <strong>42</strong>
+          <em>Events requiring review</em>
+        </article>
+      </div>
+      <div className="infraEventList">
+        <div className="infraEventHeader">
+          <span>Recent evidence</span>
+          <strong>Action</strong>
         </div>
-        <div className="mockupContent">
-          <div className="mockupHeader">
-            <div>
-              <span>Ingestion status</span>
-              <strong>Live</strong>
-            </div>
-            <em>Control plane</em>
+        {previewActivity.map(([time, botName, path, action]) => (
+          <div key={`${time}-${botName}`}>
+            <span>{time}</span>
+            <strong>{botName}</strong>
+            <em>{path}</em>
+            <b>{action}</b>
           </div>
-          <div className="mockupGrid">
-            <article>
-              <span>AI requests</span>
-              <strong>128k</strong>
-            </article>
-            <article>
-              <span>Policies</span>
-              <strong>18</strong>
-            </article>
-            <article>
-              <span>Operators</span>
-              <strong>42</strong>
-            </article>
-          </div>
-          <div className="mockupPanels">
-            <div className="mockupChartPanel">
-              <div className="mockupPanelHeader">
-                <strong>Traffic trend</strong>
-                <span>7d</span>
-              </div>
-              <TrafficChart data={traffic} />
-            </div>
-            <div className="mockupSidePanel">
-              <div className="mockupPanelHeader">
-                <strong>Operator mix</strong>
-                <span>Live</span>
-              </div>
-              <DistributionChart data={distribution} />
-            </div>
-          </div>
-          <div className="mockupActivity">
-            {previewActivity.map(([botName, status, tokens]) => (
-              <div key={botName}>
-                <span>{botName}</span>
-                <strong>{status}</strong>
-                <em>{tokens}</em>
-              </div>
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -207,21 +183,25 @@ export default function Landing() {
       <main>
         <section className="heroSection" data-reveal>
           <div className="heroCopy">
-            <div className="heroPill">AI access governance for the open web</div>
+            <div className="heroPill">AI crawler governance for website owners</div>
             <h1>Control how AI systems access your website.</h1>
             <p>
-              KtrlAI helps website owners monitor AI crawlers, govern access, and prepare for future content licensing.
+              Monitor AI crawlers, understand what they access, and set governance policies for your content.
+            </p>
+            <p className="heroInfrastructureNote">
+              KtrlAI gives website owners visibility and control over AI crawler activity, similar to an analytics and
+              governance layer for AI access.
             </p>
             <div className="heroActions">
-              <RouteLink to="/visibility" className="primaryButton heroPrimaryCta">
-                Check site visibility
+              <RouteLink to="/signup" className="primaryButton heroPrimaryCta">
+                Start free
               </RouteLink>
-              <RouteLink to="/dashboard" className="secondaryButton">
-                View operations console
+              <RouteLink to="#how-it-works" className="secondaryButton">
+                View how it works
               </RouteLink>
             </div>
           </div>
-          <DashboardPreview />
+          <InfrastructurePreview />
         </section>
 
         <section className="authorityStrip" aria-label="Trusted by modern teams" data-reveal>
@@ -261,9 +241,9 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="section solutionBand" data-reveal>
+        <section className="section solutionBand" id="how-it-works" data-reveal>
           <span className="eyebrow">How it works</span>
-          <h2>From invisible AI access to governed traffic operations.</h2>
+          <h2>Four steps from unknown crawler traffic to governed access.</h2>
           <div className="workflow onboardingWorkflow">
             {howItWorks.map(([icon, title, body], index) => (
               <article key={title} data-reveal style={{ "--reveal-index": index }}>

@@ -67,7 +67,7 @@ export default function Activity() {
   const hasActivityRows = state.activity.length > 0;
 
   return (
-    <AppShell title="Live AI Activity Stream" eyebrow="Monitor">
+    <AppShell title="Live Stream" eyebrow="Monitor">
       <section className="panel liveIngestionPanel">
         <div className="liveIngestionHeader">
           <div>
@@ -144,37 +144,27 @@ export default function Activity() {
               </p>
             </div>
           ) : (
-            <div className="tableWrap">
-              <table className="activityLogTable">
-                <thead>
-                  <tr>
-                    <th>Time</th>
-                    <th>Operator</th>
-                    <th>Path</th>
-                    <th>Category</th>
-                    <th>Risk</th>
-                    <th>Status</th>
-                    <th>Policy</th>
-                    <th>Region</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.date} {row.time}</td>
-                      <td>{row.bot}</td>
-                      <td>{row.page}</td>
-                      <td>{row.category || "Legacy"}</td>
-                      <td>{getEventSeverity(row)}</td>
-                      <td>
-                        <StatusBadge status={row.status} />
-                      </td>
-                      <td>{row.confidenceScore ? `${row.confidenceScore}% confidence` : row.type}</td>
-                      <td>{row.region}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="eventStreamList" role="table" aria-label="AI access event stream">
+              <div className="eventStreamHeader" role="row">
+                <span>Time</span>
+                <span>Operator</span>
+                <span>Path</span>
+                <span>Category</span>
+                <span>Risk</span>
+                <span>Status</span>
+                <span>Evidence</span>
+              </div>
+              {filtered.map((row) => (
+                <article className="eventStreamRow" key={row.id} role="row">
+                  <span>{row.date} {row.time}</span>
+                  <strong>{row.bot}</strong>
+                  <em>{row.page}</em>
+                  <span>{row.category || "Legacy"}</span>
+                  <b>{getEventSeverity(row)}</b>
+                  <StatusBadge status={row.status} />
+                  <span>{row.confidenceScore ? `${row.confidenceScore}% confidence` : row.type}</span>
+                </article>
+              ))}
             </div>
           )}
         </section>

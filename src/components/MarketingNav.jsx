@@ -6,9 +6,9 @@ const menus = [
   {
     label: "Product",
     items: [
-      ["Dashboard", "/dashboard"],
-      ["AI Visibility", "/visibility"],
-      ["Control Center", "/control"]
+      ["Operations", "/dashboard"],
+      ["Visibility", "/visibility"],
+      ["Governance", "/control"]
     ]
   },
   {
@@ -24,7 +24,7 @@ const menus = [
     items: [
       ["Training permissions", "/training"],
       ["Access rules", "/control"],
-      ["Audit logs", "/activity"]
+      ["Live stream", "/activity"]
     ]
   },
   {
@@ -123,7 +123,7 @@ export default function MarketingNav() {
     <header className="marketingHeader">
       <div className="announcement">
         <span>New</span>
-        Content rights controls for answer engines and AI training crawlers are now in beta.
+        AI crawler visibility and governance controls are now in private beta.
       </div>
       <nav className={isMobileOpen ? "marketingNav menuOpen" : "marketingNav"} aria-label="Main navigation">
         <Logo />
