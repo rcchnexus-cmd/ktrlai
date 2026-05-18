@@ -7,7 +7,7 @@ import { openBillingPortal, startBillingCheckout } from "../billing/billingApi.j
 import { useApp } from "../context/AppContext.jsx";
 
 const trust = ["API keys", "Audit logs", "Redis rate limiting", "Rollup analytics", "Notifications", "Jobs/queues", "Governance policies"];
-const teams = ["Publishers", "SEO teams", "SaaS teams", "Content platforms", "Enterprise operators"];
+const teams = ["Publishers", "SEO agencies", "SaaS companies", "Content platforms", "Enterprise teams"];
 
 const whatKtrlAiDoes = [
   "See which AI systems access your site",
@@ -228,7 +228,7 @@ export default function Landing() {
             <span className="eyebrow">What is KtrlAI?</span>
             <h2>Infrastructure for monitoring and governing AI crawler access.</h2>
             <p className="introStatement">
-              KtrlAI gives publishers, SaaS companies, SEO teams, content platforms, and enterprises a control plane
+              KtrlAI gives publishers, SaaS companies, SEO agencies, content platforms, and enterprises a control plane
               for AI traffic across their websites.
             </p>
           </div>

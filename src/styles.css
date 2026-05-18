@@ -1,23 +1,23 @@
 :root {
-  color-scheme: dark;
-  --bg: #070b14;
-  --bg-soft: #0c111d;
-  --card: rgba(255, 255, 255, 0.03);
-  --card-strong: rgba(255, 255, 255, 0.055);
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #ffffff;
-  --muted: #9ca3af;
-  --muted-strong: #c8ced8;
-  --accent: #5b8cff;
-  --accent-2: #9b6dff;
-  --green: #4ade80;
-  --orange: #f97316;
-  --red: #fb7185;
-  --surface-1: rgba(255, 255, 255, 0.026);
-  --surface-2: rgba(255, 255, 255, 0.04);
-  --surface-3: rgba(255, 255, 255, 0.06);
-  --line-soft: rgba(255, 255, 255, 0.065);
-  --line-strong: rgba(255, 255, 255, 0.12);
+  color-scheme: light;
+  --bg: #fafaf8;
+  --bg-soft: #f4f5f7;
+  --card: #ffffff;
+  --card-strong: #f8fafc;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+  --muted-strong: #374151;
+  --accent: #315d86;
+  --accent-2: #4f5f73;
+  --green: #16a34a;
+  --orange: #d97706;
+  --red: #dc2626;
+  --surface-1: #ffffff;
+  --surface-2: #f7f8fa;
+  --surface-3: #f1f3f5;
+  --line-soft: #e5e7eb;
+  --line-strong: #d1d5db;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -27,9 +27,9 @@
   --space-7: 32px;
   --radius: 8px;
   --radius-sm: 6px;
-  --shadow: 0 18px 58px rgba(0, 0, 0, 0.36);
-  --shadow-soft: 0 10px 34px rgba(0, 0, 0, 0.24);
-  --shadow-operational: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px rgba(0, 0, 0, 0.2);
+  --shadow: 0 20px 50px rgba(17, 24, 39, 0.09);
+  --shadow-soft: 0 12px 28px rgba(17, 24, 39, 0.07);
+  --shadow-operational: 0 1px 2px rgba(17, 24, 39, 0.04), 0 10px 24px rgba(17, 24, 39, 0.06);
   --transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -60,11 +60,11 @@ body {
   overflow-x: hidden;
   color: var(--text);
   background:
-    linear-gradient(180deg, rgba(91, 140, 255, 0.045), rgba(7, 11, 20, 0) 300px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(250, 250, 248, 0) 360px),
+    linear-gradient(90deg, rgba(17, 24, 39, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(17, 24, 39, 0.03) 1px, transparent 1px),
     var(--bg);
-  background-size: auto, 96px 96px, 96px 96px, auto;
+  background-size: auto, 120px 120px, 120px 120px, auto;
 }
 
 #root {
@@ -154,7 +154,7 @@ textarea {
   padding: 0 14px;
   color: var(--text);
   font-size: 16px;
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   outline: none;
@@ -166,8 +166,8 @@ textarea {
 
 input:focus,
 select:focus {
-  border-color: rgba(91, 140, 255, 0.7);
-  box-shadow: 0 0 0 4px rgba(91, 140, 255, 0.12);
+  border-color: rgba(49, 93, 134, 0.7);
+  box-shadow: 0 0 0 4px rgba(49, 93, 134, 0.12);
 }
 
 button:disabled,
@@ -4544,6 +4544,554 @@ code {
 .trustArticle {
   display: grid;
   gap: 14px;
+}
+
+/* Light infrastructure identity reset */
+.site,
+.appShell,
+.docsShell,
+.helpShell,
+.trustPageShell {
+  color: var(--text);
+}
+
+.marketingHeader,
+.topbar {
+  background: rgba(250, 250, 248, 0.92) !important;
+  border-color: var(--border);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.topbar {
+  box-shadow: 0 1px 0 rgba(17, 24, 39, 0.04);
+}
+
+.announcement {
+  color: var(--muted-strong);
+  background: #f3f4f6;
+}
+
+.announcement span,
+.heroPill,
+.eyebrow {
+  color: #1f2937;
+  background: #eef2f7;
+  border-color: #d9e1ea;
+}
+
+.logoIcon {
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, #1f2937, #315d86) border-box;
+  box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.03);
+}
+
+.logoIcon span {
+  background: #111827;
+}
+
+.logoWord em {
+  background: linear-gradient(135deg, #315d86, #1f2937);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.chevronIcon {
+  color: rgba(17, 24, 39, 0.55);
+}
+
+.navMenuButton:hover,
+.navMenu:focus-within .navMenuButton,
+.navMenu.open .navMenuButton,
+.mobileMenuButton:hover,
+.appMenuButton:hover,
+.docsSidebar a:hover,
+.docsSidebar a.active {
+  background: #f3f4f6;
+}
+
+.navMenuButton:hover .chevronIcon,
+.navMenu.open .chevronIcon,
+.navMenu:focus-within .chevronIcon {
+  color: rgba(17, 24, 39, 0.82);
+}
+
+.navDropdown,
+.mobileNavPanel {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow-soft) !important;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.navDropdown a:hover {
+  background: #f3f4f6;
+}
+
+.primaryButton {
+  color: #ffffff;
+  background: #111827;
+  border-color: #111827;
+  box-shadow: none;
+}
+
+.primaryButton::before,
+.heroSection::after {
+  display: none;
+}
+
+.primaryButton:hover {
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.16);
+}
+
+.secondaryButton,
+.ghostButton,
+.iconButton,
+.mobileMenuButton,
+.appMenuButton,
+.logoutButton,
+.installMethodTabs button,
+.docsSidebarHeader button,
+.docsMobileToggle {
+  color: var(--text);
+  background: #ffffff;
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.secondaryButton:hover,
+.ghostButton:hover,
+.iconButton:hover,
+.logoutButton:hover,
+.installMethodTabs button:hover,
+.installMethodTabs button.active {
+  color: var(--text);
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.08);
+}
+
+.heroSection {
+  padding-top: 48px;
+}
+
+.heroCopy h1,
+.sectionIntro h2,
+.docsHero h1,
+.trustHero h1 {
+  color: var(--text);
+  letter-spacing: 0;
+}
+
+.heroCopy h1 {
+  max-width: 760px;
+  font-size: clamp(40px, 5.2vw, 64px);
+  line-height: 1;
+}
+
+.docsHero h1,
+.trustHero h1 {
+  font-size: clamp(30px, 4.2vw, 48px);
+  line-height: 1.06;
+}
+
+.heroCopy > p,
+.heroInfrastructureNote,
+.sectionIntro p,
+.introStatement {
+  color: var(--muted-strong);
+}
+
+.heroInfrastructureNote,
+.trustStrip,
+.authorityStrip,
+.problemGrid article,
+.featureCard,
+.pricingCard,
+.faqItem,
+.workflow article,
+.useCaseGrid article,
+.infraTrustGrid article,
+.splitBand article,
+.solutionBand,
+.heroMockup,
+.panel,
+.metricCard,
+.onboardingCard,
+.onboardingSteps article,
+.dataModeNotice,
+.opsCommandCard,
+.installHealthPanel,
+.installStep,
+.developerDocs article,
+.domainVerificationCard,
+.billingMiniPlan,
+.billingPlanSummary article,
+.roleAccessNotice,
+.inviteMemberCard,
+.teamList article,
+.policyGrid article,
+.securityPostureItem,
+.productHint,
+.docsSidebar,
+.docsHero,
+.trustHero,
+.docsCard,
+.docsArticle,
+.supportForm,
+.trustArticle,
+.contactPanel,
+.authPanel,
+.authVisual {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--shadow-operational);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.heroMockup,
+.infrastructurePreview {
+  box-shadow: var(--shadow);
+}
+
+.infrastructurePreview::before,
+.infrastructurePreview::after {
+  opacity: 0.06;
+}
+
+.infraFlow article,
+.infraPreviewGrid article,
+.infraEventList span,
+.opsStatusRail article,
+.governanceStatusGrid article,
+.eventStreamRow,
+.settingsConfigRail a,
+.infraHealthList li,
+.domainList span,
+.accountList span,
+.billingMiniPlan.current,
+.localTestNote,
+.dnsRecordGrid {
+  background: #f8fafc;
+  border-color: var(--border);
+}
+
+.opsStatusRail,
+.governanceStatusGrid,
+.settingsConfigRail,
+.eventStreamList {
+  background: var(--border);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.eventStreamHeader {
+  color: var(--muted);
+  background: #f3f4f6;
+  border-color: var(--border);
+}
+
+.eventStreamRow:hover,
+.settingsConfigRail a:hover,
+.settingsConfigRail a.active,
+.featureCard:hover,
+.pricingCard:hover,
+.billingMiniPlan:hover,
+.securityPostureItem:hover {
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow-soft);
+}
+
+.heroMockup:hover,
+.metricCard:hover,
+.providerCard:hover {
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow-soft);
+}
+
+.workflow article:hover,
+.previewMatrix article:hover,
+.panel:hover,
+.splitBand article:hover,
+.checkList span:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow-soft);
+}
+
+.infraPreviewHeader strong,
+.mockupHeader em {
+  color: #166534;
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}
+
+.featureIcon,
+.onboardingWorkflow .featureIcon {
+  color: #315d86;
+  background: #eef2f7;
+  border-color: #d9e1ea;
+}
+
+.featureCard p,
+.companyMission p {
+  color: var(--muted-strong);
+}
+
+.checkList span,
+.missionStats span,
+.faq details,
+.faq details[open],
+.payoutRequestList article,
+.adminPlanGrid article,
+.adminHealthItem,
+.adminEnvGrid div,
+.adminList div,
+.adminAuditList div,
+.uploadBox,
+.apiKeyEmptyState,
+.auditMiniList div,
+.emptyState,
+.setupGuide,
+.setupStepList article {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.pricingCard.highlighted {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow-soft);
+}
+
+.pricingTopline span,
+.currentPlanBadge,
+.billingStatus {
+  color: #1e3a8a;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.currentPlanBadge {
+  color: #111827;
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.uploadBox {
+  border-style: dashed;
+}
+
+.routeLoading span {
+  border-color: #d1d5db;
+  border-top-color: var(--accent);
+}
+
+.setupGuide::before {
+  display: none;
+}
+
+.setupProgress {
+  background: #f8fafc;
+  border-color: var(--border);
+  box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.02);
+}
+
+.adminHealthItem.ready {
+  border-color: #bbf7d0;
+}
+
+.adminHealthItem.attention {
+  border-color: #fde68a;
+}
+
+.sidebar {
+  background: #ffffff !important;
+  border-color: var(--border);
+  box-shadow: 8px 0 28px rgba(17, 24, 39, 0.05) !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.sidebarGroupLabel {
+  color: #6b7280;
+}
+
+.sidebarLink span {
+  color: var(--muted-strong);
+  background: #f8fafc;
+  border-color: var(--border);
+}
+
+.sidebarLink:hover,
+.sidebarLink.active {
+  color: var(--text);
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.sidebarFooter {
+  background: #f8fafc;
+  border-color: var(--border);
+}
+
+.barTrack,
+.setupProgressBar {
+  background: #e5e7eb;
+}
+
+.installCodeBlock,
+.docsArticle code:not(.installCodeBlock code),
+.trustArticle code {
+  color: #111827;
+  background: #f8fafc;
+  border-color: var(--border);
+}
+
+.installCodeBlock {
+  box-shadow: inset 0 1px 0 rgba(17, 24, 39, 0.03);
+}
+
+code,
+.scriptBox code,
+.dnsRecordGrid code,
+.apiKey code,
+.apiKeyDisplay code {
+  color: #111827;
+}
+
+.apiKeyPlaintext {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.apiKeyPlaintext code,
+.keyMeta span {
+  color: #111827;
+  background: #f8fafc;
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.securityWarning {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.formHint,
+.authFooter a,
+.textLink {
+  color: #315d86;
+}
+
+.authError {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.metricChange.positive,
+.statusBadge.allowed,
+.statusBadge.active,
+.statusBadge.approved,
+.statusBadge.confirmed,
+.statusBadge.paid,
+.statusBadge.ready,
+.statusBadge.visible,
+.statusBadge.payouts-enabled,
+.statusBadge.paid-access,
+.statusBadge.live-data,
+.statusBadge.tracker-active,
+.statusBadge.detected {
+  color: #166534;
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}
+
+.statusBadge.blocked,
+.statusBadge.rejected,
+.statusBadge.reversed,
+.statusBadge.missing,
+.statusBadge.payouts-disabled,
+.statusBadge.training-denied,
+.statusBadge.failed {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.statusBadge.partial,
+.statusBadge.pending,
+.statusBadge.requested,
+.statusBadge.review,
+.statusBadge.restricted,
+.statusBadge.under-review,
+.statusBadge.summaries-only,
+.statusBadge.not-installed,
+.statusBadge.inactive {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.statusBadge.sample-preview,
+.statusBadge.awaiting-tracking-data,
+.statusBadge.waiting-for-first-event,
+.statusBadge.checking,
+.metricChange.neutral {
+  color: #1e3a8a;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.metricChange.negative {
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.domainVerificationMessage {
+  color: #166534;
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}
+
+.domainVerificationMessage.error,
+.billingWarningBanner,
+.billingWarningBanner p,
+.billingWarningBanner strong {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.docsArticle code:not(.installCodeBlock code),
+.trustArticle code {
+  border: 1px solid var(--border);
+}
+
+.setupStepList article,
+.setupStepList article.current,
+.setupStepList article.done {
+  background: #ffffff;
+}
+
+.setupStepList article > span,
+.setupStepList article.current > span,
+.setupStepList article.done > span,
+.installStep > span,
+.onboardingSteps span {
+  color: #ffffff;
+  background: #111827;
+}
+
+.installStep.pending > span {
+  color: var(--muted);
+  background: #e5e7eb;
 }
 
 @media (max-width: 1120px) {
