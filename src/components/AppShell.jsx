@@ -50,6 +50,8 @@ export default function AppShell({ title, eyebrow, children, action }) {
   const { state, actions } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarGroups = state.auth.isPlatformAdmin ? [...navGroups, adminGroup] : navGroups;
+  const workspaceName = state.auth.workspace?.name || "Workspace";
+  const workspacePlan = state.auth.user?.plan || "Free";
 
   const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
   const toggleSidebar = useCallback(() => setIsSidebarOpen((isOpen) => !isOpen), []);
@@ -129,6 +131,11 @@ export default function AppShell({ title, eyebrow, children, action }) {
             </div>
           </div>
           <div className="topbarActions">
+            <div className="topbarRuntime" aria-label="Workspace environment">
+              <span>Workspace</span>
+              <strong>{workspaceName}</strong>
+              <em>{workspacePlan} plan</em>
+            </div>
             {action}
             <button type="button" className="secondaryButton smallButton" onClick={handleLogout}>
               Log out

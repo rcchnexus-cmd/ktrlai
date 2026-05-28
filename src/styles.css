@@ -9824,3 +9824,505 @@ tbody td {
     font-size: clamp(38px, 14vw, 54px);
   }
 }
+
+/* Dashboard polish pass 1: operations control room. */
+.sidebarBrand {
+  padding: 0 2px 14px;
+}
+
+.sidebarBrand .logo {
+  gap: 11px;
+}
+
+.sidebarBrand .logoIcon {
+  width: 38px;
+  height: 38px;
+  background:
+    linear-gradient(var(--kt-card-dark), var(--kt-card-dark)) padding-box,
+    var(--kt-cta-gradient) border-box;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 14px 34px rgba(255,59,33,0.16),
+    inset 0 0 24px rgba(255,155,38,0.08);
+}
+
+.sidebarBrand .logoIcon span {
+  background: #ffffff;
+  box-shadow: 0 0 12px rgba(255,255,255,0.18);
+}
+
+.sidebarBrand .logoWord {
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+.sidebarBrand .logoWord strong,
+.sidebarBrand .logoWord em {
+  color: #ffffff;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+}
+
+.sidebar {
+  width: 252px;
+  padding: 14px;
+  background:
+    radial-gradient(circle at 24px 30px, rgba(255,155,38,0.12), transparent 34%),
+    rgba(14,9,24,0.94);
+  border-right: 1px solid rgba(255,255,255,0.09);
+}
+
+.mainPanel {
+  width: calc(100% - 252px);
+  max-width: calc(100vw - 252px);
+  margin-left: 252px;
+  gap: 12px;
+  padding: 16px 18px 26px;
+}
+
+.sidebarNav {
+  gap: 11px;
+}
+
+.sidebarGroup {
+  gap: 3px;
+}
+
+.sidebarGroupLabel {
+  padding: 0 9px 4px;
+  color: rgba(255,155,38,0.76);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.sidebarLink {
+  min-height: 34px;
+  padding: 0 9px;
+  gap: 9px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 720;
+}
+
+.sidebarLink span {
+  width: 22px;
+  height: 22px;
+  color: rgba(255,255,255,0.84);
+  background: rgba(255,255,255,0.055);
+  border-color: rgba(255,255,255,0.1);
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+.sidebarLink:hover,
+.sidebarLink:focus-visible {
+  background: rgba(255,255,255,0.075);
+  transform: none;
+}
+
+.sidebarLink.active {
+  background:
+    linear-gradient(90deg, rgba(255,155,38,0.18), rgba(255,59,33,0.08)),
+    rgba(255,255,255,0.065);
+  border-color: rgba(255,155,38,0.26);
+  box-shadow: inset 3px 0 0 var(--kt-orange), 0 10px 28px rgba(255,59,33,0.08);
+}
+
+.sidebarLink.active span {
+  color: #ffffff;
+  background: rgba(255,155,38,0.16);
+  border-color: rgba(255,155,38,0.34);
+}
+
+.sidebarFooter {
+  gap: 4px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.055);
+}
+
+.sidebarFooter strong {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.sidebarFooter span,
+.sidebarFooter em {
+  font-size: 11px;
+}
+
+.topbar {
+  min-height: 58px;
+  margin-bottom: 6px;
+  padding: 10px 12px;
+  background: rgba(25,20,34,0.72);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  box-shadow: 0 12px 42px rgba(0,0,0,0.16);
+}
+
+.topbarTitle {
+  gap: 10px;
+}
+
+.topbar h1 {
+  margin-top: 2px;
+  font-size: clamp(22px, 2.1vw, 28px);
+  letter-spacing: -0.045em;
+}
+
+.topbarActions {
+  align-items: center;
+  gap: 7px;
+}
+
+.topbarRuntime {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1px 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 7px 10px;
+  color: #ffffff;
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+}
+
+.topbarRuntime span,
+.topbarRuntime em {
+  color: var(--kt-text-muted-dark);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.topbarRuntime strong {
+  grid-column: 1;
+  max-width: 170px;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbarRuntime em {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: #ffcf8a;
+  background: rgba(255,155,38,0.1);
+  border: 1px solid rgba(255,155,38,0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+}
+
+.smallButton,
+.logoutButton {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+}
+
+.dataModeNotice {
+  padding: 9px 12px;
+  border-radius: 14px;
+}
+
+.opsStatusRail {
+  gap: 8px;
+  margin: 8px 0 2px;
+}
+
+.opsStatusRail article {
+  min-height: 74px;
+  padding: 10px 11px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035)),
+    rgba(27,23,40,0.86);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+}
+
+.opsStatusRail span,
+.opsCommandCard span,
+.infraHealthList span {
+  color: rgba(255,155,38,0.82);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.opsStatusRail strong {
+  font-size: 14px;
+}
+
+.opsCommandGrid {
+  gap: 9px;
+  margin-bottom: 10px;
+}
+
+.opsCommandCard {
+  min-height: 108px;
+  padding: 12px;
+  gap: 7px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.072), rgba(255,255,255,0.032)),
+    rgba(27,23,40,0.88);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 15px;
+  box-shadow: 0 14px 44px rgba(0,0,0,0.16);
+}
+
+.opsCommandCard.primary {
+  background:
+    radial-gradient(circle at 85% 0%, rgba(255,59,33,0.26), transparent 42%),
+    linear-gradient(180deg, rgba(67,45,51,0.95), rgba(27,23,40,0.94));
+  border-color: rgba(255,155,38,0.36);
+}
+
+.opsCommandCard strong {
+  font-size: clamp(24px, 2.7vw, 34px);
+  letter-spacing: -0.055em;
+}
+
+.opsCommandCard p {
+  font-size: 11.5px;
+  line-height: 1.38;
+}
+
+.activityStreamPanel {
+  margin: 4px 0 2px;
+}
+
+.opsEvidenceStream {
+  min-width: 0;
+  overflow-x: auto;
+  background: rgba(14,9,24,0.58);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.opsEvidenceHeader,
+.opsEvidenceRow {
+  display: grid;
+  grid-template-columns: 92px minmax(128px, 0.9fr) minmax(200px, 1.45fr) minmax(96px, 0.7fr) minmax(110px, 0.75fr) 92px;
+  align-items: center;
+  gap: 12px;
+  min-width: 820px;
+  padding: 9px 12px;
+}
+
+.opsEvidenceHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  color: rgba(255,155,38,0.84);
+  background: rgba(255,155,38,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.opsEvidenceRow {
+  color: var(--kt-text-muted-dark);
+  border-top: 1px solid rgba(255,255,255,0.075);
+  font-size: 12.5px;
+}
+
+.opsEvidenceRow:first-of-type {
+  border-top: 0;
+}
+
+.opsEvidenceRow:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.opsEvidenceTime {
+  color: rgba(255,255,255,0.56);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+}
+
+.opsEvidenceOperator {
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 8px;
+  overflow: hidden;
+  color: #ffffff;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opsEvidencePath {
+  overflow: hidden;
+  color: rgba(255,255,255,0.78);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opsEvidencePolicy,
+.opsEvidenceRisk {
+  width: fit-content;
+  padding: 5px 8px;
+  color: #ffcf8a;
+  background: rgba(255,155,38,0.1);
+  border: 1px solid rgba(255,155,38,0.2);
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.opsEvidenceRisk {
+  color: #9af0c7;
+  background: rgba(138,244,195,0.1);
+  border-color: rgba(138,244,195,0.22);
+}
+
+.opsEvidenceRisk.attention {
+  color: #ff9a8d;
+  background: rgba(255,59,33,0.12);
+  border-color: rgba(255,59,33,0.28);
+}
+
+.governanceSnapshotPanel,
+.systemHealthPanel {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.026)),
+    rgba(27,23,40,0.9);
+}
+
+.governanceSnapshotPanel .panelHeader,
+.systemHealthPanel .panelHeader {
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.infraHealthList {
+  gap: 7px;
+}
+
+.infraHealthList > div {
+  grid-template-columns: minmax(120px, 0.75fr) minmax(84px, 0.38fr) minmax(0, 1.45fr);
+  padding: 10px 11px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.075);
+  border-radius: 12px;
+}
+
+.infraHealthList strong {
+  font-size: 14px;
+}
+
+.infraHealthList em {
+  font-size: 11.5px;
+}
+
+.dashboardGrid {
+  gap: 10px;
+}
+
+.panel {
+  padding: 14px;
+}
+
+.panelHeader {
+  margin-bottom: 10px;
+}
+
+.panelHeader h2 {
+  font-size: clamp(17px, 1.6vw, 20px);
+}
+
+@media (max-width: 1180px) {
+  .opsStatusRail,
+  .opsCommandGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .topbarRuntime {
+    order: -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    width: min(82vw, 300px);
+  }
+
+  .mainPanel {
+    width: 100%;
+    max-width: 100vw;
+    margin-left: 0;
+    padding: 12px;
+  }
+
+  .topbarActions {
+    width: 100%;
+  }
+
+  .topbarRuntime {
+    width: 100%;
+  }
+
+  .opsStatusRail,
+  .opsCommandGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .opsStatusRail article,
+  .opsCommandCard {
+    min-height: 0;
+  }
+
+  .infraHealthList > div {
+    grid-template-columns: 1fr;
+  }
+
+  .opsEvidenceHeader,
+  .opsEvidenceRow {
+    min-width: 760px;
+  }
+}
+
+@media (max-width: 420px) {
+  .topbar {
+    padding: 10px;
+  }
+
+  .topbarRuntime {
+    grid-template-columns: 1fr;
+  }
+
+  .topbarRuntime em {
+    grid-column: 1;
+    grid-row: auto;
+    width: fit-content;
+  }
+}

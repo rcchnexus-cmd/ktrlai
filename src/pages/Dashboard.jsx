@@ -209,38 +209,36 @@ export default function Dashboard() {
                 <p>Install the tracker or run a visibility check to start collecting access evidence.</p>
               </div>
             ) : (
-              <div className="tableWrap">
-                <table className="activityLogTable">
-                  <thead>
-                    <tr>
-                      <th>Timestamp</th>
-                      <th>Operator</th>
-                      <th>Path</th>
-                      <th>Action</th>
-                      <th>Policy</th>
-                      <th>Risk</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dashboard.recentActivity.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.time}</td>
-                        <td>{row.bot}</td>
-                        <td>{row.page}</td>
-                        <td>
-                          <StatusBadge status={row.status} />
-                        </td>
-                        <td>{row.policyAction || row.policy || row.category || "Monitor"}</td>
-                        <td>{/block|deny|failed/i.test(row.status) ? "Attention" : "Monitor"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="opsEvidenceStream" role="table" aria-label="Latest AI access evidence">
+                <div className="opsEvidenceHeader" role="row">
+                  <span>Timestamp</span>
+                  <span>Operator</span>
+                  <span>Path</span>
+                  <span>Action</span>
+                  <span>Policy</span>
+                  <span>Risk</span>
+                </div>
+                {dashboard.recentActivity.map((row) => {
+                  const risk = /block|deny|failed/i.test(row.status) ? "Attention" : "Monitor";
+
+                  return (
+                    <div className="opsEvidenceRow" role="row" key={row.id}>
+                      <span className="opsEvidenceTime">{row.time}</span>
+                      <strong className="opsEvidenceOperator">{row.bot}</strong>
+                      <code className="opsEvidencePath">{row.page}</code>
+                      <span>
+                        <StatusBadge status={row.status} />
+                      </span>
+                      <span className="opsEvidencePolicy">{row.policyAction || row.policy || row.category || "Monitor"}</span>
+                      <span className={risk === "Attention" ? "opsEvidenceRisk attention" : "opsEvidenceRisk"}>{risk}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </section>
           <section className="dashboardGrid opsTwoColumn">
-            <article className="panel">
+            <article className="panel governanceSnapshotPanel">
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">Governance snapshot</span>
@@ -271,7 +269,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </article>
-            <article className="panel">
+            <article className="panel systemHealthPanel">
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">System health</span>
