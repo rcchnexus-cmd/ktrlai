@@ -51,6 +51,13 @@ function GlassNav() {
 function WorkflowCanvas() {
   return (
     <aside className="workflowCanvas" aria-label="AI access workflow preview">
+      <div className="workflowCanvasStatus">
+        <span>
+          <i aria-hidden="true" />
+          Live policy graph
+        </span>
+        <strong>Evidence recorded</strong>
+      </div>
       <div className="workflowNode source">
         <span>Website event</span>
         <strong>/docs/api</strong>
@@ -85,6 +92,11 @@ function WorkflowCanvas() {
         <span>Perplexity</span>
         <span>Claude</span>
         <span>Gemini</span>
+      </div>
+      <div className="workflowCanvasTelemetry">
+        <span>128k AI requests</span>
+        <span>18 policies active</span>
+        <span>42 suspicious signals</span>
       </div>
     </aside>
   );
@@ -182,6 +194,15 @@ export default function Landing() {
               <p>
                 Monitor AI crawlers, route policy decisions, and govern how AI systems interact with your website.
               </p>
+              <div className="n8nHeroTelemetry" aria-label="Live KtrlAI telemetry">
+                <span>
+                  <i aria-hidden="true" />
+                  Live tracker signal
+                </span>
+                <span>128k AI requests</span>
+                <span>18 policies active</span>
+                <span>Evidence recorded</span>
+              </div>
               <div className="n8nHeroActions">
                 <RouteLink to="/signup" className="n8nGradientButton large">
                   Get started for free
@@ -198,7 +219,7 @@ export default function Landing() {
         <div className="n8nLandingContainer">
           <UseCaseRail />
 
-          <section className="n8nSection" id="product">
+          <section className="n8nSection n8nProductProofSection" id="product">
             <div className="n8nSectionIntro">
               <span className="n8nEyebrow">Product proof</span>
               <h2>Govern AI access with operational evidence.</h2>
@@ -206,7 +227,7 @@ export default function Landing() {
             </div>
             <div className="n8nProofGrid">
               {proofCards.map(([title, body, detail]) => (
-                <article key={title}>
+                <article className={/Evidence stream|Policy engine/.test(title) ? "primaryProof" : ""} key={title}>
                   <span>{title}</span>
                   <strong>{detail}</strong>
                   <p>{body}</p>
@@ -215,7 +236,7 @@ export default function Landing() {
             </div>
           </section>
 
-          <section className="n8nSection" id="governance">
+          <section className="n8nSection n8nWorkflowSection" id="governance">
             <div className="n8nSectionIntro">
               <span className="n8nEyebrow">Workflow</span>
               <h2>From crawler signal to governance action.</h2>
@@ -231,7 +252,7 @@ export default function Landing() {
             </div>
           </section>
 
-          <section className="n8nSection">
+          <section className="n8nSection n8nControlPreviewSection">
             <div className="n8nSectionIntro">
               <span className="n8nEyebrow">Control plane</span>
               <h2>Evidence, policy, and system health in one dashboard.</h2>
@@ -241,16 +262,36 @@ export default function Landing() {
           </section>
 
           <section className="n8nFinalCta" id="pricing">
-            <span className="n8nEyebrow">Private beta</span>
-            <h2>Start governing AI access.</h2>
-            <p>Install the tracker, validate AI crawler activity, and prepare your content operations for governed access.</p>
-            <div>
-              <RouteLink to="/signup" className="n8nGradientButton large">
-                Get Started
-              </RouteLink>
-              <RouteLink to="/contact" className="n8nGhostButton">
-                Request Access
-              </RouteLink>
+            <div className="n8nFinalCtaCopy">
+              <span className="n8nEyebrow">Private beta</span>
+              <h2>Start governing AI access.</h2>
+              <p>Install the tracker, validate AI crawler activity, and prepare your content operations for governed access.</p>
+              <div>
+                <RouteLink to="/signup" className="n8nGradientButton large">
+                  Get Started
+                </RouteLink>
+                <RouteLink to="/contact" className="n8nGhostButton">
+                  Request Access
+                </RouteLink>
+              </div>
+            </div>
+            <div className="n8nCtaProof" aria-label="KtrlAI proof signals">
+              <span>Policy active</span>
+              <div>
+                <strong>PerplexityBot</strong>
+                <em>/guides/api</em>
+                <b>Restrict</b>
+              </div>
+              <div>
+                <strong>ChatGPT-User</strong>
+                <em>/pricing</em>
+                <b>Monitor</b>
+              </div>
+              <div>
+                <strong>ClaudeBot</strong>
+                <em>/blog/licensing</em>
+                <b>Allow</b>
+              </div>
             </div>
           </section>
         </div>
