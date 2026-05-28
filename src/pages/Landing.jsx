@@ -1,82 +1,122 @@
-import MarketingNav from "../components/MarketingNav.jsx";
-import Footer from "../components/Footer.jsx";
+import Logo from "../components/Logo.jsx";
 import { RouteLink } from "../navigation.jsx";
 
-const evidenceRows = [
-  ["ChatGPT-User", "/pricing", "Monitor"],
-  ["PerplexityBot", "/guides/api", "Restrict"],
-  ["ClaudeBot", "/blog/licensing", "Allow"]
-];
-
-const problemCards = [
-  ["Unknown crawler activity", "AI systems can access valuable public content without a clean operating record.", "warning"],
-  ["No policy layer", "Website teams need crawler rules that map to AI summaries, training, and usage intent.", "policy"],
-  ["Limited AI referral insight", "AI visibility is difficult to measure when crawler evidence and content outcomes are separate.", "intelligence"],
-  ["Licensing readiness gap", "Commercial AI access requires reliable evidence before terms can be negotiated.", "revenue"]
-];
-
-const solutionCards = [
-  ["Detect AI crawlers", "Classify AI, search, browser, and suspicious access patterns from live site activity."],
-  ["Review accessed pages", "Understand which paths AI systems touch, how often, and under what policy context."],
-  ["Set governance policies", "Apply allow, monitor, restrict, block-ready, and charge-ready states across crawler scopes."],
-  ["Prepare licensing workflows", "Keep policy-aware records that support reporting, negotiation, and monetization readiness."]
+const proofCards = [
+  ["Evidence stream", "Timestamped crawler access with operator, path, action, and policy context.", "12:04 /pricing monitor"],
+  ["Policy engine", "Map AI operators to monitor, restrict, block-ready, or charge-ready workflows.", "18 active policies"],
+  ["Operator intelligence", "Group activity by OpenAI, Perplexity, Anthropic, Google, and unknown scrapers.", "4 top operators"],
+  ["Traffic intelligence", "Summarize AI share, suspicious pressure, top paths, and governance outcomes.", "128k AI requests"],
+  ["Licensing readiness", "Keep evidence trails that support future commercial AI access discussions.", "3.8k governed paths"],
+  ["Audit trail", "Record policy updates, workspace changes, API key events, and security activity.", "7d activity log"]
 ];
 
 const workflowSteps = [
-  ["01", "Install tracker", "Add the lightweight SDK to verified domains and start capturing evidence."],
-  ["02", "Detect AI crawlers", "Identify known AI operators, search crawlers, browsers, and suspicious scrapers."],
-  ["03", "Govern access", "Map crawler scopes to policy states without changing network behavior yet."],
-  ["04", "Review intelligence", "Use dashboards, streams, and rollups to understand AI access over time."]
+  ["01", "Detect request", "Capture crawler activity from verified sites."],
+  ["02", "Identify operator", "Classify known AI systems and suspicious clients."],
+  ["03", "Apply policy", "Attach allow, monitor, restrict, or charge-ready context."],
+  ["04", "Record evidence", "Store an operational record for analytics and audit."],
+  ["05", "Prepare licensing", "Use governed evidence to support future commercial workflows."]
 ];
 
-const productProofCards = [
-  ["Evidence stream", "Timestamped crawler activity with operator, path, status, risk, and policy context.", "12:04 ChatGPT-User /pricing"],
-  ["Policy control", "Governance states turn crawler activity into operational workflow metadata.", "Monitor / Restrict / Charge-ready"],
-  ["Traffic intelligence", "Rollup-ready analytics summarize operators, paths, AI share, and suspicious pressure.", "76% AI assistant traffic"],
-  ["Licensing readiness", "Usage evidence prepares content teams for commercial AI access discussions.", "3.8k governed paths"],
-  ["System health", "Tracker, ingestion, queues, rollups, notifications, and rate limits surface operating state.", "Ingestion healthy"],
-  ["API key security", "Workspace keys are generated once, hashed server-side, and masked after refresh.", "ktrl_live_masked"]
+const useCases = [
+  ["Publishers", "Control AI crawler access to articles, archives, and premium pages."],
+  ["SEO teams", "Track AI visibility and understand crawler behavior across content."],
+  ["SaaS teams", "Govern docs, changelog, and developer content ingestion."],
+  ["Enterprise teams", "Audit AI access across domains, policies, and workspaces."]
 ];
 
-const trustSignals = [
-  "API keys",
-  "Audit logs",
-  "Rate limits",
-  "Rollup analytics",
-  "Notifications",
-  "Jobs/queues",
-  "Governance policies"
-];
-
-function SectionIntro({ eyebrow, title, body }) {
+function GlassNav() {
   return (
-    <div className="landing-section-intro">
-      <span className="kt-eyebrow">{eyebrow}</span>
-      <h2 className="kt-section-title">{title}</h2>
-      {body ? <p>{body}</p> : null}
-    </div>
+    <header className="n8nLandingNavWrap">
+      <nav className="n8nLandingNav" aria-label="KtrlAI public navigation">
+        <Logo />
+        <div className="n8nLandingNavLinks">
+          <a href="#product">Product</a>
+          <a href="#use-cases">Use cases</a>
+          <RouteLink to="/docs">Docs</RouteLink>
+          <a href="#governance">Governance</a>
+          <a href="#pricing">Pricing</a>
+        </div>
+        <div className="n8nLandingNavActions">
+          <RouteLink to="/login">Sign in</RouteLink>
+          <RouteLink to="/signup" className="n8nGradientButton">
+            Get Started
+          </RouteLink>
+        </div>
+      </nav>
+    </header>
   );
 }
 
-function ControlPlaneVisual() {
+function WorkflowCanvas() {
   return (
-    <aside className="kt-proof-card landing-control-plane" aria-label="KtrlAI control plane preview">
-      <div className="landing-proof-header">
-        <div>
-          <span className="kt-eyebrow">Control plane</span>
-          <strong>docs.company.com</strong>
-        </div>
-        <span className="kt-status-pill status-active">Tracking active</span>
+    <aside className="workflowCanvas" aria-label="AI access workflow preview">
+      <div className="workflowNode source">
+        <span>Website event</span>
+        <strong>/docs/api</strong>
+        <em>GET request</em>
       </div>
-
-      <div className="landing-operator-row" aria-label="AI operators">
+      <div className="workflowLine horizontal" />
+      <div className="workflowNode engine">
+        <span>KtrlAI policy engine</span>
+        <strong>Classify + govern</strong>
+        <em>workspace policy context</em>
+      </div>
+      <div className="workflowLine horizontal second" />
+      <div className="workflowNode decision">
+        <span>Decision</span>
+        <strong>Training allowed?</strong>
+        <em>policy: restrict</em>
+      </div>
+      <div className="workflowBranch branchOne" />
+      <div className="workflowBranch branchTwo" />
+      <div className="workflowNode monitor">
+        <span>Branch A</span>
+        <strong>Monitor</strong>
+        <em>record evidence</em>
+      </div>
+      <div className="workflowNode restrict">
+        <span>Branch B</span>
+        <strong>Restrict</strong>
+        <em>flag operator</em>
+      </div>
+      <div className="operatorOrbit">
         <span>OpenAI</span>
         <span>Perplexity</span>
-        <span>Anthropic</span>
-        <span>Google</span>
+        <span>Claude</span>
+        <span>Gemini</span>
       </div>
+    </aside>
+  );
+}
 
-      <div className="kt-grid-3 landing-proof-metrics">
+function UseCaseRail() {
+  return (
+    <section className="n8nUseCaseRail" id="use-cases" aria-label="KtrlAI use cases">
+      {useCases.map(([title, body], index) => (
+        <article className={index === 0 ? "active" : ""} key={title}>
+          <span>0{index + 1}</span>
+          <div>
+            <strong>{title}</strong>
+            <p>{body}</p>
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function DashboardPreview() {
+  return (
+    <section className="darkDashboardPreview" aria-label="KtrlAI dashboard preview">
+      <div className="darkPreviewHeader">
+        <div>
+          <span>Operations</span>
+          <strong>AI traffic control room</strong>
+        </div>
+        <em>Live governance</em>
+      </div>
+      <div className="darkPreviewMetrics">
         <article>
           <span>AI requests</span>
           <strong>128k</strong>
@@ -90,187 +130,142 @@ function ControlPlaneVisual() {
           <strong>42</strong>
         </article>
       </div>
-
-      <div className="landing-evidence-table" aria-label="Recent evidence rows">
-        <div className="landing-evidence-head">
-          <span>Operator</span>
-          <span>Path</span>
-          <span>Policy</span>
-        </div>
-        {evidenceRows.map(([operator, path, policy]) => (
-          <div className="landing-evidence-row" key={`${operator}-${path}`}>
-            <strong>{operator}</strong>
-            <code>{path}</code>
-            <span>{policy}</span>
+      <div className="darkPreviewGrid">
+        <div className="darkPreviewStream">
+          <span>Evidence stream</span>
+          <div>
+            <strong>ChatGPT-User</strong>
+            <code>/pricing</code>
+            <em>Monitor</em>
           </div>
-        ))}
+          <div>
+            <strong>PerplexityBot</strong>
+            <code>/guides/api</code>
+            <em>Restrict</em>
+          </div>
+          <div>
+            <strong>ClaudeBot</strong>
+            <code>/blog/licensing</code>
+            <em>Allow</em>
+          </div>
+        </div>
+        <div className="darkPolicyMatrix">
+          <span>Policy matrix</span>
+          <p>OpenAI <strong>Monitor</strong></p>
+          <p>Perplexity <strong>Restrict</strong></p>
+          <p>Unknown scraper <strong>Review</strong></p>
+        </div>
+        <div className="darkSystemHealth">
+          <span>System health</span>
+          <p>Ingestion <strong>Healthy</strong></p>
+          <p>Rollups <strong>Ready</strong></p>
+          <p>Audit logs <strong>Active</strong></p>
+        </div>
       </div>
-    </aside>
+    </section>
   );
 }
 
 export default function Landing() {
   return (
-    <div className="site landing-page">
-      <MarketingNav />
+    <div className="n8nLandingPage">
+      <GlassNav />
 
       <main>
-        <section className="kt-section landing-hero">
-          <div className="kt-container landing-hero-grid">
-            <div className="landing-hero-copy">
-              <span className="kt-eyebrow">AI access governance infrastructure</span>
-              <h1 className="kt-hero-title">Control how AI systems access your website.</h1>
-              <p className="landing-hero-lead">
-                Monitor AI crawlers, enforce governance policies, and measure AI visibility from one control plane.
+        <section className="n8nHeroSection">
+          <div className="n8nHeroGrid">
+            <div className="n8nHeroCopy">
+              <span className="n8nEyebrow">AI access governance infrastructure</span>
+              <h1>
+                AI access workflows you can <span>see and control.</span>
+              </h1>
+              <p>
+                Monitor AI crawlers, route policy decisions, and govern how AI systems interact with your website.
               </p>
-              <p className="landing-hero-note">
-                Built for publishers, SaaS teams, SEO operators, and content platforms preparing for the AI-driven web.
-              </p>
-              <div className="landing-hero-actions">
-                <RouteLink to="/signup" className="kt-btn kt-btn-primary">
-                  Start free
+              <div className="n8nHeroActions">
+                <RouteLink to="/signup" className="n8nGradientButton large">
+                  Get started for free
                 </RouteLink>
-                <RouteLink to="#product" className="kt-btn kt-btn-secondary">
-                  View product
+                <RouteLink to="/contact" className="n8nGhostButton">
+                  Talk to us
                 </RouteLink>
               </div>
             </div>
-            <ControlPlaneVisual />
+            <WorkflowCanvas />
           </div>
         </section>
 
-        <section className="kt-section">
-          <div className="kt-container">
-            <div className="kt-audience-section-final">
-              <div className="kt-eyebrow">
-                Built for operators of the open web
-              </div>
+        <div className="n8nLandingContainer">
+          <UseCaseRail />
 
-              <div className="kt-audience-grid-final">
-                <div className="kt-audience-chip-final">Publishers</div>
-                <div className="kt-audience-chip-final">SEO agencies</div>
-                <div className="kt-audience-chip-final">SaaS companies</div>
-                <div className="kt-audience-chip-final">Content platforms</div>
-                <div className="kt-audience-chip-final">Enterprise teams</div>
-              </div>
+          <section className="n8nSection" id="product">
+            <div className="n8nSectionIntro">
+              <span className="n8nEyebrow">Product proof</span>
+              <h2>Govern AI access with operational evidence.</h2>
+              <p>Every crawler signal becomes policy context, analytics, and audit-ready workflow data.</p>
             </div>
-          </div>
-        </section>
-
-        <section className="kt-section" id="problem">
-          <div className="kt-container">
-            <SectionIntro
-              eyebrow="Problem"
-              title="AI systems are accessing websites without clear visibility."
-              body="Open web operators need a reliable way to see crawler activity, understand accessed content, and prepare for policy and licensing decisions."
-            />
-            <div className="kt-grid-4 landing-card-grid">
-              {problemCards.map(([title, body, tone]) => (
-                <article className="kt-card landing-feature-card" key={title}>
-                  <span className={`landing-card-accent ${tone}`} aria-hidden="true" />
-                  <h3>{title}</h3>
-                  <p>{body}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="kt-section landing-soft-section" id="solution">
-          <div className="kt-container">
-            <SectionIntro
-              eyebrow="Solution"
-              title="Visibility and governance for AI access."
-              body="KtrlAI turns AI crawler activity into evidence, policies, traffic intelligence, and licensing readiness workflows."
-            />
-            <div className="kt-grid-4 landing-card-grid">
-              {solutionCards.map(([title, body]) => (
-                <article className="kt-card landing-feature-card" key={title}>
-                  <span className="landing-card-index" aria-hidden="true">
-                    0{solutionCards.findIndex(([item]) => item === title) + 1}
-                  </span>
-                  <h3>{title}</h3>
-                  <p>{body}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="kt-section" id="how-it-works">
-          <div className="kt-container">
-            <SectionIntro
-              eyebrow="How it works"
-              title="From tracker install to governed intelligence."
-              body="Four operational steps move your site from unknown AI access to measurable, policy-aware crawler evidence."
-            />
-            <div className="kt-grid-4 landing-workflow">
-              {workflowSteps.map(([step, title, body]) => (
-                <article className="kt-card-compact landing-workflow-card" key={title}>
-                  <span>{step}</span>
-                  <h3>{title}</h3>
-                  <p>{body}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="kt-section landing-product-section" id="product">
-          <div className="kt-container">
-            <SectionIntro
-              eyebrow="Product proof"
-              title="Operational controls for AI access decisions."
-              body="KtrlAI gives teams a shared evidence layer for crawler visibility, governance state, analytics, system health, and API key security."
-            />
-            <div className="kt-grid-3 landing-proof-grid">
-              {productProofCards.map(([title, body, detail]) => (
-                <article className="kt-card landing-proof-card" key={title}>
-                  <span className="kt-eyebrow">{title}</span>
+            <div className="n8nProofGrid">
+              {proofCards.map(([title, body, detail]) => (
+                <article key={title}>
+                  <span>{title}</span>
                   <strong>{detail}</strong>
                   <p>{body}</p>
                 </article>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="kt-section landing-trust-section" aria-label="Infrastructure trust">
-          <div className="kt-container landing-trust-panel">
-            <div>
-              <span className="kt-eyebrow">Infrastructure trust</span>
-              <h2 className="kt-section-title">Built for crawler governance operations.</h2>
+          <section className="n8nSection" id="governance">
+            <div className="n8nSectionIntro">
+              <span className="n8nEyebrow">Workflow</span>
+              <h2>From crawler signal to governance action.</h2>
             </div>
-            <div className="landing-trust-list">
-              {trustSignals.map((signal) => (
-                <span className="kt-status-pill" key={signal}>
-                  {signal}
-                </span>
+            <div className="n8nWorkflowSteps">
+              {workflowSteps.map(([step, title, body]) => (
+                <article key={title}>
+                  <span>{step}</span>
+                  <strong>{title}</strong>
+                  <p>{body}</p>
+                </article>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="kt-section" id="pricing">
-          <div className="kt-container landing-beta-cta">
-            <span className="kt-eyebrow">Private beta</span>
-            <h2 className="kt-section-title">Start with AI visibility. Grow into governance.</h2>
-            <p>
-              Install the tracker, validate AI crawler activity, and prepare your content operations for AI access control.
-            </p>
+          <section className="n8nSection">
+            <div className="n8nSectionIntro">
+              <span className="n8nEyebrow">Control plane</span>
+              <h2>Evidence, policy, and system health in one dashboard.</h2>
+              <p>Designed for teams that need to understand AI traffic before they can govern or commercialize it.</p>
+            </div>
+            <DashboardPreview />
+          </section>
+
+          <section className="n8nFinalCta" id="pricing">
+            <span className="n8nEyebrow">Private beta</span>
+            <h2>Start governing AI access.</h2>
+            <p>Install the tracker, validate AI crawler activity, and prepare your content operations for governed access.</p>
             <div>
-              <RouteLink to="/signup" className="kt-btn kt-btn-primary">
-                Start free
+              <RouteLink to="/signup" className="n8nGradientButton large">
+                Get Started
               </RouteLink>
-              <RouteLink to="/contact" className="kt-btn kt-btn-secondary">
-                Request private beta
+              <RouteLink to="/contact" className="n8nGhostButton">
+                Request Access
               </RouteLink>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </main>
 
-      <Footer />
+      <footer className="n8nLandingFooter">
+        <Logo linked={false} />
+        <p>AI access governance infrastructure for the open web.</p>
+        <nav aria-label="Footer navigation">
+          <RouteLink to="/docs">Docs</RouteLink>
+          <RouteLink to="/security">Security</RouteLink>
+          <RouteLink to="/privacy">Privacy</RouteLink>
+          <RouteLink to="/terms">Terms</RouteLink>
+        </nav>
+      </footer>
     </div>
   );
 }
