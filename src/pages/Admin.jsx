@@ -167,7 +167,7 @@ export default function Admin() {
         <div>
           <span className="eyebrow">Operator console</span>
           <h2>KtrlAI infrastructure operations</h2>
-          <p>Monitor platform health, ingestion, queue, Redis/rate limits, rollups, billing state, audit activity, and workspace risk from an operator-only surface.</p>
+          <p>Monitor health, ingestion, queues, rate limits, rollups, billing, audit activity, and workspace risk.</p>
         </div>
         <StatusBadge status={health.payoutsEnabled ? "Payouts enabled" : "Payouts disabled"} />
       </section>

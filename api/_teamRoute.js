@@ -19,7 +19,21 @@ import { getSupabaseAdmin, isSupabaseAdminConfigured } from "./_supabaseAdmin.js
 const readableRoles = ["owner", "admin", "analyst", "viewer"];
 const inviteRoles = ["admin", "analyst", "viewer"];
 const policyTypes = ["allow", "monitor", "restrict", "block"];
-const policyScopes = ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "Unknown/Suspicious"];
+const policyScopes = [
+  "GPTBot",
+  "ChatGPT-User",
+  "OAI-SearchBot",
+  "ClaudeBot",
+  "Claude-Web",
+  "PerplexityBot",
+  "Google-Extended",
+  "Gemini",
+  "CCBot",
+  "Bytespider",
+  "Amazonbot",
+  "Applebot",
+  "Unknown/Suspicious"
+];
 
 function getRequestBody(req) {
   if (!req.body) {
@@ -86,6 +100,7 @@ function restrictedEnterpriseWorkspace(memberRole) {
 function defaultPolicies() {
   return [
     { id: "policy_gptbot", botScope: "GPTBot", policyType: "monitor", notes: "Watch OpenAI crawler activity before enforcing access." },
+    { id: "policy_chatgpt_user", botScope: "ChatGPT-User", policyType: "monitor", notes: "Monitor ChatGPT browsing access and attribution paths." },
     { id: "policy_claudebot", botScope: "ClaudeBot", policyType: "monitor", notes: "Monitor Claude crawler behavior and content paths." },
     { id: "policy_perplexity", botScope: "PerplexityBot", policyType: "allow", notes: "Allow answer-engine preview access while analytics mature." },
     { id: "policy_google_extended", botScope: "Google-Extended", policyType: "restrict", notes: "Restrict training-style access unless explicitly licensed." },

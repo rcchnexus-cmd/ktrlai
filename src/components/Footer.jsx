@@ -2,29 +2,30 @@ import Logo from "./Logo.jsx";
 import { RouteLink } from "../navigation.jsx";
 
 const columns = [
-  ["Product", ["Operations", "Live Stream", "Governance", "Visibility", "Docs"]],
-  ["Pricing", ["Free", "Pro", "Business", "Compare plans"]],
-  ["Company", ["About", "Contact", "Security", "Help"]],
-  ["Legal", ["Privacy", "Terms", "Security", "Contact"]]
+  ["Product", ["Operations", "Live Stream", "Traffic Intelligence", "Visibility"]],
+  ["Governance", ["Governance", "AI Training", "Licensing Readiness", "Configuration"]],
+  ["Resources", ["Docs", "Install guide", "Help", "Contact"]],
+  ["Legal", ["Privacy", "Terms", "Security", "Login", "Start free"]]
 ];
 
 const routeFor = {
   Operations: "/dashboard",
   "Live Stream": "/activity",
+  "Traffic Intelligence": "/analytics",
   Governance: "/control",
   Visibility: "/visibility",
+  "AI Training": "/training",
+  "Licensing Readiness": "/monetization",
+  Configuration: "/settings",
   Docs: "/docs",
+  "Install guide": "/docs/install",
   Help: "/help",
-  Free: "/#pricing",
-  Pro: "/#pricing",
-  Business: "/#pricing",
-  "Compare plans": "/#pricing",
-  About: "/#about",
-  Pricing: "/#pricing",
   Contact: "/contact",
   Privacy: "/privacy",
   Terms: "/terms",
-  Security: "/security"
+  Security: "/security",
+  Login: "/login",
+  "Start free": "/signup"
 };
 
 export default function Footer() {
@@ -32,7 +33,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footerBrand">
         <Logo linked={false} />
-        <p>AI crawler visibility, governance, and licensing readiness for website owners.</p>
+        <p>AI access governance infrastructure for open web operators.</p>
       </div>
       <div className="footerGrid">
         {columns.map(([title, links]) => (

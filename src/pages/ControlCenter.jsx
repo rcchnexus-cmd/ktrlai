@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import AppShell from "../components/AppShell.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
+import { accessToPolicyType, normalizeGovernanceBotScope } from "../governance/governanceControls.js";
 
 export default function ControlCenter() {
   const { state, actions } = useApp();
   const [bot, setBot] = useState("ChatGPT-User");
   const [access, setAccess] = useState("Allow summaries only");
-  const [policyOverrides, setPolicyOverrides] = useState({});
+  const [savingPolicyKey, setSavingPolicyKey] = useState("");
+  const [policyMessage, setPolicyMessage] = useState("");
+  const [policyMessageType, setPolicyMessageType] = useState("success");
 
   useEffect(() => {
     if (!state.controls && !state.loading.controls) {
@@ -16,23 +19,81 @@ export default function ControlCenter() {
   }, [actions, state.controls, state.loading.controls]);
 
   const controls = state.controls;
-  const policyRows = (controls?.governancePolicies || []).map((policy) => ({
-    ...policy,
-    policyType: policyOverrides[policy.botScope] || policy.policyType
-  }));
+  const policyRows = controls?.governancePolicies || [];
   const activePolicyCount = controls?.rules?.filter((rule) => rule.enabled).length || 0;
   const monitoredCount = policyRows.filter((policy) => policy.policyType === "monitor").length;
   const restrictedCount = policyRows.filter((policy) => ["restrict", "block"].includes(policy.policyType)).length;
+  const canManagePolicies = controls?.permissions?.canManageOperations !== false;
+
+  const savePolicy = async ({ botScope, policyType, notes }) => {
+    const normalizedScope = normalizeGovernanceBotScope(botScope);
+
+    setSavingPolicyKey(normalizedScope);
+    setPolicyMessage("");
+
+    try {
+      await actions.saveGovernancePolicy({
+        botScope: normalizedScope,
+        policyType,
+        notes
+      });
+      setPolicyMessage("Governance policy saved.");
+      setPolicyMessageType("success");
+      return true;
+    } catch (error) {
+      setPolicyMessage(error.message || "Governance policy could not be saved.");
+      setPolicyMessageType("error");
+      return false;
+    } finally {
+      setSavingPolicyKey("");
+    }
+  };
+
+  const handleRuleToggle = (rule, enabled) => {
+    if (!rule.botScope) {
+      return actions.updateControlRule(rule.id, enabled);
+    }
+
+    return savePolicy({
+      botScope: rule.botScope,
+      policyType: enabled ? rule.enabledPolicyType : rule.disabledPolicyType,
+      notes: rule.detail
+    });
+  };
+
+  const handlePolicyChange = (policy, nextType) =>
+    savePolicy({
+      botScope: policy.botScope,
+      policyType: nextType,
+      notes: policy.notes || policy.detail
+    });
 
   const addRule = async () => {
-    await actions.addControlRule({ bot, access });
-    setBot("ChatGPT-User");
-    setAccess("Allow summaries only");
+    const saved = await savePolicy({
+      botScope: bot,
+      policyType: accessToPolicyType(access),
+      notes: access
+    });
+
+    if (saved) {
+      setBot("ChatGPT-User");
+      setAccess("Allow summaries only");
+    }
   };
 
   return (
     <AppShell title="Governance" eyebrow="Control Plane">
-      {!controls ? (
+      {state.errors.controls ? (
+        <div className="emptyState">
+          <strong>Governance policies could not be loaded</strong>
+          <p>{state.errors.controls}</p>
+          <div className="emptyStateActions">
+            <button type="button" className="secondaryButton smallButton" onClick={actions.loadControls}>
+              Retry
+            </button>
+          </div>
+        </div>
+      ) : !controls ? (
         <div className="loadingState">Loading control policies...</div>
       ) : (
         <>
@@ -40,7 +101,7 @@ export default function ControlCenter() {
           <article>
             <span>Active policies</span>
             <strong>{activePolicyCount}</strong>
-            <em>Default workspace controls enabled</em>
+            <em>{controls.source === "enterprise" ? "Loaded from workspace policy storage" : "Local development controls enabled"}</em>
           </article>
           <article>
             <span>Monitored crawlers</span>
@@ -58,6 +119,11 @@ export default function ControlCenter() {
             <em>Commercial access rules prepared</em>
           </article>
         </section>
+        {policyMessage && (
+          <p className={`domainVerificationMessage ${policyMessageType === "error" ? "error" : ""}`} role="status">
+            {policyMessage}
+          </p>
+        )}
         <div className="controlLayout">
           <section className="panel">
             <div className="panelHeader">
@@ -76,7 +142,8 @@ export default function ControlCenter() {
                   <input
                     type="checkbox"
                     checked={rule.enabled}
-                    onChange={(event) => actions.updateControlRule(rule.id, event.target.checked)}
+                    onChange={(event) => handleRuleToggle(rule, event.target.checked)}
+                    disabled={!canManagePolicies || savingPolicyKey === rule.botScope}
                   />
                 </label>
               ))}
@@ -111,8 +178,13 @@ export default function ControlCenter() {
                   <option>Block all access</option>
                 </select>
               </label>
-              <button type="button" className="primaryButton" onClick={addRule}>
-                Add rule
+              <button
+                type="button"
+                className="primaryButton"
+                onClick={addRule}
+                disabled={!canManagePolicies || savingPolicyKey === normalizeGovernanceBotScope(bot)}
+              >
+                {savingPolicyKey === normalizeGovernanceBotScope(bot) ? "Saving..." : "Add rule"}
               </button>
             </div>
             {controls.customRules.length === 0 ? (
@@ -142,7 +214,7 @@ export default function ControlCenter() {
               <StatusBadge status="Control-ready" />
             </div>
             <p className="enterpriseCopy">
-              Define crawler intent for analytics and governance workflows. Network-level blocking is not enabled yet.
+              Network-level blocking is not enabled yet. Policies currently drive visibility, workflow, and tracker metadata.
             </p>
             <div className="policyGrid">
               {policyRows.map((policy) => (
@@ -153,12 +225,8 @@ export default function ControlCenter() {
                   </div>
                   <select
                     value={policy.policyType}
-                    onChange={(event) =>
-                      setPolicyOverrides((current) => ({
-                        ...current,
-                        [policy.botScope]: event.target.value
-                      }))
-                    }
+                    onChange={(event) => handlePolicyChange(policy, event.target.value)}
+                    disabled={!canManagePolicies || savingPolicyKey === policy.botScope}
                   >
                     <option value="allow">Allow</option>
                     <option value="monitor">Monitor</option>

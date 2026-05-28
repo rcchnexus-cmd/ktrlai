@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST, OPTIONS");
-    return res.status(405).json({ message: "Method not allowed" });
+    return res.status(405).json({ ok: false, message: "Method not allowed" });
   }
 
   const { plan, workspaceId, customerEmail, successUrl, cancelUrl } = getRequestBody(req);
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
   }
 
   if (!workspaceId) {
-    return res.status(400).json({ message: "workspaceId is required." });
+    return res.status(400).json({ ok: false, message: "workspaceId is required." });
   }
 
   const rateLimit = await checkServerRateLimit(req, {

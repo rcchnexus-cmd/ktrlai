@@ -57,6 +57,10 @@ export default function Monetization() {
         <div className="loadingState">Loading licensing settings...</div>
       ) : (
         <>
+          <section className={`dataModeNotice ${monetization.source || "empty"}`} aria-label="Licensing data status">
+            <StatusBadge status={monetization.sourceLabel || "Licensing readiness"} />
+            <span>{monetization.sourceDetail || "Licensing workflows are separated from live tracker analytics."}</span>
+          </section>
           <section className="metricGrid">
             <MetricCard label="Cleared revenue" value={`$${monetization.clearedRevenue.toLocaleString()}`} change="+18.2%" tone="positive" />
             <MetricCard label="Pending revenue" value={`$${monetization.pendingRevenue.toLocaleString()}`} change="In review" tone="neutral" />

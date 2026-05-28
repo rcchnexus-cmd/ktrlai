@@ -187,6 +187,9 @@ const analytics = {
 };
 
 const monetization = {
+  source: "preview",
+  sourceLabel: "Licensing readiness preview",
+  sourceDetail: "Commercial modeling is shown as planning data until live licensing ledger workflows are enabled.",
   paidAccess: true,
   pricePerCrawl: 0.18,
   pricePerDataset: 425,
@@ -324,6 +327,9 @@ export const mockApi = {
     await delay(720);
     const hostname = url.replace(/^https?:\/\//, "").replace(/\/$/, "") || "yourdomain.com";
     return {
+      source: "preview",
+      sourceLabel: "Visibility preview",
+      sourceDetail: "Visibility scans are planning guidance until live provider verification is enabled.",
       url: hostname,
       score: 74,
       lastChecked: "Just now",

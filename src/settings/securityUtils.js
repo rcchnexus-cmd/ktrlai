@@ -284,6 +284,7 @@ export function createLocalEnterpriseSettings() {
     ],
     policies: [
       { id: "policy_gptbot", botScope: "GPTBot", policyType: "monitor", notes: "Watch OpenAI crawler activity before enforcing access." },
+      { id: "policy_chatgpt_user", botScope: "ChatGPT-User", policyType: "monitor", notes: "Monitor ChatGPT browsing access and attribution paths." },
       { id: "policy_claudebot", botScope: "ClaudeBot", policyType: "monitor", notes: "Monitor Claude crawler behavior and content paths." },
       { id: "policy_perplexity", botScope: "PerplexityBot", policyType: "allow", notes: "Allow answer-engine preview access while analytics mature." },
       { id: "policy_google_extended", botScope: "Google-Extended", policyType: "restrict", notes: "Restrict training-style access unless licensed." },

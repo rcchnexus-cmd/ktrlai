@@ -63,7 +63,7 @@ export default function Activity() {
   const activityError = state.errors.activity;
   const activityMeta = state.activityMeta || {};
   const sourceLabel = activityMeta.sourceLabel || "Awaiting tracking data";
-  const sourceDetail = activityMeta.sourceDetail || "Install the tracker script to start collecting AI access events.";
+  const sourceDetail = activityMeta.sourceDetail || "Install the tracker to collect live AI access evidence.";
   const hasActivityRows = state.activity.length > 0;
 
   return (
@@ -71,7 +71,7 @@ export default function Activity() {
       <section className="panel liveIngestionPanel">
         <div className="liveIngestionHeader">
           <div>
-            <span className="eyebrow">Live ingestion</span>
+            <span className="eyebrow">Ingestion status</span>
             <h2>{sourceLabel}</h2>
           </div>
           <StatusBadge status={sourceLabel} />
@@ -113,7 +113,7 @@ export default function Activity() {
       </section>
       {activityError ? (
         <div className="emptyState">
-          <strong>AI activity could not be loaded</strong>
+          <strong>Live stream could not be loaded</strong>
           <p>{activityError}</p>
           <div className="emptyStateActions">
             <button type="button" className="secondaryButton smallButton" onClick={actions.loadActivity}>
@@ -130,28 +130,28 @@ export default function Activity() {
         <section className="panel activityStreamPanel">
           <div className="panelHeader">
             <div>
-              <span className="eyebrow">Event stream</span>
+              <span className="eyebrow">Evidence stream</span>
               <h2>{filtered.length} access events</h2>
             </div>
           </div>
           {filtered.length === 0 ? (
             <div className="emptyState">
-              <strong>{hasActivityRows ? "No matching AI events" : "No tracking data yet"}</strong>
+              <strong>{hasActivityRows ? "No matching events" : "No tracking data yet"}</strong>
               <p>
                 {hasActivityRows
                   ? "Try clearing your search or choosing a broader bot type, status, or date filter."
-                  : "Install your tracker script and generate a live event to start filling this log."}
+                  : "Install the tracker and generate a live event to start filling this log."}
               </p>
             </div>
           ) : (
             <div className="eventStreamList" role="table" aria-label="AI access event stream">
               <div className="eventStreamHeader" role="row">
-                <span>Time</span>
+                <span>Timestamp</span>
                 <span>Operator</span>
                 <span>Path</span>
-                <span>Category</span>
+                <span>Type</span>
                 <span>Risk</span>
-                <span>Status</span>
+                <span>Policy</span>
                 <span>Evidence</span>
               </div>
               {filtered.map((row) => (

@@ -20,7 +20,7 @@ const menus = [
     ]
   },
   {
-    label: "AI Governance",
+    label: "Governance",
     items: [
       ["Training permissions", "/training"],
       ["Access rules", "/control"],
@@ -34,14 +34,6 @@ const menus = [
       ["Install guide", "/docs/install"],
       ["Security", "/security"],
       ["Visibility check", "/visibility"]
-    ]
-  },
-  {
-    label: "Company",
-    items: [
-      ["About KtrlAI", "/#about"],
-      ["Contact", "/contact"],
-      ["Help", "/help"]
     ]
   }
 ];
@@ -122,8 +114,8 @@ export default function MarketingNav() {
   return (
     <header className="marketingHeader">
       <div className="announcement">
-        <span>New</span>
-        AI crawler visibility and governance controls are now in private beta.
+        <span>Private beta</span>
+        KtrlAI is in private beta for AI crawler visibility and governance.
       </div>
       <nav className={isMobileOpen ? "marketingNav menuOpen" : "marketingNav"} aria-label="Main navigation">
         <Logo />

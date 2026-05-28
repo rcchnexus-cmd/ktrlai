@@ -13,12 +13,12 @@ export function TrafficChart({ data = [] }) {
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="AI traffic over time">
         <defs>
           <linearGradient id="trafficLine" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#5B8CFF" />
-            <stop offset="100%" stopColor="#9B6DFF" />
+            <stop offset="0%" stopColor="#315d86" />
+            <stop offset="100%" stopColor="#4f5f73" />
           </linearGradient>
         </defs>
         <polyline points={points} fill="none" stroke="url(#trafficLine)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-        <polygon points={`0,100 ${points} 100,100`} fill="rgba(91, 140, 255, 0.12)" />
+        <polygon points={`0,100 ${points} 100,100`} fill="rgba(49, 93, 134, 0.1)" />
       </svg>
       <div className="chartLabels">
         {data.map((item) => (

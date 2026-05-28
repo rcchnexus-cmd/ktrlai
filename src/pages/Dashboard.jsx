@@ -65,7 +65,7 @@ export default function Dashboard() {
   const hasStoredApiKey = Boolean(storedApiKey.id || storedApiKey.keyPrefix || storedApiKey.key);
   const shouldShowOnboarding = Boolean(state.settings && dashboard);
   const dataLabel = dashboard?.sourceLabel || "Awaiting tracking data";
-  const dataDetail = dashboard?.sourceDetail || "Install your tracker to start seeing live AI access analytics.";
+  const dataDetail = dashboard?.sourceDetail || "Install the tracker to begin live AI access telemetry.";
   const hasWorkspaceApiKey = hasStoredApiKey;
   const verifiedDomainCount = (state.settings?.domains || []).filter(
     (item) => String(item.status || "").toLowerCase() === "verified"
@@ -93,6 +93,7 @@ export default function Dashboard() {
   );
   const topAiSystem = dashboard?.botDistribution?.[0];
   const governedShare = dashboard?.kpis?.find((kpi) => /page|govern|access/i.test(kpi.label));
+  const pagesAccessedKpi = dashboard?.kpis?.find((kpi) => /page/i.test(kpi.label));
 
   return (
     <AppShell
@@ -118,7 +119,7 @@ export default function Dashboard() {
           </div>
         </div>
       ) : !dashboard ? (
-        <div className="loadingState">Loading AI activity...</div>
+        <div className="loadingState">Loading operations telemetry...</div>
       ) : (
         <>
           {shouldShowOnboarding && (
@@ -130,19 +131,19 @@ export default function Dashboard() {
           </section>
           <section className="opsStatusRail" aria-label="Workspace infrastructure status">
             <article>
-              <span>Plan</span>
-              <strong>{state.auth.user?.plan || "Free"}</strong>
-              <em>{state.auth.workspace?.name || "Workspace"}</em>
-            </article>
-            <article>
               <span>Tracker</span>
               <strong>{getInstallStatusLabel(installHealth.status)}</strong>
               <em>{installHealth.sdkInstalled ? "SDK detected" : "Awaiting SDK"}</em>
             </article>
             <article>
-              <span>Last event</span>
-              <strong>{formatInstallDate(installHealth.lastEventAt)}</strong>
-              <em>{installHealth.eventsToday || 0} today</em>
+              <span>Policies</span>
+              <strong>{verifiedDomainCount > 0 ? "Active" : "Pending"}</strong>
+              <em>{verifiedDomainCount || 0} verified domains</em>
+            </article>
+            <article>
+              <span>Ingestion</span>
+              <strong>{installHealth.sdkInstalled ? "Receiving" : "Waiting"}</strong>
+              <em>{formatInstallDate(installHealth.lastEventAt)}</em>
             </article>
             <article>
               <span>Rate limits</span>
@@ -155,9 +156,9 @@ export default function Dashboard() {
               <em>Analytics acceleration</em>
             </article>
             <article>
-              <span>Policies</span>
-              <strong>{verifiedDomainCount > 0 ? "Active" : "Pending"}</strong>
-              <em>{verifiedDomainCount || 0} verified domains</em>
+              <span>Notifications</span>
+              <strong>Ready</strong>
+              <em>{installHealth.eventsToday || 0} events today</em>
             </article>
           </section>
           <section className="opsCommandGrid" aria-label="AI traffic operations summary">
@@ -167,7 +168,7 @@ export default function Dashboard() {
               <p>{aiRequestKpi?.label || "Tracked AI requests"}</p>
             </article>
             <article className="opsCommandCard">
-              <span>AI systems detected</span>
+              <span>Operators detected</span>
               <strong>{dashboard.botDistribution?.length || 0}</strong>
               <p>{topAiSystem?.label ? `${topAiSystem.label} is currently the top operator.` : "Operators appear after live crawler events."}</p>
             </article>
@@ -182,6 +183,11 @@ export default function Dashboard() {
               <p>{verifiedDomainCount > 0 ? `${verifiedDomainCount} verified domain${verifiedDomainCount === 1 ? "" : "s"} under policy.` : "Verify a domain to enforce workspace policy."}</p>
             </article>
             <article className="opsCommandCard">
+              <span>Pages accessed</span>
+              <strong>{pagesAccessedKpi?.value ?? "0"}</strong>
+              <p>{pagesAccessedKpi?.change || "Accessed paths appear after live tracker events."}</p>
+            </article>
+            <article className="opsCommandCard">
               <span>Top operator</span>
               <strong>{topAiSystem?.label || "Pending"}</strong>
               <p>{topAiSystem?.value ? `${topAiSystem.value}% of detected crawler mix.` : "Top operator appears after live traffic."}</p>
@@ -191,7 +197,7 @@ export default function Dashboard() {
             <div className="panelHeader">
               <div>
                 <span className="eyebrow">Live AI access feed</span>
-                <h2>Latest crawler events</h2>
+                <h2>Latest access events</h2>
               </div>
               <RouteLink to="/activity" className="textLink">
                 View stream
@@ -200,18 +206,18 @@ export default function Dashboard() {
             {dashboard.recentActivity.length === 0 ? (
               <div className="emptyState">
                 <strong>No recent AI activity</strong>
-                <p>Install the tracker script or run a visibility check to start collecting AI access events.</p>
+                <p>Install the tracker or run a visibility check to start collecting access evidence.</p>
               </div>
             ) : (
               <div className="tableWrap">
                 <table className="activityLogTable">
                   <thead>
                     <tr>
-                      <th>Time</th>
+                      <th>Timestamp</th>
                       <th>Operator</th>
                       <th>Path</th>
-                      <th>Category</th>
                       <th>Action</th>
+                      <th>Policy</th>
                       <th>Risk</th>
                     </tr>
                   </thead>
@@ -221,10 +227,10 @@ export default function Dashboard() {
                         <td>{row.time}</td>
                         <td>{row.bot}</td>
                         <td>{row.page}</td>
-                        <td>{row.category || "AI crawler"}</td>
                         <td>
                           <StatusBadge status={row.status} />
                         </td>
+                        <td>{row.policyAction || row.policy || row.category || "Monitor"}</td>
                         <td>{/block|deny|failed/i.test(row.status) ? "Attention" : "Monitor"}</td>
                       </tr>
                     ))}
@@ -246,17 +252,22 @@ export default function Dashboard() {
                 <div>
                   <span>Monitored crawlers</span>
                   <strong>{dashboard.botDistribution?.length || 0}</strong>
-                  <em>Known operators tracked by workspace evidence</em>
+                  <em>Operators tracked by workspace evidence</em>
                 </div>
                 <div>
                   <span>Restricted crawlers</span>
                   <strong>{suspiciousInsight?.value ?? "0"}</strong>
-                  <em>Suspicious or restricted traffic requiring review</em>
+                  <em>Traffic requiring review</em>
                 </div>
                 <div>
                   <span>Licensing readiness</span>
                   <strong>Prepared</strong>
-                  <em>Usage evidence can support future content terms</em>
+                  <em>Usage evidence supports future content terms</em>
+                </div>
+                <div>
+                  <span>Training-related</span>
+                  <strong>{dashboard.botDistribution?.some((item) => /gpt|claude|perplexity|google/i.test(item.label || "")) ? "Detected" : "Watching"}</strong>
+                  <em>AI access evidence can inform training policy reviews</em>
                 </div>
               </div>
             </article>
@@ -270,6 +281,11 @@ export default function Dashboard() {
               </div>
               <div className="infraHealthList">
                 <div>
+                  <span>API</span>
+                  <strong>Ready</strong>
+                  <em>Grouped application routes are available</em>
+                </div>
+                <div>
                   <span>Ingestion</span>
                   <strong>{installHealth.sdkInstalled ? "Receiving" : "Waiting"}</strong>
                   <em>Tracker endpoint and payload validation ready</em>
@@ -280,12 +296,12 @@ export default function Dashboard() {
                   <em>Background processing foundation available</em>
                 </div>
                 <div>
-                  <span>Redis</span>
+                  <span>Redis/rate limits</span>
                   <strong>Active</strong>
                   <em>Rate-limit provider is ready for shared enforcement</em>
                 </div>
                 <div>
-                  <span>Rollups</span>
+                  <span>Analytics rollups</span>
                   <strong>{dashboard.source === "live" ? "Healthy" : "Ready"}</strong>
                   <em>Summary analytics are rollup-ready</em>
                 </div>

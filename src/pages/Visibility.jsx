@@ -18,8 +18,8 @@ export default function Visibility() {
       <section className="panel visibilityHero">
         <div>
           <span className="eyebrow">Check visibility</span>
-          <h2>See how AI systems discover your website.</h2>
-          <p>Run a visibility scan across major answer engines, AI crawlers, and retrieval patterns.</p>
+          <h2>Inspect how AI systems discover your website.</h2>
+          <p>Run a visibility scan across answer engines, crawlers, and retrieval patterns.</p>
         </div>
         <div className="urlCheck">
           <input value={url} onChange={(event) => setUrl(event.target.value)} aria-label="Website URL" />
@@ -32,12 +32,16 @@ export default function Visibility() {
       {!result && !state.loading.visibility && (
         <section className="emptyState">
           <strong>No visibility scan yet</strong>
-          <p>Enter a domain and run a scan to see how major AI systems discover, cite, and access your content.</p>
+          <p>Enter a domain and run a scan to inspect discovery, citation, and access signals.</p>
         </section>
       )}
 
       {result && (
         <>
+          <section className={`dataModeNotice ${result.source || "empty"}`} aria-label="Visibility data status">
+            <span>{result.sourceLabel || "Visibility preview"}</span>
+            <span>{result.sourceDetail || "Visibility guidance is separated from live tracker analytics."}</span>
+          </section>
           <section className="metricGrid">
             <article className="metricCard">
               <span>Visibility score</span>
@@ -67,7 +71,7 @@ export default function Visibility() {
           <section className="panel twoColumnPanel">
             <div>
               <span className="eyebrow">Suggested queries</span>
-              <h2>Test how AI systems cite you</h2>
+              <h2>Test citation and retrieval patterns</h2>
               <div className="queryList">
                 {result.suggestedQueries.map((query) => (
                   <span key={query}>
@@ -77,7 +81,7 @@ export default function Visibility() {
               </div>
             </div>
             <div className="ctaPanel">
-              <h3>Ready to control access?</h3>
+              <h3>Ready for policy control?</h3>
               <p>Enable policies for trusted bots, unknown crawlers, summaries, full content, and training rights.</p>
               <RouteLink to="/control" className="primaryButton smallButton">
                 Enable control

@@ -10,6 +10,7 @@ import {
   decorateSampleAnalytics,
   decorateSampleDashboard,
   getWorkspaceAnalyticsSummary,
+  summaryHasWorkspaceEvidence,
   toActivityRows,
   toAnalyticsView,
   toDashboardView
@@ -17,6 +18,8 @@ import {
 import * as authService from "../auth/supabaseAuth.js";
 import { requestPayoutReview } from "../billing/billingApi.js";
 import { allowLocalMockFallback, showInvestorSampleData } from "../config/runtime.js";
+import { createControlsFromEnterprise, mergeSavedPolicyIntoControls } from "../governance/governanceControls.js";
+import { loadEnterpriseSettings, saveGovernancePolicy } from "../settings/securityUtils.js";
 
 const AppContext = createContext(null);
 
@@ -111,6 +114,14 @@ function reducer(state, action) {
           customRules: [action.rule, ...state.controls.customRules]
         }
       };
+    case "updateGovernancePolicy":
+      if (!state.controls) {
+        return state;
+      }
+      return {
+        ...state,
+        controls: mergeSavedPolicyIntoControls(state.controls, action.policy)
+      };
     case "updateMonetization":
       if (!state.monetization) {
         return state;
@@ -194,6 +205,7 @@ function reducer(state, action) {
         dashboard: workspaceChanged ? null : state.dashboard,
         activity: workspaceChanged ? [] : state.activity,
         activityMeta: workspaceChanged ? { ...createEmptyActivityMeta(), loaded: false } : state.activityMeta,
+        controls: workspaceChanged ? null : state.controls,
         analytics: workspaceChanged ? null : state.analytics,
         settings: !workspaceChanged && state.settings
           ? decorateSettings(state.settings, {
@@ -288,7 +300,7 @@ async function getDashboardAnalyticsData() {
   try {
     const summary = await getLiveSummary("7d");
 
-    if (summary.hasRealData) {
+    if (summaryHasWorkspaceEvidence(summary)) {
       return toDashboardView(summary);
     }
 
@@ -310,7 +322,7 @@ async function getAnalyticsData() {
   try {
     const summary = await getLiveSummary("30d");
 
-    if (summary.hasRealData) {
+    if (summaryHasWorkspaceEvidence(summary)) {
       return toAnalyticsView(summary);
     }
 
@@ -332,7 +344,7 @@ async function getActivityData() {
   try {
     const summary = await getLiveSummary("30d");
 
-    if (summary.hasRealData) {
+    if (summaryHasWorkspaceEvidence(summary)) {
       return loadResult(toActivityRows(summary), createActivityMeta(summary));
     }
 
@@ -349,6 +361,58 @@ async function getActivityData() {
     return showInvestorSampleData
       ? loadResult(await mockApi.getActivityLogs(), createSampleActivityMeta())
       : loadResult([], createEmptyActivityMeta());
+  }
+}
+
+async function getGovernanceControlData() {
+  const workspaceId = authService.getActiveWorkspaceId();
+
+  if (!workspaceId) {
+    if (allowLocalMockFallback) {
+      return mockApi.getControls();
+    }
+
+    throw new Error("Workspace is required to load governance policies.");
+  }
+
+  try {
+    const enterprise = await loadEnterpriseSettings({ workspaceId });
+    return createControlsFromEnterprise(enterprise);
+  } catch (error) {
+    if (!error.useMockFallback || !allowLocalMockFallback) {
+      throw error;
+    }
+
+    return mockApi.getControls();
+  }
+}
+
+async function persistGovernancePolicy({ botScope, policyType, notes }) {
+  const workspaceId = authService.getActiveWorkspaceId();
+
+  if (!workspaceId) {
+    throw new Error("Workspace is required to save governance policies.");
+  }
+
+  try {
+    return await saveGovernancePolicy({
+      workspaceId,
+      botScope,
+      policyType,
+      notes
+    });
+  } catch (error) {
+    if (!error.useMockFallback || !allowLocalMockFallback) {
+      throw error;
+    }
+
+    return {
+      id: `policy_${String(botScope || "unknown").toLowerCase().replace(/[^a-z0-9]+/g, "_")}`,
+      botScope,
+      policyType,
+      notes,
+      updatedAt: new Date().toISOString()
+    };
   }
 }
 
@@ -416,7 +480,7 @@ export function AppProvider({ children }) {
       loadDashboard: () =>
         load(dispatch, "dashboard", getDashboardAnalyticsData),
       loadActivity: () => load(dispatch, "activity", getActivityData),
-      loadControls: () => load(dispatch, "controls", mockApi.getControls),
+      loadControls: () => load(dispatch, "controls", getGovernanceControlData),
       loadAnalytics: () => load(dispatch, "analytics", getAnalyticsData),
       loadMonetization: () => load(dispatch, "monetization", mockApi.getMonetization),
       loadTraining: () => load(dispatch, "training", mockApi.getTraining),
@@ -436,6 +500,11 @@ export function AppProvider({ children }) {
       addControlRule: async (rule) => {
         const created = await mockApi.createControlRule(rule);
         dispatch({ type: "addControlRule", rule: created });
+      },
+      saveGovernancePolicy: async ({ botScope, policyType, notes }) => {
+        const savedPolicy = await persistGovernancePolicy({ botScope, policyType, notes });
+        dispatch({ type: "updateGovernancePolicy", policy: savedPolicy });
+        return savedPolicy;
       },
       updateMonetization: async (updates) => {
         dispatch({ type: "updateMonetization", updates });

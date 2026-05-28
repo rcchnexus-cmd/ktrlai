@@ -45,11 +45,30 @@ function getDataMode(summary) {
     };
   }
 
+  if (summaryHasWorkspaceEvidence(summary)) {
+    return {
+      source: "live",
+      sourceLabel: "Live data",
+      sourceDetail: "This workspace has received live tracker events. No events were found in the selected range."
+    };
+  }
+
   return {
     source: "empty",
     sourceLabel: "Awaiting tracking data",
     sourceDetail: "Install your tracker to start seeing live AI access analytics."
   };
+}
+
+export function summaryHasWorkspaceEvidence(summary = {}) {
+  const installHealth = summary.installHealth || {};
+
+  return Boolean(
+    summary.hasRealData ||
+      installHealth.lastEventAt ||
+      installHealth.sdkInstalled ||
+      Number(installHealth.eventsToday || 0) > 0
+  );
 }
 
 function normalizeInstallHealth(value = {}) {

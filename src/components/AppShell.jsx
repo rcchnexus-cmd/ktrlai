@@ -9,8 +9,8 @@ const navGroups = [
     label: "Monitor",
     routes: [
       { to: "/dashboard", label: "Operations", icon: "O" },
-      { to: "/activity", label: "Live Stream", icon: "L" },
-      { to: "/analytics", label: "Traffic Intelligence", icon: "T" },
+      { to: "/activity", label: "Activity", icon: "A" },
+      { to: "/analytics", label: "Analytics", icon: "I" },
       { to: "/visibility", label: "Visibility", icon: "V" }
     ]
   },
@@ -18,8 +18,8 @@ const navGroups = [
     label: "Govern",
     routes: [
       { to: "/control", label: "Governance", icon: "G" },
-      { to: "/training", label: "Training Policy", icon: "P" },
-      { to: "/monetization", label: "Licensing", icon: "$" }
+      { to: "/training", label: "Training", icon: "T" },
+      { to: "/monetization", label: "Monetization", icon: "$" }
     ]
   },
   {
@@ -30,7 +30,7 @@ const navGroups = [
 
 const adminGroup = {
   label: "Platform",
-  routes: [{ to: "/admin", label: "Infrastructure", icon: "I" }]
+  routes: [{ to: "/admin", label: "Admin", icon: "A" }]
 };
 
 function routePath(to) {
@@ -133,8 +133,8 @@ export default function AppShell({ title, eyebrow, children, action }) {
             <button type="button" className="secondaryButton smallButton" onClick={handleLogout}>
               Log out
             </button>
-            <RouteLink to="/" className="secondaryButton smallButton" aria-label="Back to landing page" title="Back to landing page">
-              Open
+            <RouteLink to="/" className="secondaryButton smallButton" aria-label="Back to public site" title="Back to public site">
+              Public site
             </RouteLink>
           </div>
         </header>

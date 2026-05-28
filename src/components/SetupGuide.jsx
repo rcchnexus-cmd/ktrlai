@@ -59,7 +59,7 @@ export default function SetupGuide({ settings, dashboard }) {
     },
     {
       title: "Receive first event",
-      why: "Your first event verifies installation and unlocks live dashboard analytics.",
+      why: "Your first event verifies installation and activates live operations telemetry.",
       to: "/activity",
       done: hasRealData,
       current: hasApiKey && hasDomain && !hasRealData

@@ -17,7 +17,7 @@ export default function Analytics() {
   const analytics = state.analytics;
   const analyticsError = state.errors.analytics;
   const dataLabel = analytics?.sourceLabel || "Awaiting tracking data";
-  const dataDetail = analytics?.sourceDetail || "Install your tracker to start seeing live AI access analytics.";
+  const dataDetail = analytics?.sourceDetail || "Install the tracker to begin live traffic intelligence.";
   const totalEvents = analytics?.trend?.reduce((sum, item) => sum + Number(item.value || 0), 0) || 0;
   const topOperator = analytics?.topDetectedAiSystems?.[0]?.name || analytics?.botFrequency?.[0]?.bot || "Pending";
   const topOperatorCount = analytics?.topDetectedAiSystems?.[0]?.count || analytics?.botFrequency?.[0]?.requests || 0;
@@ -52,12 +52,12 @@ export default function Analytics() {
             <article className="opsCommandCard primary">
               <span>Total requests</span>
               <strong>{totalEvents}</strong>
-              <p>Events in the selected analytics window.</p>
+              <p>Events in the current analysis window.</p>
             </article>
             <article className="opsCommandCard">
               <span>Top operator</span>
               <strong>{topOperator}</strong>
-              <p>{topOperatorCount ? `${topOperatorCount} requests observed.` : "Operator activity appears after live events."}</p>
+              <p>{topOperatorCount ? `${topOperatorCount} requests observed.` : "Operators appear after live events."}</p>
             </article>
             <article className="opsCommandCard">
               <span>Suspicious activity</span>
@@ -67,7 +67,7 @@ export default function Analytics() {
             <article className="opsCommandCard">
               <span>Highest-impact path</span>
               <strong>{topPage}</strong>
-              <p>{governedBreakdown?.detail || "Governance and traffic evidence are grouped by content path."}</p>
+              <p>{governedBreakdown?.detail || "Evidence is grouped by content path."}</p>
             </article>
           </section>
           {analytics.detectionInsights?.length ? (
@@ -85,7 +85,7 @@ export default function Analytics() {
             <article className="panel largePanel">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Usage trends</span>
+                  <span className="eyebrow">Traffic trend</span>
                   <h2>Operator traffic by period</h2>
                 </div>
               </div>
@@ -94,8 +94,8 @@ export default function Analytics() {
             <article className="panel">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Source breakdown</span>
-                  <h2>Source mix</h2>
+                  <span className="eyebrow">Source mix</span>
+                  <h2>Traffic composition</h2>
                 </div>
               </div>
               <DistributionChart data={analytics.sources} />
@@ -114,13 +114,13 @@ export default function Analytics() {
             <article className="panel">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">AI systems</span>
-                  <h2>Top detected AI systems</h2>
+                  <span className="eyebrow">Operators</span>
+                  <h2>Top detected systems</h2>
                 </div>
               </div>
               {(analytics.topDetectedAiSystems || []).length === 0 ? (
                 <div className="emptyState compact">
-                  <strong>No AI systems detected yet</strong>
+                  <strong>No systems detected yet</strong>
                   <p>Known AI crawler names will appear after live tracker events arrive.</p>
                 </div>
               ) : (
