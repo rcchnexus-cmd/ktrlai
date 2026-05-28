@@ -30,6 +30,61 @@ function getInstallStatusLabel(status) {
   return labels[status] || "Waiting for first event";
 }
 
+const controlPlaneAreas = [
+  ["Overview", "/dashboard", "Workspace status, setup, telemetry, and evidence stream.", "Live"],
+  ["Get started", "/settings#install", "Domain, API key, tracker install, and first event workflow.", "Setup"],
+  ["Analyze AI traffic", "/analytics", "Date, crawler, operator, hostname, path, and outcome analysis.", "Traffic"],
+  ["Manage crawlers", "/control", "Operator policies for allow, monitor, restrict, and charge-ready states.", "Govern"],
+  ["Directives / robots.txt", "/settings#domains", "Robots and llms.txt readiness for agent-access documentation.", "Signals"],
+  ["Monetization readiness", "/monetization", "Pay Per Crawl-style pricing and payout preparedness.", "Beta"],
+  ["Configuration", "/settings", "Tracker, keys, domains, notifications, security, and audit logs.", "Config"],
+  ["Developer tools", "/docs/sdk", "API reference, install snippets, webhook readiness, and bot reference.", "Docs"]
+];
+
+const trafficFilters = ["Date range", "Crawler", "Operator", "Hostname", "Path"];
+const trafficSignals = [
+  "AI requests over time",
+  "Top crawlers",
+  "Top operators",
+  "Top accessed paths",
+  "Suspicious requests",
+  "Governance outcomes"
+];
+
+const crawlerPolicyRows = [
+  ["GPTBot", "OpenAI", "Monitor", "Measure AI visibility before restriction.", "12:04"],
+  ["PerplexityBot", "Perplexity", "Restrict", "High-value docs require review workflow.", "11:48"],
+  ["ClaudeBot", "Anthropic", "Allow", "Low-risk content discovery remains visible.", "10:31"],
+  ["Unknown scraper", "Unverified", "Charge-ready", "Commercial access requires pricing review.", "09:52"]
+];
+
+const monetizationReadiness = [
+  "Pay Per Crawl readiness",
+  "Price rules",
+  "Selectable crawlers",
+  "Payout readiness",
+  "Payable content discovery",
+  "Crawl pricing logic"
+];
+
+const configurationReadiness = [
+  "Tracker installation",
+  "API keys",
+  "Domains",
+  "Robots/directives",
+  "WAF-style future enforcement note",
+  "Bot detection confidence"
+];
+
+const developerResources = [
+  "API reference",
+  "Bot/operator reference",
+  "Webhook readiness",
+  "llms.txt readiness",
+  "Markdown-friendly docs",
+  "Install snippet"
+];
+
 export default function Dashboard() {
   const { state, actions } = useApp();
 
@@ -161,6 +216,31 @@ export default function Dashboard() {
               <em>{installHealth.eventsToday || 0} events today</em>
             </article>
           </section>
+          <section className="panel dashboardFeatureMapPanel" aria-label="KtrlAI control plane areas">
+            <div className="panelHeader">
+              <div>
+                <span className="eyebrow">Control plane map</span>
+                <h2>AI crawl control workflow</h2>
+              </div>
+              <div className="panelActions">
+                <RouteLink to="/settings#install" className="secondaryButton smallButton">
+                  View install
+                </RouteLink>
+                <RouteLink to="/docs" className="secondaryButton smallButton">
+                  Docs
+                </RouteLink>
+              </div>
+            </div>
+            <div className="dashboardFeatureGrid">
+              {controlPlaneAreas.map(([title, to, body, status]) => (
+                <RouteLink to={to} className="dashboardFeatureCard" key={title}>
+                  <span>{status}</span>
+                  <strong>{title}</strong>
+                  <p>{body}</p>
+                </RouteLink>
+              ))}
+            </div>
+          </section>
           <section className="opsCommandGrid" aria-label="AI traffic operations summary">
             <article className="opsCommandCard primary">
               <span>AI requests</span>
@@ -191,6 +271,64 @@ export default function Dashboard() {
               <span>Top operator</span>
               <strong>{topAiSystem?.label || "Pending"}</strong>
               <p>{topAiSystem?.value ? `${topAiSystem.value}% of detected crawler mix.` : "Top operator appears after live traffic."}</p>
+            </article>
+          </section>
+          <section className="dashboardGrid opsTwoColumn dashboardScopeGrid">
+            <article className="panel trafficScopePanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Traffic intelligence</span>
+                  <h2>Analysis scope</h2>
+                </div>
+                <RouteLink to="/analytics" className="textLink">
+                  Open analytics
+                </RouteLink>
+              </div>
+              <div className="dashboardFilterRail" aria-label="Available analytics filters">
+                {trafficFilters.map((filter) => (
+                  <span key={filter}>{filter}</span>
+                ))}
+              </div>
+              <div className="dashboardSignalList">
+                {trafficSignals.map((signal) => (
+                  <div key={signal}>
+                    <strong>{signal}</strong>
+                    <em>Supported by live activity and rollup-ready summaries</em>
+                  </div>
+                ))}
+              </div>
+            </article>
+            <article className="panel crawlerPolicyPanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Manage crawlers</span>
+                  <h2>Policy matrix</h2>
+                </div>
+                <RouteLink to="/control" className="textLink">
+                  Manage policies
+                </RouteLink>
+              </div>
+              <p className="honestPolicyNote">
+                Network-level blocking is not enabled yet. Policies currently drive visibility, workflow, and tracker metadata.
+              </p>
+              <div className="crawlerPolicyTable" role="table" aria-label="Crawler policy readiness">
+                <div className="crawlerPolicyHeader" role="row">
+                  <span>Crawler</span>
+                  <span>Operator</span>
+                  <span>Action</span>
+                  <span>Reason</span>
+                  <span>Evidence</span>
+                </div>
+                {crawlerPolicyRows.map(([crawler, operator, action, reason, timestamp]) => (
+                  <div className="crawlerPolicyRow" role="row" key={`${crawler}-${action}`}>
+                    <strong>{crawler}</strong>
+                    <span>{operator}</span>
+                    <em>{action}</em>
+                    <p>{reason}</p>
+                    <code>{timestamp}</code>
+                  </div>
+                ))}
+              </div>
             </article>
           </section>
           <section className="panel activityStreamPanel">
@@ -308,6 +446,55 @@ export default function Dashboard() {
                   <strong>Ready</strong>
                   <em>Workspace alerts can be queued safely</em>
                 </div>
+              </div>
+            </article>
+          </section>
+          <section className="dashboardGrid readinessGrid">
+            <article className="panel readinessPanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Monetization readiness</span>
+                  <h2>Future crawl pricing workflow</h2>
+                </div>
+                <StatusBadge status="Beta" />
+              </div>
+              <div className="readinessTagGrid">
+                {monetizationReadiness.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+              <p>Pay Per Crawl workflows are readiness-oriented until commercial charging and enforcement are explicitly enabled.</p>
+            </article>
+            <article className="panel readinessPanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Configuration</span>
+                  <h2>Operational setup blocks</h2>
+                </div>
+                <RouteLink to="/settings" className="textLink">
+                  Open config
+                </RouteLink>
+              </div>
+              <div className="readinessTagGrid">
+                {configurationReadiness.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            </article>
+            <article className="panel readinessPanel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Developer / agent resources</span>
+                  <h2>Reference readiness</h2>
+                </div>
+                <RouteLink to="/docs" className="textLink">
+                  View docs
+                </RouteLink>
+              </div>
+              <div className="readinessTagGrid">
+                {developerResources.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
               </div>
             </article>
           </section>

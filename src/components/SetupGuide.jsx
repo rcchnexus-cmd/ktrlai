@@ -21,9 +21,14 @@ export default function SetupGuide({ settings, dashboard }) {
   const hasApiKey = Boolean(apiKey.id || apiKey.keyPrefix || apiKey.key);
   const hasDomain = domains.length > 0;
   const hasRealData = Boolean(dashboard?.hasRealData);
+  const hasReviewedActivity = hasRealData;
+  const hasGovernancePolicy = Boolean(
+    (settings?.governancePolicies || []).length ||
+      (settings?.policies || []).length ||
+      (settings?.aiPolicies || []).length
+  );
   const hasExploredAnalytics = hasRealData;
-  const progress = [hasApiKey, hasDomain, hasRealData, hasExploredAnalytics].filter(Boolean).length;
-  const isComplete = progress === 4;
+  const hasMonetizationPrep = hasGovernancePolicy && hasExploredAnalytics;
 
   useEffect(() => {
     try {
@@ -44,15 +49,22 @@ export default function SetupGuide({ settings, dashboard }) {
 
   const steps = [
     {
+      title: "Add domain",
+      why: "Connect the site KtrlAI should observe before production traffic arrives.",
+      to: "/settings#domains",
+      done: hasDomain,
+      current: !hasDomain
+    },
+    {
       title: "Generate API key",
-      why: "This gives your tracker a secure workspace credential without exposing stored secrets.",
+      why: "Issue a secure tracker credential without exposing stored secrets.",
       to: "/settings#api-key",
       done: hasApiKey,
-      current: !hasApiKey
+      current: hasDomain && !hasApiKey
     },
     {
       title: "Install tracker",
-      why: "The tracker sends page events that KtrlAI turns into AI crawler intelligence.",
+      why: "Send page events that KtrlAI turns into crawler intelligence.",
       to: "/settings#install",
       done: hasDomain && hasApiKey,
       current: hasApiKey && !hasRealData
@@ -65,13 +77,36 @@ export default function SetupGuide({ settings, dashboard }) {
       current: hasApiKey && hasDomain && !hasRealData
     },
     {
+      title: "Review crawler activity",
+      why: "Inspect the live evidence stream for operators, paths, status, and risk.",
+      to: "/activity",
+      done: hasReviewedActivity,
+      current: hasRealData && !hasReviewedActivity
+    },
+    {
+      title: "Create first governance policy",
+      why: "Move from visibility into managed crawler workflows.",
+      to: "/control",
+      done: hasGovernancePolicy,
+      current: hasReviewedActivity && !hasGovernancePolicy
+    },
+    {
       title: "Explore analytics",
       why: "See AI systems, suspicious traffic, and top pages once live activity appears.",
       to: "/analytics",
       done: hasExploredAnalytics,
-      current: hasRealData
+      current: hasGovernancePolicy && !hasExploredAnalytics
+    },
+    {
+      title: "Prepare monetization",
+      why: "Review beta readiness for Pay Per Crawl-style pricing, payout, and licensing workflows.",
+      to: "/monetization",
+      done: hasMonetizationPrep,
+      current: hasExploredAnalytics && !hasMonetizationPrep
     }
   ];
+  const progress = steps.filter((step) => step.done).length;
+  const isComplete = progress === steps.length;
 
   if (isDismissed) {
     return null;
@@ -90,8 +125,8 @@ export default function SetupGuide({ settings, dashboard }) {
           </p>
         </div>
         <div className="setupGuideControls">
-          <div className="setupProgress" aria-label={`${progress} of 4 setup steps complete`}>
-            <strong>{progress}/4</strong>
+          <div className="setupProgress" aria-label={`${progress} of ${steps.length} setup steps complete`}>
+            <strong>{progress}/{steps.length}</strong>
             <span>complete</span>
           </div>
           <button type="button" className="textButton setupDismissButton" onClick={dismiss}>
@@ -100,7 +135,7 @@ export default function SetupGuide({ settings, dashboard }) {
         </div>
       </div>
       <div className="setupProgressBar" aria-hidden="true">
-        <span style={{ width: `${(progress / 4) * 100}%` }} />
+        <span style={{ width: `${(progress / steps.length) * 100}%` }} />
       </div>
       <div className="setupStepList">
         {steps.map((step, index) => (

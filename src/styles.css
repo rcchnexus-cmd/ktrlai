@@ -10788,3 +10788,323 @@ tbody td {
     padding: 24px;
   }
 }
+
+/* Cloudflare-inspired product scope integration: dark KtrlAI-original controls. */
+.n8nCapabilitySection {
+  padding-top: 42px;
+}
+
+.n8nCapabilityGrid,
+.n8nPlanGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.n8nCapabilityGrid article,
+.n8nPlanGrid article {
+  display: grid;
+  gap: 10px;
+  min-height: 168px;
+  padding: 18px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(255,155,38,0.14), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.062), rgba(255,255,255,0.026)),
+    rgba(27,23,40,0.88);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  box-shadow: 0 18px 58px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.055);
+}
+
+.n8nCapabilityGrid span,
+.n8nPlanGrid span {
+  width: fit-content;
+  padding: 5px 8px;
+  color: #ffcf8a;
+  background: rgba(255,155,38,0.1);
+  border: 1px solid rgba(255,155,38,0.22);
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.n8nCapabilityGrid strong,
+.n8nPlanGrid strong {
+  color: #ffffff;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.n8nCapabilityGrid p,
+.n8nPlanGrid p,
+.n8nPlanGrid li {
+  margin: 0;
+  color: var(--kt-text-muted-dark);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.n8nPlanGrid ul {
+  display: grid;
+  gap: 7px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.n8nPlanGrid li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.n8nPlanGrid li::before {
+  width: 6px;
+  height: 6px;
+  margin-top: 7px;
+  flex: 0 0 auto;
+  content: "";
+  background: var(--kt-orange);
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(255,155,38,0.5);
+}
+
+.panelActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dashboardFeatureMapPanel,
+.trafficScopePanel,
+.crawlerPolicyPanel,
+.readinessPanel {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.064), rgba(255,255,255,0.028)),
+    rgba(27,23,40,0.9);
+}
+
+.dashboardFeatureGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dashboardFeatureCard {
+  display: grid;
+  gap: 7px;
+  min-height: 126px;
+  padding: 12px;
+  color: var(--kt-text-muted-dark);
+  text-decoration: none;
+  background: rgba(14,9,24,0.42);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 13px;
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.dashboardFeatureCard:hover,
+.dashboardFeatureCard:focus-visible {
+  color: var(--kt-text-muted-dark);
+  background: rgba(255,255,255,0.055);
+  border-color: rgba(255,155,38,0.28);
+  transform: translateY(-1px);
+}
+
+.dashboardFeatureCard span,
+.dashboardFilterRail span,
+.readinessTagGrid span {
+  width: fit-content;
+  padding: 5px 8px;
+  color: #ffcf8a;
+  background: rgba(255,155,38,0.1);
+  border: 1px solid rgba(255,155,38,0.2);
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 830;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dashboardFeatureCard strong {
+  color: #ffffff;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+}
+
+.dashboardFeatureCard p {
+  margin: 0;
+  color: var(--kt-text-muted-dark);
+  font-size: 11.5px;
+  line-height: 1.38;
+}
+
+.dashboardScopeGrid {
+  align-items: stretch;
+}
+
+.dashboardFilterRail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.dashboardSignalList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dashboardSignalList > div {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  background: rgba(14,9,24,0.42);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+}
+
+.dashboardSignalList strong {
+  color: #ffffff;
+  font-size: 12.5px;
+}
+
+.dashboardSignalList em,
+.readinessPanel p {
+  color: var(--kt-text-muted-dark);
+  font-size: 11.5px;
+  font-style: normal;
+  line-height: 1.38;
+}
+
+.honestPolicyNote {
+  margin: 0 0 10px;
+  padding: 10px 11px;
+  color: #ffcf8a;
+  background: rgba(255,155,38,0.08);
+  border: 1px solid rgba(255,155,38,0.18);
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.42;
+}
+
+.crawlerPolicyTable {
+  overflow-x: auto;
+  background: rgba(14,9,24,0.42);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 13px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.crawlerPolicyHeader,
+.crawlerPolicyRow {
+  display: grid;
+  grid-template-columns: minmax(118px, 0.78fr) minmax(112px, 0.7fr) minmax(92px, 0.55fr) minmax(190px, 1.4fr) 76px;
+  gap: 10px;
+  align-items: center;
+  min-width: 720px;
+  padding: 9px 10px;
+}
+
+.crawlerPolicyHeader {
+  color: rgba(255,155,38,0.86);
+  background: rgba(255,155,38,0.07);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.crawlerPolicyRow {
+  color: var(--kt-text-muted-dark);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 12px;
+}
+
+.crawlerPolicyRow:first-of-type {
+  border-top: 0;
+}
+
+.crawlerPolicyRow strong {
+  color: #ffffff;
+}
+
+.crawlerPolicyRow em {
+  width: fit-content;
+  padding: 5px 8px;
+  color: #ffcf8a;
+  background: rgba(255,155,38,0.1);
+  border: 1px solid rgba(255,155,38,0.2);
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 820;
+  text-transform: uppercase;
+}
+
+.crawlerPolicyRow p {
+  margin: 0;
+  color: var(--kt-text-muted-dark);
+}
+
+.crawlerPolicyRow code {
+  color: rgba(255,255,255,0.6);
+  font-size: 11px;
+}
+
+.readinessGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.readinessTagGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.readinessPanel p {
+  margin: 8px 0 0;
+}
+
+@media (max-width: 1180px) {
+  .dashboardFeatureGrid,
+  .readinessGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .n8nCapabilityGrid,
+  .n8nPlanGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .n8nCapabilityGrid,
+  .n8nPlanGrid,
+  .dashboardFeatureGrid,
+  .dashboardSignalList,
+  .readinessGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .panelActions {
+    justify-content: flex-start;
+  }
+
+  .dashboardFeatureCard {
+    min-height: 0;
+  }
+}

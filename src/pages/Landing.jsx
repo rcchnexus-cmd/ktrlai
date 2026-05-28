@@ -10,12 +10,39 @@ const proofCards = [
   ["Audit trail", "Record policy updates, workspace changes, API key events, and security activity.", "7d activity log"]
 ];
 
+const crawlControlFeatures = [
+  ["Get started with KtrlAI", "Add a domain, generate a key, install the tracker, and confirm first crawler evidence.", "Setup workflow"],
+  ["Monitor AI crawler activity", "Track AI requests, suspicious signals, top operators, and accessed paths.", "Traffic intelligence"],
+  ["Manage AI crawlers", "Assign allow, monitor, restrict, or charge-ready states by crawler and operator.", "Governance policies"],
+  ["Prepare monetization", "Model Pay Per Crawl-style readiness with pricing rules and payout checks.", "Beta readiness"],
+  ["Configure directives", "Document robots.txt and llms.txt readiness while policies drive KtrlAI metadata.", "Agent resources"],
+  ["Reference-ready platform", "Keep API, webhook, bot/operator, and install references close to operations.", "Developer tools"]
+];
+
 const workflowSteps = [
   ["01", "Detect request", "Capture crawler activity from verified sites."],
   ["02", "Identify operator", "Classify known AI systems and suspicious clients."],
   ["03", "Apply policy", "Attach allow, monitor, restrict, or charge-ready context."],
   ["04", "Record evidence", "Store an operational record for analytics and audit."],
   ["05", "Prepare licensing", "Use governed evidence to support future commercial workflows."]
+];
+
+const planTiers = [
+  [
+    "Free / Starter",
+    "Validate crawler visibility before broad rollout.",
+    ["Basic crawler detection", "Limited analytics window", "Monitor and restrict workflow"]
+  ],
+  [
+    "Pro / Business",
+    "Operate policy and intelligence across production content.",
+    ["Longer analytics windows", "Operator intelligence", "Policy templates", "Monetization readiness"]
+  ],
+  [
+    "Enterprise",
+    "Govern AI access with team, audit, and integration readiness.",
+    ["Advanced detection", "API access", "Team governance", "Audit exports", "Enforcement integrations readiness"]
+  ]
 ];
 
 const useCases = [
@@ -32,6 +59,7 @@ function GlassNav() {
         <Logo />
         <div className="n8nLandingNavLinks">
           <a href="#product">Product</a>
+          <a href="#capabilities">Capabilities</a>
           <a href="#use-cases">Use cases</a>
           <RouteLink to="/docs">Docs</RouteLink>
           <a href="#governance">Governance</a>
@@ -118,6 +146,27 @@ function UseCaseRail() {
   );
 }
 
+function CapabilityGrid() {
+  return (
+    <section className="n8nSection n8nCapabilitySection" id="capabilities">
+      <div className="n8nSectionIntro">
+        <span className="n8nEyebrow">Crawler control scope</span>
+        <h2>From crawler visibility to governance readiness.</h2>
+        <p>KtrlAI organizes setup, traffic intelligence, crawler management, directives, and future monetization workflows in one control plane.</p>
+      </div>
+      <div className="n8nCapabilityGrid">
+        {crawlControlFeatures.map(([title, body, badge]) => (
+          <article key={title}>
+            <span>{badge}</span>
+            <strong>{title}</strong>
+            <p>{body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function DashboardPreview() {
   return (
     <section className="darkDashboardPreview" aria-label="KtrlAI dashboard preview">
@@ -173,6 +222,31 @@ function DashboardPreview() {
           <p>Rollups <strong>Ready</strong></p>
           <p>Audit logs <strong>Active</strong></p>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function PlanComparison() {
+  return (
+    <section className="n8nSection n8nPlanSection" aria-label="KtrlAI plan comparison">
+      <div className="n8nSectionIntro">
+        <span className="n8nEyebrow">Plan paths</span>
+        <h2>Start with visibility. Expand into governance.</h2>
+        <p>Plan language stays honest: network-level blocking and Pay Per Crawl monetization are readiness workflows, not active enforcement claims.</p>
+      </div>
+      <div className="n8nPlanGrid">
+        {planTiers.map(([title, body, features]) => (
+          <article key={title}>
+            <span>{title}</span>
+            <p>{body}</p>
+            <ul>
+              {features.map((feature) => (
+                <li key={feature}>{feature}</li>
+              ))}
+            </ul>
+          </article>
+        ))}
       </div>
     </section>
   );
@@ -236,6 +310,8 @@ export default function Landing() {
             </div>
           </section>
 
+          <CapabilityGrid />
+
           <section className="n8nSection n8nWorkflowSection" id="governance">
             <div className="n8nSectionIntro">
               <span className="n8nEyebrow">Workflow</span>
@@ -260,6 +336,8 @@ export default function Landing() {
             </div>
             <DashboardPreview />
           </section>
+
+          <PlanComparison />
 
           <section className="n8nFinalCta" id="pricing">
             <div className="n8nFinalCtaCopy">
