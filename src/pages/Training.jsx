@@ -26,7 +26,11 @@ export default function Training() {
   };
 
   return (
-    <AppShell title="Training Policy" eyebrow="Govern">
+    <AppShell
+      title="Training Policy"
+      eyebrow="Govern"
+      subtitle="Control model-learning permissions, approved datasets, source context, and licensing summaries."
+    >
       {!training ? (
         <div className="loadingState">Loading training permissions...</div>
       ) : (

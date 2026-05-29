@@ -45,7 +45,7 @@ function isRouteActive(currentPath, to) {
   return currentPath === routePath(to);
 }
 
-export default function AppShell({ title, eyebrow, children, action }) {
+export default function AppShell({ title, eyebrow, subtitle, children, action }) {
   const { path, navigate } = useNavigation();
   const { state, actions } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -128,6 +128,7 @@ export default function AppShell({ title, eyebrow, children, action }) {
             <div>
               <span className="eyebrow">{eyebrow}</span>
               <h1>{title}</h1>
+              {subtitle ? <p className="topbarSubtitle">{subtitle}</p> : null}
             </div>
           </div>
           <div className="topbarActions">

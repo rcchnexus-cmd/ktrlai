@@ -154,6 +154,7 @@ export default function Dashboard() {
     <AppShell
       title="Operations"
       eyebrow="Monitor"
+      subtitle="Your AI access command center: setup, crawler evidence, access rules, and monetization readiness."
       action={
         <RouteLink to="/visibility" className="primaryButton smallButton">
           Check site
@@ -375,7 +376,7 @@ export default function Dashboard() {
               </div>
             )}
           </section>
-          <section className="dashboardGrid opsTwoColumn">
+          <section className="dashboardGrid governanceOnlyGrid">
             <article className="panel governanceSnapshotPanel">
               <div className="panelHeader">
                 <div>
@@ -404,47 +405,6 @@ export default function Dashboard() {
                   <span>Training-related</span>
                   <strong>{dashboard.botDistribution?.some((item) => /gpt|claude|perplexity|google/i.test(item.label || "")) ? "Detected" : "Watching"}</strong>
                   <em>AI access evidence can inform training policy reviews</em>
-                </div>
-              </div>
-            </article>
-            <article className="panel systemHealthPanel">
-              <div className="panelHeader">
-                <div>
-                  <span className="eyebrow">System health</span>
-                  <h2>Infrastructure state</h2>
-                </div>
-                <StatusBadge status={installHealth.status === "active" ? "Healthy" : "Pending"} />
-              </div>
-              <div className="infraHealthList">
-                <div>
-                  <span>API</span>
-                  <strong>Ready</strong>
-                  <em>Grouped application routes are available</em>
-                </div>
-                <div>
-                  <span>Ingestion</span>
-                  <strong>{installHealth.sdkInstalled ? "Receiving" : "Waiting"}</strong>
-                  <em>Tracker endpoint and payload validation ready</em>
-                </div>
-                <div>
-                  <span>Queue</span>
-                  <strong>Ready</strong>
-                  <em>Background processing foundation available</em>
-                </div>
-                <div>
-                  <span>Redis/rate limits</span>
-                  <strong>Active</strong>
-                  <em>Rate-limit provider is ready for shared enforcement</em>
-                </div>
-                <div>
-                  <span>Analytics rollups</span>
-                  <strong>{dashboard.source === "live" ? "Healthy" : "Ready"}</strong>
-                  <em>Summary analytics are rollup-ready</em>
-                </div>
-                <div>
-                  <span>Notifications</span>
-                  <strong>Ready</strong>
-                  <em>Workspace alerts can be queued safely</em>
                 </div>
               </div>
             </article>

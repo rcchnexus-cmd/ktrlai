@@ -52,7 +52,11 @@ export default function Monetization() {
   };
 
   return (
-    <AppShell title="Licensing Readiness" eyebrow="Govern">
+    <AppShell
+      title="Licensing Readiness"
+      eyebrow="Govern"
+      subtitle="Prepare pricing, payout, and Pay Per Crawl-style commercial workflows without claiming active enforcement."
+    >
       {!monetization ? (
         <div className="loadingState">Loading licensing settings...</div>
       ) : (
@@ -62,15 +66,15 @@ export default function Monetization() {
             <span>{monetization.sourceDetail || "Licensing workflows are separated from live tracker analytics."}</span>
           </section>
           <section className="metricGrid">
-            <MetricCard label="Cleared revenue" value={`$${monetization.clearedRevenue.toLocaleString()}`} change="+18.2%" tone="positive" />
-            <MetricCard label="Pending revenue" value={`$${monetization.pendingRevenue.toLocaleString()}`} change="In review" tone="neutral" />
-            <MetricCard label="Estimated earnings" value={`$${monetization.projectedMonthly.toLocaleString()}`} change="Next 30 days" tone="positive" />
+            <MetricCard label="Modeled cleared value" value={`$${monetization.clearedRevenue.toLocaleString()}`} change="+18.2%" tone="positive" />
+            <MetricCard label="Modeled pending value" value={`$${monetization.pendingRevenue.toLocaleString()}`} change="In review" tone="neutral" />
+            <MetricCard label="Readiness estimate" value={`$${monetization.projectedMonthly.toLocaleString()}`} change="Next 30 days" tone="positive" />
           </section>
           <section className="panel largePanel earningsPanel">
             <div className="panelHeader">
               <div>
-                <span className="eyebrow">Earnings ledger</span>
-                <h2>Content access earnings</h2>
+                <span className="eyebrow">Value ledger</span>
+                <h2>Content access value model</h2>
               </div>
               <button
                 type="button"
@@ -78,7 +82,7 @@ export default function Monetization() {
                 onClick={requestPayout}
                 disabled={requestingPayout || !earnings.availableCents}
               >
-                {requestingPayout ? "Requesting..." : "Request payout"}
+                {requestingPayout ? "Requesting..." : "Request payout review"}
               </button>
             </div>
             <div className="earningsSummary">
@@ -95,7 +99,7 @@ export default function Monetization() {
                 <strong>{formatMoney(earnings.availableCents, earnings.currency)}</strong>
               </article>
             </div>
-            <p className="payoutNotice">Payouts are reviewed before processing.</p>
+            <p className="payoutNotice">Payout requests are beta review workflows before any processing is enabled.</p>
             {payoutMessage && (
               <p className="domainVerificationMessage" role="status">
                 {payoutMessage}
@@ -143,13 +147,13 @@ export default function Monetization() {
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">Paid access</span>
-                  <h2>Revenue controls</h2>
+                  <h2>Pricing model simulator</h2>
                 </div>
               </div>
               <label className="toggleRow">
                 <div>
-                  <strong>Enable paid AI access</strong>
-                  <span>Require commercial terms for approved crawlers and dataset usage.</span>
+                  <strong>Model paid AI access</strong>
+                  <span>Prepare commercial terms for approved crawlers and dataset usage.</span>
                 </div>
                 <input
                   type="checkbox"
@@ -183,12 +187,12 @@ export default function Monetization() {
               <div className="panelHeader">
                 <div>
                   <span className="eyebrow">Deals</span>
-                  <h2>Revenue dashboard</h2>
+                  <h2>Deal and ledger preview</h2>
                 </div>
               </div>
               {monetization.deals.length === 0 ? (
                 <div className="emptyState">
-                  <strong>No monetization deals yet</strong>
+                  <strong>No licensing workflows modeled yet</strong>
                   <p>Enable paid AI access to start modeling crawl, summary, and dataset revenue.</p>
                 </div>
               ) : (

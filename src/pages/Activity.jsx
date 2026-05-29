@@ -67,7 +67,11 @@ export default function Activity() {
   const hasActivityRows = state.activity.length > 0;
 
   return (
-    <AppShell title="Live Stream" eyebrow="Monitor">
+    <AppShell
+      title="Live AI Access Feed"
+      eyebrow="Monitor"
+      subtitle="Timestamped crawler activity across operators, paths, policies, risk, and evidence."
+    >
       <section className="panel liveIngestionPanel">
         <div className="liveIngestionHeader">
           <div>
@@ -130,7 +134,7 @@ export default function Activity() {
         <section className="panel activityStreamPanel">
           <div className="panelHeader">
             <div>
-              <span className="eyebrow">Evidence stream</span>
+              <span className="eyebrow">Crawler Evidence Ledger</span>
               <h2>{filtered.length} access events</h2>
             </div>
           </div>

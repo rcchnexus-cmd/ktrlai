@@ -11108,3 +11108,796 @@ tbody td {
     min-height: 0;
   }
 }
+
+/* Landing strategic polish pass 2: urgency, hierarchy, and section pacing. */
+.n8nSectionIntro .landing-section-title-xl {
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1;
+  letter-spacing: -0.055em;
+}
+
+.n8nSectionIntro .landing-section-title-md {
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+}
+
+.n8nSectionIntro .landing-section-title-sm {
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.n8nWhyNowSection {
+  position: relative;
+  padding: clamp(42px, 6vw, 72px) 0;
+}
+
+.n8nWhyNowSection::before,
+.n8nTrustSetupStrip::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(255,155,38,0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+  border-radius: 28px;
+}
+
+.n8nWhyNowLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(22px, 4vw, 42px);
+  align-items: start;
+}
+
+.n8nWhyNowCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.n8nWhyNowCards article {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-height: 142px;
+  padding: 16px;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(255,59,33,0.13), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,0.064), rgba(255,255,255,0.026)),
+    rgba(27,23,40,0.88);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  box-shadow: 0 18px 54px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.n8nWhyNowCards article > span {
+  width: 10px;
+  height: 10px;
+  background: var(--kt-cta-gradient);
+  border-radius: 999px;
+  box-shadow: 0 0 18px rgba(255,59,33,0.45);
+}
+
+.n8nWhyNowCards strong {
+  color: #ffffff;
+  font-size: 17px;
+  letter-spacing: -0.025em;
+}
+
+.n8nWhyNowCards p {
+  margin: 0;
+  color: var(--kt-text-muted-dark);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.n8nProductProofSection {
+  position: relative;
+}
+
+.n8nProductProofSection::before {
+  position: absolute;
+  inset: 24px -28px auto;
+  z-index: -1;
+  height: 44%;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 72% 20%, rgba(184,61,255,0.1), transparent 38%),
+    linear-gradient(180deg, rgba(14,9,24,0.14), transparent);
+}
+
+.n8nWorkflowSection {
+  position: relative;
+}
+
+.n8nWorkflowSteps {
+  position: relative;
+  gap: 8px;
+}
+
+.n8nWorkflowSteps::before {
+  position: absolute;
+  top: 34px;
+  right: 9%;
+  left: 9%;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(255,155,38,0.62), rgba(255,59,33,0.72), transparent);
+  box-shadow: 0 0 18px rgba(255,59,33,0.2);
+}
+
+.n8nWorkflowSteps article {
+  min-height: 142px;
+  padding: 16px;
+}
+
+.n8nWorkflowSteps article::before {
+  width: 12px;
+  height: 12px;
+  content: "";
+  background: var(--kt-cta-gradient);
+  border: 2px solid rgba(14,9,24,0.94);
+  border-radius: 999px;
+  box-shadow: 0 0 18px rgba(255,59,33,0.42);
+}
+
+.n8nWorkflowSteps article:not(:last-child)::after {
+  top: 34px;
+  right: -8px;
+  width: 8px;
+  opacity: 0.72;
+}
+
+.n8nPolicyExamples {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 14px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.022)),
+    rgba(14,9,24,0.58);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+}
+
+.n8nPolicyExamples > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.n8nPolicyExamples article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  background: rgba(255,255,255,0.052);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+}
+
+.n8nPolicyExamples strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.n8nPolicyExamples em {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  color: #ffcf8a;
+  background: rgba(255,155,38,0.1);
+  border: 1px solid rgba(255,155,38,0.2);
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 820;
+  text-transform: uppercase;
+}
+
+.n8nTrustSetupStrip {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.74fr);
+  gap: 18px;
+  align-items: center;
+  margin: 0 0 clamp(30px, 5vw, 58px);
+  padding: 18px;
+  background:
+    radial-gradient(circle at 8% 20%, rgba(255,155,38,0.12), transparent 30%),
+    rgba(14,9,24,0.48);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+}
+
+.n8nTrustSetupStrip > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.n8nTrustSetupStrip span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  color: #ffffff;
+  background: rgba(255,255,255,0.065);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.n8nTrustSetupStrip p {
+  margin: 0;
+  color: #ffcf8a;
+  font-size: 12.5px;
+  line-height: 1.46;
+}
+
+.n8nControlPreviewSection {
+  background:
+    radial-gradient(circle at 96% 8%, rgba(81,89,217,0.1), transparent 30%),
+    linear-gradient(180deg, transparent, rgba(255,255,255,0.018), transparent);
+  border-radius: 32px;
+}
+
+@media (max-width: 980px) {
+  .n8nWhyNowLayout,
+  .n8nTrustSetupStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .n8nPolicyExamples {
+    grid-template-columns: 1fr;
+  }
+
+  .n8nPolicyExamples > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .n8nWhyNowCards,
+  .n8nPolicyExamples > div {
+    grid-template-columns: 1fr;
+  }
+
+  .n8nWorkflowSteps::before,
+  .n8nWorkflowSteps article:not(:last-child)::after {
+    display: none;
+  }
+
+  .n8nPolicyExamples article {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* Dashboard design alignment: dark KtrlAI control-plane layer. */
+:root {
+  --kt-bg-dark: #080511;
+  --kt-bg-dark-2: #120b1f;
+  --kt-card-dark: rgba(30, 26, 44, 0.82);
+  --kt-card-dark-hover: rgba(47, 39, 64, 0.9);
+  --kt-border-dark: rgba(255, 255, 255, 0.12);
+  --kt-border-dark-strong: rgba(255, 255, 255, 0.2);
+  --kt-text-white: #ffffff;
+  --kt-text-muted-dark: rgba(255, 255, 255, 0.66);
+  --kt-orange: #ff9f1c;
+  --kt-orange-2: #ff6a1a;
+  --kt-red: #ff2d20;
+  --kt-purple-glow: rgba(176, 70, 255, 0.22);
+  --kt-blue-glow: rgba(95, 129, 255, 0.18);
+  --kt-cta-gradient: linear-gradient(135deg, #ff9f1c 0%, #ff5a1f 45%, #ff2415 100%);
+}
+
+.appShell {
+  color-scheme: dark;
+  color: var(--kt-text-white);
+  background:
+    radial-gradient(circle at 12% 4%, rgba(255, 159, 28, 0.15), transparent 30%),
+    radial-gradient(circle at 85% 0%, var(--kt-purple-glow), transparent 34%),
+    radial-gradient(circle at 74% 68%, var(--kt-blue-glow), transparent 40%),
+    linear-gradient(180deg, var(--kt-bg-dark-2) 0%, var(--kt-bg-dark) 54%, #05030b 100%);
+}
+
+.appShell::before {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  content: "";
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.075) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(8, 5, 17, 0) 0%, rgba(8, 5, 17, 0.55) 100%);
+  background-size: 34px 34px, auto;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.14));
+}
+
+.appShell .sidebar,
+.appShell .mainPanel,
+.appShell .topbar,
+.appShell .panel,
+.appShell .metricCard,
+.appShell .providerCard,
+.appShell .liveIngestionPanel,
+.appShell .visibilityHero,
+.appShell .adminHero,
+.appShell .productHint,
+.appShell .setupGuide,
+.appShell .emptyState,
+.appShell .loadingState,
+.appShell .dataModeNotice,
+.appShell .domainVerificationCard,
+.appShell .billingMiniPlan,
+.appShell .teamList article,
+.appShell .policyGrid article,
+.appShell .securityPostureItem,
+.appShell .adminHealthItem,
+.appShell .adminPlanGrid article,
+.appShell .adminEnvGrid div,
+.appShell .adminList div,
+.appShell .adminAuditList div,
+.appShell .earningsSummary article,
+.appShell .payoutRequestList article,
+.appShell .toggleRow,
+.appShell .apiKey,
+.appShell .apiKeyEmptyState,
+.appShell .priceControls label,
+.appShell .accountList span,
+.appShell .detectionInsight,
+.appShell .installChecklistCard,
+.appShell .installSnippetCard,
+.appShell .developerDocs article,
+.appShell .installStep,
+.appShell .domainVerificationMessage {
+  color: var(--kt-text-white);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.028)),
+    var(--kt-card-dark);
+  border-color: var(--kt-border-dark);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.appShell .mainPanel {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  box-shadow: none;
+}
+
+.appShell .sidebar {
+  z-index: 3;
+  background:
+    radial-gradient(circle at 14% 6%, rgba(255, 159, 28, 0.15), transparent 34%),
+    rgba(8, 5, 17, 0.92);
+  border-right: 1px solid var(--kt-border-dark);
+  backdrop-filter: blur(18px);
+}
+
+.appShell .topbar {
+  position: sticky;
+  top: 12px;
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035)),
+    rgba(18, 11, 31, 0.82);
+  border: 1px solid var(--kt-border-dark);
+  backdrop-filter: blur(18px);
+}
+
+.appShell .topbarSubtitle {
+  max-width: min(760px, 70vw);
+  margin: 3px 0 0;
+  color: var(--kt-text-muted-dark);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.appShell h1,
+.appShell h2,
+.appShell h3,
+.appShell strong,
+.appShell .metricCard strong,
+.appShell .providerCard strong,
+.appShell .governanceStatusGrid strong,
+.appShell .adminPlanGrid strong,
+.appShell .adminHealthItem strong,
+.appShell .adminList strong,
+.appShell .adminAuditList strong,
+.appShell .earningsSummary strong,
+.appShell .accountList strong,
+.appShell .securityPostureContent strong {
+  color: var(--kt-text-white);
+}
+
+.appShell p,
+.appShell em,
+.appShell li,
+.appShell .panelHeader p,
+.appShell .panel p,
+.appShell .productHint p,
+.appShell .liveIngestionPanel p,
+.appShell .metricCard em,
+.appShell .providerCard p,
+.appShell .toggleRow span,
+.appShell .teamList span,
+.appShell .policyGrid p,
+.appShell .securityPostureContent p,
+.appShell .adminHealthItem em,
+.appShell .adminAuditList em,
+.appShell .emptyState p,
+.appShell .dataModeNotice span:not(.statusBadge),
+.appShell .accountList span,
+.appShell .keyMeta span {
+  color: var(--kt-text-muted-dark);
+}
+
+.appShell .eyebrow,
+.appShell .panelHeader .eyebrow,
+.appShell .topbar .eyebrow,
+.appShell .filters label,
+.appShell .metricCard span,
+.appShell .providerCard span,
+.appShell .governanceStatusGrid span,
+.appShell .adminPlanGrid span,
+.appShell .adminHealthItem span,
+.appShell .adminEnvGrid span,
+.appShell .adminList span,
+.appShell .adminAuditList span,
+.appShell .opsStatusRail span,
+.appShell .opsCommandCard span,
+.appShell .detectionInsight span {
+  color: rgba(255, 159, 28, 0.86);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.appShell .panel,
+.appShell .metricCard,
+.appShell .providerCard,
+.appShell .liveIngestionPanel,
+.appShell .visibilityHero,
+.appShell .adminHero,
+.appShell .emptyState,
+.appShell .loadingState {
+  border-radius: 20px;
+}
+
+.appShell .panel.largePanel,
+.appShell .largePanel {
+  min-height: 0;
+}
+
+.appShell .dashboardGrid,
+.appShell .metricGrid,
+.appShell .adminSectionGrid,
+.appShell .adminSecurityGrid,
+.appShell .adminGrid,
+.appShell .trainingLayout,
+.appShell .controlLayout,
+.appShell .settingsGrid {
+  align-items: start;
+}
+
+.appShell .governanceOnlyGrid {
+  grid-template-columns: 1fr;
+}
+
+.appShell .governanceOnlyGrid .governanceSnapshotPanel {
+  max-width: none;
+}
+
+.appShell .opsStatusRail article,
+.appShell .opsCommandCard,
+.appShell .dashboardFeatureCard,
+.appShell .trafficScopePanel,
+.appShell .crawlerPolicyPanel,
+.appShell .readinessPanel,
+.appShell .governanceSnapshotPanel {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(255, 45, 32, 0.12), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.03)),
+    rgba(30, 26, 44, 0.86);
+  border: 1px solid var(--kt-border-dark);
+  box-shadow: 0 20px 58px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.appShell .opsCommandCard.primary,
+.appShell .metricCard:hover,
+.appShell .panel:hover,
+.appShell .providerCard:hover,
+.appShell .dashboardFeatureCard:hover {
+  background:
+    radial-gradient(circle at 90% 2%, rgba(255, 45, 32, 0.22), transparent 42%),
+    linear-gradient(180deg, rgba(67, 45, 51, 0.9), rgba(30, 26, 44, 0.9));
+  border-color: rgba(255, 159, 28, 0.3);
+}
+
+.appShell .primaryButton {
+  color: #ffffff;
+  background: var(--kt-cta-gradient);
+  border: 1px solid rgba(255, 159, 28, 0.36);
+  box-shadow: 0 12px 30px rgba(255, 45, 32, 0.2);
+}
+
+.appShell .secondaryButton,
+.appShell .logoutButton,
+.appShell .textLink,
+.appShell .textButton,
+.appShell .installMethodTabs button,
+.appShell .sidebarLink {
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.appShell .secondaryButton:hover,
+.appShell .logoutButton:hover,
+.appShell .textLink:hover,
+.appShell .installMethodTabs button:hover,
+.appShell .installMethodTabs button.active {
+  color: #ffffff;
+  background: rgba(255, 159, 28, 0.12);
+  border-color: rgba(255, 159, 28, 0.28);
+}
+
+.appShell input,
+.appShell select,
+.appShell textarea {
+  color: #ffffff;
+  background: rgba(8, 5, 17, 0.72);
+  border: 1px solid var(--kt-border-dark);
+  box-shadow: none;
+}
+
+.appShell input::placeholder,
+.appShell textarea::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.appShell option {
+  color: #ffffff;
+  background: var(--kt-bg-dark-2);
+}
+
+.appShell pre,
+.appShell code,
+.appShell .installCodeBlock,
+.appShell .apiKeyDisplay code,
+.appShell .apiKey code,
+.appShell .dnsRecordGrid code {
+  color: rgba(255, 255, 255, 0.84);
+  background: rgba(8, 5, 17, 0.72);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.appShell .tableWrap,
+.appShell .compactTableWrap,
+.appShell .eventStreamList,
+.appShell .opsEvidenceStream,
+.appShell .crawlerPolicyTable {
+  max-height: none;
+  overflow: auto;
+  background: rgba(20, 16, 32, 0.88);
+  border: 1px solid var(--kt-border-dark);
+  border-radius: 22px;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.2);
+}
+
+.appShell .chartBox,
+.appShell .distribution,
+.appShell .miniBars {
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(8, 5, 17, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+}
+
+.appShell .chartLabels span,
+.appShell .distributionRow,
+.appShell .miniBar em {
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.appShell .barTrack {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.appShell table {
+  width: 100%;
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+}
+
+.appShell th,
+.appShell .eventStreamHeader,
+.appShell .opsEvidenceHeader,
+.appShell .crawlerPolicyHeader {
+  color: var(--kt-orange);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.appShell td,
+.appShell .eventStreamRow,
+.appShell .opsEvidenceRow,
+.appShell .crawlerPolicyRow {
+  color: rgba(255, 255, 255, 0.78);
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.appShell tr:hover td,
+.appShell .eventStreamRow:hover,
+.appShell .opsEvidenceRow:hover,
+.appShell .crawlerPolicyRow:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.appShell .eventStreamRow strong,
+.appShell .eventStreamRow code,
+.appShell .eventStreamRow em,
+.appShell .opsEvidencePath,
+.appShell .crawlerPolicyRow code {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.appShell .statusBadge,
+.appShell .securityPostureStatus,
+.appShell .readinessTagGrid span,
+.appShell .dashboardFilterRail span {
+  color: #ffcf8a;
+  background: rgba(255, 159, 28, 0.11);
+  border: 1px solid rgba(255, 159, 28, 0.24);
+}
+
+.appShell .statusBadge.allowed,
+.appShell .statusBadge.active,
+.appShell .statusBadge.approved,
+.appShell .statusBadge.confirmed,
+.appShell .statusBadge.ready,
+.appShell .statusBadge.visible,
+.appShell .statusBadge.tracker-active,
+.appShell .statusBadge.detected,
+.appShell .statusBadge.live-data {
+  color: #9af0c7;
+  background: rgba(138, 244, 195, 0.1);
+  border-color: rgba(138, 244, 195, 0.26);
+}
+
+.appShell .statusBadge.blocked,
+.appShell .statusBadge.rejected,
+.appShell .statusBadge.failed,
+.appShell .statusBadge.missing,
+.appShell .statusBadge.payouts-disabled,
+.appShell .statusBadge.training-denied {
+  color: #ff9a8d;
+  background: rgba(255, 45, 32, 0.12);
+  border-color: rgba(255, 45, 32, 0.28);
+}
+
+.appShell .emptyState {
+  min-height: 0;
+  max-height: none;
+  padding: 18px;
+}
+
+.appShell .emptyState.compact {
+  padding: 14px;
+}
+
+.appShell .activityStreamPanel .emptyState,
+.appShell .tableWrap + .emptyState {
+  max-height: 240px;
+}
+
+.appShell .filters {
+  background: rgba(20, 16, 32, 0.72);
+  border: 1px solid var(--kt-border-dark);
+  border-radius: 18px;
+}
+
+.appShell .domainVerificationMessage.error,
+.appShell .billingWarningBanner,
+.appShell .securityWarning,
+.appShell .adminWarning {
+  color: #ffb0a7;
+  background: rgba(255, 45, 32, 0.1);
+  border-color: rgba(255, 45, 32, 0.3);
+}
+
+.appShell .adminHealthItem.ready {
+  border-color: rgba(138, 244, 195, 0.26);
+}
+
+.appShell .adminHealthItem.attention {
+  border-color: rgba(255, 159, 28, 0.28);
+}
+
+.appShell .sidebarBrand .logoIcon {
+  background:
+    linear-gradient(var(--kt-card-dark), var(--kt-card-dark)) padding-box,
+    var(--kt-cta-gradient) border-box;
+  border: 1px solid transparent;
+}
+
+.appShell .sidebarBrand .logoWord strong,
+.appShell .sidebarBrand .logoWord em,
+.appShell .sidebarFooter strong {
+  color: #ffffff;
+}
+
+.appShell .sidebarLink.active {
+  color: #ffffff;
+  background:
+    linear-gradient(90deg, rgba(255, 159, 28, 0.18), rgba(255, 45, 32, 0.09)),
+    rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 159, 28, 0.32);
+  box-shadow: inset 3px 0 0 var(--kt-orange), 0 12px 32px rgba(255, 45, 32, 0.12);
+}
+
+.appShell .settingsConfigRail {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03)),
+    rgba(18, 11, 31, 0.84);
+  border: 1px solid var(--kt-border-dark);
+  border-radius: 20px;
+}
+
+.appShell .settingsConfigRail a {
+  color: rgba(255, 255, 255, 0.78);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.appShell .settingsConfigRail a:hover {
+  color: #ffffff;
+  background: rgba(255, 159, 28, 0.09);
+}
+
+@media (max-width: 900px) {
+  .appShell .topbarSubtitle {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .appShell .topbar {
+    position: relative;
+    top: 0;
+  }
+
+  .appShell .topbarActions {
+    align-items: stretch;
+  }
+
+  .appShell .topbarActions > *,
+  .appShell .topbarActions .smallButton {
+    width: 100%;
+  }
+}

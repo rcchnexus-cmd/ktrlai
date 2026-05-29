@@ -26,7 +26,11 @@ export default function Analytics() {
   const suspiciousInsight = analytics?.detectionInsights?.find((insight) => /suspicious|scrap/i.test(`${insight.label} ${insight.detail}`));
 
   return (
-    <AppShell title="Traffic Intelligence" eyebrow="Monitor">
+    <AppShell
+      title="Traffic Intelligence"
+      eyebrow="Monitor"
+      subtitle="Understand AI request volume, top operators, source mix, suspicious pressure, and high-impact paths."
+    >
       {analyticsError ? (
         <div className="emptyState">
           <strong>Analytics could not be loaded</strong>

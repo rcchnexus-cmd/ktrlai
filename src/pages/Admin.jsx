@@ -41,6 +41,26 @@ function statusLabel(value) {
   return String(value || "unknown").replace(/_/g, " ");
 }
 
+function formatAdminMessage(value, fallback = "Some admin datasets could not be loaded. Check network logs or admin API permissions.") {
+  if (!value) {
+    return fallback;
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (typeof value.message === "string") {
+    return value.message;
+  }
+
+  if (typeof value.error === "string") {
+    return value.error;
+  }
+
+  return fallback;
+}
+
 function HealthItem({ label, enabled, detail, statusText }) {
   return (
     <article className={enabled ? "adminHealthItem ready" : "adminHealthItem attention"}>
@@ -70,7 +90,7 @@ export default function Admin() {
     } catch (error) {
       if (isMountedRef.current) {
         setStatus(error.status === 401 || error.status === 403 ? "denied" : "error");
-        setMessage(error.message || "Admin data could not be loaded.");
+        setMessage(formatAdminMessage(error, "Admin data could not be loaded. Check network logs or admin API permissions."));
       }
     }
   }, []);
@@ -113,7 +133,7 @@ export default function Admin() {
 
   if (status === "loading") {
     return (
-      <AppShell title="Infrastructure" eyebrow="Platform">
+      <AppShell title="Platform Infrastructure" eyebrow="Platform">
         <div className="loadingState">Loading platform controls...</div>
       </AppShell>
     );
@@ -132,7 +152,7 @@ export default function Admin() {
 
   if (status === "error") {
     return (
-      <AppShell title="Infrastructure unavailable" eyebrow="Platform">
+      <AppShell title="Platform Infrastructure unavailable" eyebrow="Platform">
         <div className="emptyState">
           <strong>Admin controls could not be loaded</strong>
           <p>{message}</p>
@@ -162,7 +182,11 @@ export default function Admin() {
   const rollups = platformAnalytics.rollups || {};
 
   return (
-      <AppShell title="Infrastructure" eyebrow="Platform">
+      <AppShell
+        title="Platform Infrastructure"
+        eyebrow="Platform"
+        subtitle="Operator-only view for platform health, datasets, queues, abuse controls, jobs, security, and growth."
+      >
       <section className="adminHero panel">
         <div>
           <span className="eyebrow">Operator console</span>
@@ -180,7 +204,9 @@ export default function Admin() {
 
       {summary.warnings?.length ? (
         <section className="domainVerificationMessage error adminWarning" role="status">
-          Some admin datasets could not be loaded: {summary.warnings.slice(0, 3).join(" | ")}
+          Some admin datasets could not be loaded.{" "}
+          {summary.warnings.slice(0, 3).map((warning) => formatAdminMessage(warning, "")).filter(Boolean).join(" | ") ||
+            "Check network logs or admin API permissions."}
         </section>
       ) : null}
 

@@ -82,7 +82,11 @@ export default function ControlCenter() {
   };
 
   return (
-    <AppShell title="Governance" eyebrow="Control Plane">
+    <AppShell
+      title="Access Governance"
+      eyebrow="Control Plane"
+      subtitle="Define crawler access rules for monitoring, restriction, citation, training, and charge-ready workflows."
+    >
       {state.errors.controls ? (
         <div className="emptyState">
           <strong>Governance policies could not be loaded</strong>

@@ -2,29 +2,50 @@ import Logo from "../components/Logo.jsx";
 import { RouteLink } from "../navigation.jsx";
 
 const proofCards = [
-  ["Evidence stream", "Timestamped crawler access with operator, path, action, and policy context.", "12:04 /pricing monitor"],
-  ["Policy engine", "Map AI operators to monitor, restrict, block-ready, or charge-ready workflows.", "18 active policies"],
+  ["Crawler ledger", "Timestamped access with operator, path, action, and context.", "12:04 /pricing monitor"],
+  ["Access rules", "Map AI operators to monitor, restrict, block-ready, or charge-ready workflows.", "18 active rules"],
   ["Operator intelligence", "Group activity by OpenAI, Perplexity, Anthropic, Google, and unknown scrapers.", "4 top operators"],
-  ["Traffic intelligence", "Summarize AI share, suspicious pressure, top paths, and governance outcomes.", "128k AI requests"],
-  ["Licensing readiness", "Keep evidence trails that support future commercial AI access discussions.", "3.8k governed paths"],
-  ["Audit trail", "Record policy updates, workspace changes, API key events, and security activity.", "7d activity log"]
+  ["Traffic analysis", "Summarize AI share, suspicious pressure, top paths, and outcomes.", "128k AI requests"],
+  ["Licensing prep", "Keep access trails that support future commercial AI discussions.", "3.8k paths tracked"],
+  ["Audit trail", "Record workspace changes, API key events, and security activity.", "7d activity log"]
 ];
 
 const crawlControlFeatures = [
   ["Get started with KtrlAI", "Add a domain, generate a key, install the tracker, and confirm first crawler evidence.", "Setup workflow"],
   ["Monitor AI crawler activity", "Track AI requests, suspicious signals, top operators, and accessed paths.", "Traffic intelligence"],
-  ["Manage AI crawlers", "Assign allow, monitor, restrict, or charge-ready states by crawler and operator.", "Governance policies"],
+  ["Manage AI crawlers", "Assign allow, monitor, restrict, or charge-ready states by crawler and operator.", "Crawler controls"],
   ["Prepare monetization", "Model Pay Per Crawl-style readiness with pricing rules and payout checks.", "Beta readiness"],
   ["Configure directives", "Document robots.txt and llms.txt readiness while policies drive KtrlAI metadata.", "Agent resources"],
   ["Reference-ready platform", "Keep API, webhook, bot/operator, and install references close to operations.", "Developer tools"]
 ];
 
+const whyNowCards = [
+  ["AI visibility", "Understand which AI systems access your content."],
+  ["Governance readiness", "Prepare operational policy workflows for AI access."],
+  ["Evidence infrastructure", "Maintain audit-ready records of crawler activity."],
+  ["Monetization readiness", "Prepare future licensing and commercial AI workflows."]
+];
+
 const workflowSteps = [
   ["01", "Detect request", "Capture crawler activity from verified sites."],
   ["02", "Identify operator", "Classify known AI systems and suspicious clients."],
-  ["03", "Apply policy", "Attach allow, monitor, restrict, or charge-ready context."],
-  ["04", "Record evidence", "Store an operational record for analytics and audit."],
-  ["05", "Prepare licensing", "Use governed evidence to support future commercial workflows."]
+  ["03", "Apply rule", "Attach allow, monitor, restrict, or charge-ready context."],
+  ["04", "Record event", "Store an operational record for analytics and audit."],
+  ["05", "Prepare terms", "Use access records to support future commercial workflows."]
+];
+
+const policyExamples = [
+  ["Training access", "Restrict"],
+  ["Citation access", "Allow"],
+  ["Premium docs", "Monitor"],
+  ["API ingestion", "Review"]
+];
+
+const trustSetupDetails = [
+  "Setup in minutes",
+  "Metadata-first tracking",
+  "Audit-ready logs",
+  "Workflow metadata today"
 ];
 
 const planTiers = [
@@ -40,7 +61,7 @@ const planTiers = [
   ],
   [
     "Enterprise",
-    "Govern AI access with team, audit, and integration readiness.",
+    "Run team access, audit, and integration workflows.",
     ["Advanced detection", "API access", "Team governance", "Audit exports", "Enforcement integrations readiness"]
   ]
 ];
@@ -48,7 +69,7 @@ const planTiers = [
 const useCases = [
   ["Publishers", "Control AI crawler access to articles, archives, and premium pages."],
   ["SEO teams", "Track AI visibility and understand crawler behavior across content."],
-  ["SaaS teams", "Govern docs, changelog, and developer content ingestion."],
+  ["SaaS teams", "Manage docs, changelog, and developer content ingestion."],
   ["Enterprise teams", "Audit AI access across domains, policies, and workspaces."]
 ];
 
@@ -146,13 +167,38 @@ function UseCaseRail() {
   );
 }
 
+function WhyNowSection() {
+  return (
+    <section className="n8nSection n8nWhyNowSection" aria-label="Why KtrlAI matters now">
+      <div className="n8nWhyNowLayout">
+        <div className="n8nSectionIntro">
+          <span className="n8nEyebrow">Why this matters now</span>
+          <h2 className="landing-section-title-md">AI systems are already accessing the open web.</h2>
+          <p>
+            KtrlAI helps website owners understand AI crawler activity, preserve evidence, and prepare governance workflows before AI access becomes standard commercial infrastructure.
+          </p>
+        </div>
+        <div className="n8nWhyNowCards">
+          {whyNowCards.map(([title, body]) => (
+            <article key={title}>
+              <span aria-hidden="true" />
+              <strong>{title}</strong>
+              <p>{body}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CapabilityGrid() {
   return (
     <section className="n8nSection n8nCapabilitySection" id="capabilities">
       <div className="n8nSectionIntro">
         <span className="n8nEyebrow">Crawler control scope</span>
-        <h2>From crawler visibility to governance readiness.</h2>
-        <p>KtrlAI organizes setup, traffic intelligence, crawler management, directives, and future monetization workflows in one control plane.</p>
+        <h2 className="landing-section-title-md">From crawler visibility to operating workflows.</h2>
+        <p>KtrlAI organizes setup, traffic analysis, crawler management, directives, and future monetization workflows in one control plane.</p>
       </div>
       <div className="n8nCapabilityGrid">
         {crawlControlFeatures.map(([title, body, badge]) => (
@@ -163,6 +209,35 @@ function CapabilityGrid() {
           </article>
         ))}
       </div>
+    </section>
+  );
+}
+
+function PolicyExamples() {
+  return (
+    <div className="n8nPolicyExamples" aria-label="Governance policy examples">
+      <span className="n8nEyebrow">Policy examples</span>
+      <div>
+        {policyExamples.map(([label, action]) => (
+          <article key={label}>
+            <strong>{label}</strong>
+            <em>{action}</em>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TrustSetupStrip() {
+  return (
+    <section className="n8nTrustSetupStrip" aria-label="KtrlAI setup and enforcement clarity">
+      <div>
+        {trustSetupDetails.map((item) => (
+          <span key={item}>{item}</span>
+        ))}
+      </div>
+      <p>Network-level blocking is not enabled yet. Policies currently drive visibility, workflow, and tracker metadata.</p>
     </section>
   );
 }
@@ -232,7 +307,7 @@ function PlanComparison() {
     <section className="n8nSection n8nPlanSection" aria-label="KtrlAI plan comparison">
       <div className="n8nSectionIntro">
         <span className="n8nEyebrow">Plan paths</span>
-        <h2>Start with visibility. Expand into governance.</h2>
+        <h2 className="landing-section-title-sm">Start with visibility. Expand into controls.</h2>
         <p>Plan language stays honest: network-level blocking and Pay Per Crawl monetization are readiness workflows, not active enforcement claims.</p>
       </div>
       <div className="n8nPlanGrid">
@@ -266,7 +341,7 @@ export default function Landing() {
                 AI access workflows you can <span>see and control.</span>
               </h1>
               <p>
-                Monitor AI crawlers, route policy decisions, and govern how AI systems interact with your website.
+                Monitor AI crawlers, route access decisions, and manage how AI systems interact with your website.
               </p>
               <div className="n8nHeroTelemetry" aria-label="Live KtrlAI telemetry">
                 <span>
@@ -293,15 +368,17 @@ export default function Landing() {
         <div className="n8nLandingContainer">
           <UseCaseRail />
 
+          <WhyNowSection />
+
           <section className="n8nSection n8nProductProofSection" id="product">
             <div className="n8nSectionIntro">
               <span className="n8nEyebrow">Product proof</span>
-              <h2>Govern AI access with operational evidence.</h2>
-              <p>Every crawler signal becomes policy context, analytics, and audit-ready workflow data.</p>
+              <h2 className="landing-section-title-xl">Turn crawler signals into operating data.</h2>
+              <p>Every request becomes analytics, access context, and audit-ready workflow data.</p>
             </div>
             <div className="n8nProofGrid">
               {proofCards.map(([title, body, detail]) => (
-                <article className={/Evidence stream|Policy engine/.test(title) ? "primaryProof" : ""} key={title}>
+                <article className={/Crawler ledger|Access rules/.test(title) ? "primaryProof" : ""} key={title}>
                   <span>{title}</span>
                   <strong>{detail}</strong>
                   <p>{body}</p>
@@ -315,7 +392,7 @@ export default function Landing() {
           <section className="n8nSection n8nWorkflowSection" id="governance">
             <div className="n8nSectionIntro">
               <span className="n8nEyebrow">Workflow</span>
-              <h2>From crawler signal to governance action.</h2>
+              <h2 className="landing-section-title-md">From crawler signal to access decision.</h2>
             </div>
             <div className="n8nWorkflowSteps">
               {workflowSteps.map(([step, title, body]) => (
@@ -326,13 +403,16 @@ export default function Landing() {
                 </article>
               ))}
             </div>
+            <PolicyExamples />
           </section>
+
+          <TrustSetupStrip />
 
           <section className="n8nSection n8nControlPreviewSection">
             <div className="n8nSectionIntro">
               <span className="n8nEyebrow">Control plane</span>
-              <h2>Evidence, policy, and system health in one dashboard.</h2>
-              <p>Designed for teams that need to understand AI traffic before they can govern or commercialize it.</p>
+              <h2 className="landing-section-title-md">Access records, rules, and system health in one dashboard.</h2>
+              <p>Designed for teams that need to understand AI traffic before they can manage or commercialize it.</p>
             </div>
             <DashboardPreview />
           </section>
@@ -343,7 +423,7 @@ export default function Landing() {
             <div className="n8nFinalCtaCopy">
               <span className="n8nEyebrow">Private beta</span>
               <h2>Start governing AI access.</h2>
-              <p>Install the tracker, validate AI crawler activity, and prepare your content operations for governed access.</p>
+              <p>Install the tracker, validate crawler activity, and prepare your content operations for managed AI access.</p>
               <div>
                 <RouteLink to="/signup" className="n8nGradientButton large">
                   Get Started

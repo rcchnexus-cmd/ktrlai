@@ -14,7 +14,11 @@ export default function Visibility() {
   const result = state.visibility;
 
   return (
-    <AppShell title="Visibility" eyebrow="Monitor">
+    <AppShell
+      title="AI Visibility"
+      eyebrow="Monitor"
+      subtitle="Check how your content may be discovered, cited, or accessed by AI systems."
+    >
       <section className="panel visibilityHero">
         <div>
           <span className="eyebrow">Check visibility</span>
