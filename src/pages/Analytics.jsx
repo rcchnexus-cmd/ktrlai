@@ -1,6 +1,10 @@
 import { useEffect } from "react";
 import AppShell from "../components/AppShell.jsx";
 import { DistributionChart, MiniBars, TrafficChart } from "../components/Charts.jsx";
+import {
+  AIAccessDecisions,
+  AIOperatorIntelligence
+} from "../components/SignatureWidgets.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
 import { RouteLink } from "../navigation.jsx";
@@ -24,12 +28,13 @@ export default function Analytics() {
   const topPage = analytics?.topPages?.[0]?.page || "No path yet";
   const governedBreakdown = analytics?.detectionInsights?.find((insight) => /blocked|allowed|governed|policy/i.test(insight.label));
   const suspiciousInsight = analytics?.detectionInsights?.find((insight) => /suspicious|scrap/i.test(`${insight.label} ${insight.detail}`));
+  const visibilityTrend = analytics?.trend?.length ? analytics.trend[analytics.trend.length - 1]?.value || 0 : 0;
 
   return (
     <AppShell
       title="Traffic Intelligence"
-      eyebrow="Monitor"
-      subtitle="Understand AI request volume, top operators, source mix, suspicious pressure, and high-impact paths."
+      eyebrow="Analytics"
+      subtitle="Measure operator intelligence, access trends, governance outcomes, visibility growth, and licensing readiness."
     >
       {analyticsError ? (
         <div className="emptyState">
@@ -48,13 +53,42 @@ export default function Analytics() {
         <div className="loadingState">Loading analytics...</div>
       ) : (
         <>
+          <section className="commandHero analyticsCommandHero" aria-label="AI traffic intelligence command summary">
+            <div className="commandHeroCopy">
+              <span className="eyebrow">AI traffic intelligence</span>
+              <h2>Operator demand, visibility lift, and policy outcomes.</h2>
+              <p>Connect request volume with top operators, high-impact paths, suspicious pressure, and governance decisions.</p>
+            </div>
+            <div className="commandHeroMetrics">
+              <article>
+                <span>Access trends</span>
+                <strong>{totalEvents}</strong>
+                <em>Requests in window</em>
+              </article>
+              <article>
+                <span>Top operator</span>
+                <strong>{topOperator}</strong>
+                <em>{topOperatorCount || 0} observed</em>
+              </article>
+              <article>
+                <span>Visibility growth</span>
+                <strong>{visibilityTrend}</strong>
+                <em>Latest period</em>
+              </article>
+              <article>
+                <span>Governance outcomes</span>
+                <strong>{governedBreakdown?.value ?? "0"}</strong>
+                <em>Policy signals</em>
+              </article>
+            </div>
+          </section>
           <section className={`dataModeNotice ${analytics.source || "empty"}`} aria-label="Analytics data status">
             <StatusBadge status={dataLabel} />
             <span>{dataDetail}</span>
           </section>
           <section className="opsCommandGrid trafficIntelGrid" aria-label="Traffic intelligence summary">
             <article className="opsCommandCard primary">
-              <span>Total requests</span>
+              <span>AI retrieval requests</span>
               <strong>{totalEvents}</strong>
               <p>Events in the current analysis window.</p>
             </article>
@@ -64,7 +98,7 @@ export default function Analytics() {
               <p>{topOperatorCount ? `${topOperatorCount} requests observed.` : "Operators appear after live events."}</p>
             </article>
             <article className="opsCommandCard">
-              <span>Suspicious activity</span>
+              <span>Suspicious pressure</span>
               <strong>{suspiciousInsight?.value ?? "0"}</strong>
               <p>{suspiciousInsight?.detail || "Crawler pressure and scraping signals are tracked here."}</p>
             </article>
@@ -85,6 +119,34 @@ export default function Analytics() {
               ))}
             </section>
           ) : null}
+          <section className="insightNarrativeGrid" aria-label="Traffic intelligence insights">
+            <AIOperatorIntelligence
+              operator={topOperator}
+              trustLevel={(suspiciousInsight?.value || 0) ? "Review" : "Observed"}
+              activity={topOperatorCount ? `${topOperatorCount} requests` : "Awaiting live volume"}
+              permission="Traffic intelligence"
+              detail={topOperatorCount ? `${topOperator} is the strongest observed AI operator in this window.` : "Operator intelligence begins after live tracker events arrive."}
+              operators={(analytics.topDetectedAiSystems || []).map((item) => item.name)}
+            />
+            <AIAccessDecisions
+              allowed={totalEvents}
+              denied={suspiciousInsight?.value ?? 0}
+              training={0}
+              licensing={0}
+              review={governedBreakdown?.value ?? 0}
+              detail="Traffic intelligence groups observed requests with suspicious pressure and policy outcomes."
+            />
+            <article className="signatureWidget">
+              <span className="eyebrow">Needs attention</span>
+              <h2>{suspiciousInsight?.value ?? "0"} signals</h2>
+              <p>{suspiciousInsight?.detail || "Suspicious pressure and scraping patterns will surface here."}</p>
+            </article>
+            <article className="signatureWidget">
+              <span className="eyebrow">Value created</span>
+              <h2>{topPage}</h2>
+              <p>High-impact content paths become evidence for governance and licensing readiness.</p>
+            </article>
+          </section>
           <section className="dashboardGrid">
             <article className="panel largePanel">
               <div className="panelHeader">
@@ -157,7 +219,7 @@ export default function Analytics() {
                       <tr>
                         <th>Page</th>
                         <th>Visits</th>
-                        <th>Revenue</th>
+                        <th>Modeled value</th>
                       </tr>
                     </thead>
                     <tbody>

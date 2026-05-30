@@ -1,4 +1,15 @@
+const chartPalette = ["#f59e0b", "#f97316", "#dc2626", "#8b5cf6", "#6366f1"];
+
 export function TrafficChart({ data = [] }) {
+  if (!data.length) {
+    return (
+      <div className="chartBox emptyChart">
+        <strong>Waiting for live tracker events</strong>
+        <p>Install the tracker or open your connected site to begin recording AI access evidence.</p>
+      </div>
+    );
+  }
+
   const max = Math.max(...data.map((item) => item.value), 1);
   const points = data
     .map((item, index) => {
@@ -30,16 +41,25 @@ export function TrafficChart({ data = [] }) {
 }
 
 export function DistributionChart({ data = [] }) {
+  if (!data.length) {
+    return (
+      <div className="distribution emptyChart">
+        <strong>Waiting for operator signals</strong>
+        <p>Operator share appears after KtrlAI receives AI access events.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="distribution">
       {data.map((item) => (
         <div className="distributionRow" key={item.label}>
           <div>
-            <span style={{ background: item.color }} />
+            <span style={{ background: chartPalette[data.indexOf(item) % chartPalette.length] }} />
             {item.label}
           </div>
           <div className="barTrack" aria-label={`${item.label} ${item.value}%`}>
-            <span style={{ width: `${item.value}%`, background: item.color }} />
+            <span style={{ width: `${item.value}%`, background: chartPalette[data.indexOf(item) % chartPalette.length] }} />
           </div>
           <strong>{item.value}%</strong>
         </div>
@@ -49,13 +69,22 @@ export function DistributionChart({ data = [] }) {
 }
 
 export function MiniBars({ data = [] }) {
+  if (!data.length) {
+    return (
+      <div className="miniBars emptyChart">
+        <strong>Waiting for request volume</strong>
+        <p>Frequency bars appear after live or sample traffic is available.</p>
+      </div>
+    );
+  }
+
   const max = Math.max(...data.map((item) => item.value), 1);
 
   return (
     <div className="miniBars">
       {data.map((item) => (
         <div key={item.label} className="miniBar">
-          <span style={{ height: `${Math.max((item.value / max) * 100, 8)}%` }} />
+          <span style={{ height: `${Math.max((item.value / max) * 100, 8)}%`, background: chartPalette[data.indexOf(item) % chartPalette.length] }} />
           <em>{item.label}</em>
         </div>
       ))}

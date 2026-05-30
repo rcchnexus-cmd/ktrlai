@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AppShell from "../components/AppShell.jsx";
+import { AIVisibilityScore } from "../components/SignatureWidgets.jsx";
 import { useApp } from "../context/AppContext.jsx";
 import { RouteLink } from "../navigation.jsx";
 
@@ -12,13 +13,46 @@ export default function Visibility() {
   };
 
   const result = state.visibility;
+  const visibilityScore = result?.score ?? "Pending";
+  const discoverableAssets = result?.suggestedQueries?.length || 0;
+  const aiReadyAssets = result?.providers?.filter((provider) => Number(provider.score || 0) >= 70).length || 0;
+  const directiveCoverage = result ? "Review ready" : "Not scanned";
 
   return (
     <AppShell
-      title="AI Visibility"
-      eyebrow="Monitor"
-      subtitle="Check how your content may be discovered, cited, or accessed by AI systems."
+      title="AI Discoverability"
+      eyebrow="Visibility"
+      subtitle="Inspect citation readiness, crawler reach, structured content health, and AI readiness signals."
     >
+      <section className="commandHero visibilityCommandHero" aria-label="AI visibility command summary">
+        <div className="commandHeroCopy">
+          <span className="eyebrow">AI discoverability intelligence</span>
+          <h2>Measure how ready your assets are for AI retrieval.</h2>
+          <p>Score discoverability, directives, structured content health, and citation readiness before tuning access rules.</p>
+        </div>
+        <div className="commandHeroMetrics visibilityScoreMetrics">
+          <article className="visibilityScoreHero">
+            <span>Visibility score</span>
+            <strong>{visibilityScore}{typeof visibilityScore === "number" ? "%" : ""}</strong>
+            <em>{result?.lastChecked || "Run a scan"}</em>
+          </article>
+          <article>
+            <span>Discoverable assets</span>
+            <strong>{discoverableAssets}</strong>
+            <em>Query signals</em>
+          </article>
+          <article>
+            <span>AI ready assets</span>
+            <strong>{aiReadyAssets}</strong>
+            <em>Provider scores above 70</em>
+          </article>
+          <article>
+            <span>Directive coverage</span>
+            <strong>{directiveCoverage}</strong>
+            <em>robots + llms.txt posture</em>
+          </article>
+        </div>
+      </section>
       <section className="panel visibilityHero">
         <div>
           <span className="eyebrow">Check visibility</span>
@@ -46,6 +80,15 @@ export default function Visibility() {
             <span>{result.sourceLabel || "Visibility preview"}</span>
             <span>{result.sourceDetail || "Visibility guidance is separated from live tracker analytics."}</span>
           </section>
+          <section className="signatureWidgetGrid visibilitySignatureGrid" aria-label="AI visibility score">
+            <AIVisibilityScore
+              score={result.score}
+              discoverableAssets={discoverableAssets}
+              directiveCoverage={directiveCoverage}
+              aiReadiness={`${aiReadyAssets} ready providers`}
+              detail="Visibility intelligence connects discoverability, provider checks, directives, and structured content signals."
+            />
+          </section>
           <section className="metricGrid">
             <article className="metricCard">
               <span>Visibility score</span>
@@ -56,6 +99,23 @@ export default function Visibility() {
               <span>Domain</span>
               <strong>{result.url}</strong>
               <em className="metricChange neutral">Analyzed</em>
+            </article>
+          </section>
+          <section className="visibilityReadinessGrid" aria-label="AI discoverability readiness">
+            <article className="app-dark-card">
+              <span>Directives status</span>
+              <strong>robots.txt review</strong>
+              <p>Use tracker evidence before changing public crawler instructions.</p>
+            </article>
+            <article className="app-dark-card">
+              <span>llms.txt readiness</span>
+              <strong>Documentation-ready</strong>
+              <p>Prepare machine-readable guidance for approved agent access.</p>
+            </article>
+            <article className="app-dark-card">
+              <span>Discoverable pages</span>
+              <strong>{result.suggestedQueries?.length || 0} signals</strong>
+              <p>Content structure and query patterns inform AI visibility checks.</p>
             </article>
           </section>
           <section className="providerGrid">

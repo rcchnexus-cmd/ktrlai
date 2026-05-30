@@ -133,7 +133,7 @@ export default function Admin() {
 
   if (status === "loading") {
     return (
-      <AppShell title="Platform Infrastructure" eyebrow="Platform">
+      <AppShell title="Platform Infrastructure" eyebrow="Admin">
         <div className="loadingState">Loading platform controls...</div>
       </AppShell>
     );
@@ -141,7 +141,7 @@ export default function Admin() {
 
   if (status === "denied") {
     return (
-      <AppShell title="Access denied" eyebrow="Platform">
+      <AppShell title="Access denied" eyebrow="Admin">
         <div className="emptyState">
           <strong>Access denied</strong>
           <p>{message || "This area is limited to KtrlAI platform administrators."}</p>
@@ -152,7 +152,7 @@ export default function Admin() {
 
   if (status === "error") {
     return (
-      <AppShell title="Platform Infrastructure unavailable" eyebrow="Platform">
+      <AppShell title="Platform Infrastructure unavailable" eyebrow="Admin">
         <div className="emptyState">
           <strong>Admin controls could not be loaded</strong>
           <p>{message}</p>
@@ -180,20 +180,44 @@ export default function Admin() {
   const notifications = summary.notifications || {};
   const jobs = summary.jobs || {};
   const rollups = platformAnalytics.rollups || {};
+  const environmentReadyCount = Object.values(requiredEnv).filter(Boolean).length;
+  const environmentTotalCount = Math.max(Object.keys(requiredEnv).length, 1);
+  const failedJobCount = jobs.failedJobs?.length || jobs.failed || 0;
 
   return (
       <AppShell
         title="Platform Infrastructure"
-        eyebrow="Platform"
+        eyebrow="Admin"
         subtitle="Operator-only view for platform health, datasets, queues, abuse controls, jobs, security, and growth."
       >
-      <section className="adminHero panel">
-        <div>
-          <span className="eyebrow">Operator console</span>
+      <section className="commandHero adminCommandHero" aria-label="Platform operations command summary">
+        <div className="commandHeroCopy">
+          <span className="eyebrow">Platform operations center</span>
           <h2>KtrlAI infrastructure operations</h2>
-          <p>Monitor health, ingestion, queues, rate limits, rollups, billing, audit activity, and workspace risk.</p>
+          <p>Monitor ingestion, queue health, rate limits, rollups, billing state, audit activity, and workspace risk.</p>
         </div>
-        <StatusBadge status={health.payoutsEnabled ? "Payouts enabled" : "Payouts disabled"} />
+        <div className="commandHeroMetrics">
+          <article>
+            <span>Events ingested</span>
+            <strong>{summary.overview?.eventsIngested || 0}</strong>
+            <em>All time</em>
+          </article>
+          <article>
+            <span>Queue health</span>
+            <strong>{failedJobCount ? "Attention" : "Ready"}</strong>
+            <em>{failedJobCount} failed jobs</em>
+          </article>
+          <article>
+            <span>Environment</span>
+            <strong>{environmentReadyCount}/{environmentTotalCount}</strong>
+            <em>Required vars ready</em>
+          </article>
+          <article>
+            <span>Security</span>
+            <strong>{(security.suspiciousWorkspaces || []).length}</strong>
+            <em>Workspace signals</em>
+          </article>
+        </div>
       </section>
 
       <section className="metricGrid adminMetricGrid">

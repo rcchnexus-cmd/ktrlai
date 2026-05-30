@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import AppShell from "../components/AppShell.jsx";
+import {
+  AIAccessDecisions,
+  GovernanceCoverage
+} from "../components/SignatureWidgets.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
 import { accessToPolicyType, normalizeGovernanceBotScope } from "../governance/governanceControls.js";
@@ -23,7 +27,11 @@ export default function ControlCenter() {
   const activePolicyCount = controls?.rules?.filter((rule) => rule.enabled).length || 0;
   const monitoredCount = policyRows.filter((policy) => policy.policyType === "monitor").length;
   const restrictedCount = policyRows.filter((policy) => ["restrict", "block"].includes(policy.policyType)).length;
+  const trainingRuleCount = policyRows.filter((policy) => /training|learn|dataset/i.test(`${policy.notes || ""} ${policy.detail || ""}`)).length;
+  const chargeReadyCount = policyRows.filter((policy) => /charge|paid|licens/i.test(`${policy.notes || ""} ${policy.detail || ""} ${policy.policyType || ""}`)).length;
   const canManagePolicies = controls?.permissions?.canManageOperations !== false;
+  const totalPolicySurface = Math.max(policyRows.length + (controls?.rules?.length || 0), 1);
+  const governanceCoverage = controls ? Math.min(96, Math.round(((activePolicyCount + policyRows.length) / totalPolicySurface) * 100)) : 0;
 
   const savePolicy = async ({ botScope, policyType, notes }) => {
     const normalizedScope = normalizeGovernanceBotScope(botScope);
@@ -84,7 +92,7 @@ export default function ControlCenter() {
   return (
     <AppShell
       title="Access Governance"
-      eyebrow="Control Plane"
+      eyebrow="Governance"
       subtitle="Define crawler access rules for monitoring, restriction, citation, training, and charge-ready workflows."
     >
       {state.errors.controls ? (
@@ -101,9 +109,65 @@ export default function ControlCenter() {
         <div className="loadingState">Loading control policies...</div>
       ) : (
         <>
+        <section className="commandHero governanceCommandHero" aria-label="AI access governance command summary">
+          <div className="commandHeroCopy">
+            <span className="eyebrow">AI access governance</span>
+            <h2>Policy coverage for operators, assets, training, and charge-ready workflows.</h2>
+            <p>Define how crawler activity is monitored, restricted, reviewed, and preserved as tracker metadata.</p>
+          </div>
+          <div className="commandHeroMetrics">
+            <article>
+              <span>Active policies</span>
+              <strong>{activePolicyCount}</strong>
+              <em>Workspace defaults</em>
+            </article>
+            <article>
+              <span>Protected assets</span>
+              <strong>{policyRows.length}</strong>
+              <em>Operator-specific states</em>
+            </article>
+            <article>
+              <span>Training rules</span>
+              <strong>{trainingRuleCount}</strong>
+              <em>Model-learning controls</em>
+            </article>
+            <article>
+              <span>Licensing rules</span>
+              <strong>{chargeReadyCount}</strong>
+              <em>Commercial workflows</em>
+            </article>
+          </div>
+        </section>
+        <section className="signatureWidgetGrid governanceSignatureGrid" aria-label="Governance coverage widgets">
+          <GovernanceCoverage
+            coverage={governanceCoverage}
+            assetsProtected={policyRows.length}
+            policiesActive={activePolicyCount}
+            trainingRules={trainingRuleCount}
+            licensingRules={chargeReadyCount}
+          />
+          <AIAccessDecisions
+            allowed={policyRows.filter((policy) => policy.policyType === "allow").length}
+            denied={restrictedCount}
+            training={trainingRuleCount}
+            licensing={chargeReadyCount}
+            review={monitoredCount}
+            detail="Operator permissions convert crawler evidence into allow, restrict, training, licensing, and review workflows."
+          />
+          <article className="signatureWidget">
+            <span className="eyebrow">Needs attention</span>
+            <h2>{restrictedCount ? "Restricted scopes active" : "Add protected scopes"}</h2>
+            <p>Use policy rules to distinguish citation, training, paid access, and suspicious crawler workflows.</p>
+          </article>
+        </section>
         <section className="governanceStatusGrid" aria-label="Governance readiness">
           <article>
-            <span>Active policies</span>
+            <span>Total rules</span>
+            <strong>{policyRows.length + (controls.rules?.length || 0)}</strong>
+            <em>Defaults and crawler-specific access rules</em>
+          </article>
+          <article>
+            <span>Active rules</span>
             <strong>{activePolicyCount}</strong>
             <em>{controls.source === "enterprise" ? "Loaded from workspace policy storage" : "Local development controls enabled"}</em>
           </article>
@@ -118,9 +182,14 @@ export default function ControlCenter() {
             <em>Ready for tighter handling</em>
           </article>
           <article>
-            <span>Licensing state</span>
-            <strong>Charge-ready</strong>
-            <em>Commercial access rules prepared</em>
+            <span>Training rules</span>
+            <strong>{trainingRuleCount}</strong>
+            <em>Model-learning policy signals</em>
+          </article>
+          <article>
+            <span>Charge-ready rules</span>
+            <strong>{chargeReadyCount}</strong>
+            <em>Commercial access workflows prepared</em>
           </article>
         </section>
         {policyMessage && (

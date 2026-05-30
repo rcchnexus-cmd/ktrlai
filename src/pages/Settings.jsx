@@ -699,12 +699,19 @@ export default function Settings() {
     : isShowingPlaintextKey
       ? "Copy this key now. For security, you won't be able to view it again."
       : "Rotate an API key to reveal a full live tracker credential. After refresh, only the masked key is shown.";
+  const configurationReadyCount = [
+    hasStoredApiKey,
+    verifiedDomainCount > 0,
+    derivedInstallHealth.status === "active",
+    Boolean(enterprise?.members?.length),
+    Boolean(notificationPreferences.suspiciousCrawler)
+  ].filter(Boolean).length;
 
   return (
     <AppShell
-      title="Configuration"
-      eyebrow="Control Plane"
-      subtitle="Install the tracker, manage API keys, domains, team access, billing, security, and audit logs."
+      title="Workspace Configuration"
+      eyebrow="Configuration"
+      subtitle="Manage tracking installation, domain verification, API credentials, agent directives, and developer resources."
     >
       {settingsError ? (
         <div className="emptyState">
@@ -719,6 +726,36 @@ export default function Settings() {
       ) : !settings ? (
         <div className="loadingState">Loading settings...</div>
       ) : (
+        <>
+        <section className="commandHero configurationCommandHero" aria-label="Workspace configuration command summary">
+          <div className="commandHeroCopy">
+            <span className="eyebrow">Workspace configuration</span>
+            <h2>Tracker installation, credentials, domains, team access, and audit controls.</h2>
+            <p>Keep the control plane connected to your website, authenticated APIs, verified domains, and notification workflows.</p>
+          </div>
+          <div className="commandHeroMetrics">
+            <article>
+              <span>Setup progress</span>
+              <strong>{configurationReadyCount}/5</strong>
+              <em>Core controls ready</em>
+            </article>
+            <article>
+              <span>API credential</span>
+              <strong>{hasStoredApiKey ? "Ready" : "Missing"}</strong>
+              <em>{apiKeyHelpText}</em>
+            </article>
+            <article>
+              <span>Domains</span>
+              <strong>{verifiedDomainCount}</strong>
+              <em>Verified</em>
+            </article>
+            <article>
+              <span>Tracker</span>
+              <strong>{installStatusLabel}</strong>
+              <em>{formatDateTime(derivedInstallHealth.lastEventAt)}</em>
+            </article>
+          </div>
+        </section>
         <div className="settingsGrid">
           <section className="settingsConfigRail" aria-label="Control plane configuration sections">
             {[
@@ -1408,6 +1445,7 @@ window.KtrlAI.page();`}</code>
             </div>
           </section>
         </div>
+        </>
       )}
     </AppShell>
   );

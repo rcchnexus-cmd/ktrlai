@@ -6,24 +6,27 @@ import { useApp } from "../context/AppContext.jsx";
 
 const navGroups = [
   {
-    label: "Monitor",
+    label: "Control",
     routes: [
       { to: "/dashboard", label: "Operations", icon: "O" },
       { to: "/activity", label: "Activity", icon: "A" },
-      { to: "/analytics", label: "Analytics", icon: "I" },
-      { to: "/visibility", label: "Visibility", icon: "V" }
+      { to: "/analytics", label: "Analytics", icon: "I" }
     ]
   },
   {
-    label: "Govern",
+    label: "Intelligence",
     routes: [
+      { to: "/visibility", label: "Visibility", icon: "V" },
       { to: "/control", label: "Governance", icon: "G" },
-      { to: "/training", label: "Training", icon: "T" },
-      { to: "/monetization", label: "Monetization", icon: "$" }
+      { to: "/training", label: "Training", icon: "T" }
     ]
   },
   {
-    label: "Configure",
+    label: "Monetization",
+    routes: [{ to: "/monetization", label: "Licensing", icon: "$" }]
+  },
+  {
+    label: "Platform",
     routes: [{ to: "/settings", label: "Configuration", icon: "C" }]
   }
 ];
@@ -45,11 +48,45 @@ function isRouteActive(currentPath, to) {
   return currentPath === routePath(to);
 }
 
+function getAppSectionClass(path) {
+  if (path === "/analytics" || path === "/activity") {
+    return "app-section-intelligence";
+  }
+
+  if (path === "/visibility") {
+    return "app-section-visibility";
+  }
+
+  if (path === "/control" || path === "/training") {
+    return "app-section-governance";
+  }
+
+  if (path === "/monetization") {
+    return "app-section-licensing";
+  }
+
+  if (path === "/admin") {
+    return "app-section-admin";
+  }
+
+  if (path === "/settings") {
+    return "app-section-configuration";
+  }
+
+  return "app-section-operations";
+}
+
 export default function AppShell({ title, eyebrow, subtitle, children, action }) {
   const { path, navigate } = useNavigation();
   const { state, actions } = useApp();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const sidebarGroups = state.auth.isPlatformAdmin ? [...navGroups, adminGroup] : navGroups;
+  const sidebarGroups = state.auth.isPlatformAdmin
+    ? navGroups.map((group) =>
+        group.label === "Platform"
+          ? { ...group, routes: [...group.routes, ...adminGroup.routes] }
+          : group
+      )
+    : navGroups;
   const workspaceName = state.auth.workspace?.name || "Workspace";
   const workspacePlan = state.auth.user?.plan || "Free";
 
@@ -73,7 +110,7 @@ export default function AppShell({ title, eyebrow, subtitle, children, action })
   }, [isSidebarOpen]);
 
   return (
-    <div className="appShell">
+    <div className={`appShell app-dark-shell ${getAppSectionClass(path)}`}>
       <aside className={isSidebarOpen ? "sidebar open" : "sidebar"}>
         <div className="sidebarBrand">
           <Logo />
@@ -111,8 +148,8 @@ export default function AppShell({ title, eyebrow, subtitle, children, action })
         aria-label="Close navigation menu"
         onClick={closeSidebar}
       />
-      <main className="mainPanel">
-        <header className="topbar">
+      <main className="mainPanel app-dark-page">
+        <header className="topbar app-dark-header">
           <div className="topbarTitle">
             <button
               type="button"
@@ -132,8 +169,8 @@ export default function AppShell({ title, eyebrow, subtitle, children, action })
             </div>
           </div>
           <div className="topbarActions">
-            <div className="topbarRuntime" aria-label="Workspace environment">
-              <span>Workspace</span>
+            <div className="topbarRuntime app-runtime-strip" aria-label="Workspace environment">
+              <span><i className="app-live-indicator" aria-hidden="true" /> Workspace</span>
               <strong>{workspaceName}</strong>
               <em>{workspacePlan} plan</em>
             </div>

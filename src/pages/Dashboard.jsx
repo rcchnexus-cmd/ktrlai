@@ -2,6 +2,13 @@ import { useEffect } from "react";
 import AppShell from "../components/AppShell.jsx";
 import SetupGuide from "../components/SetupGuide.jsx";
 import { DistributionChart, TrafficChart } from "../components/Charts.jsx";
+import {
+  AIAccessDecisions,
+  AIOperatorIntelligence,
+  CrawlerEvidenceStream,
+  GovernanceCoverage,
+  LicensingReadiness
+} from "../components/SignatureWidgets.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { useApp } from "../context/AppContext.jsx";
 import { RouteLink } from "../navigation.jsx";
@@ -149,12 +156,41 @@ export default function Dashboard() {
   const topAiSystem = dashboard?.botDistribution?.[0];
   const governedShare = dashboard?.kpis?.find((kpi) => /page|govern|access/i.test(kpi.label));
   const pagesAccessedKpi = dashboard?.kpis?.find((kpi) => /page/i.test(kpi.label));
+  const observedOperators =
+    dashboard?.botDistribution?.map((item) => item.label).filter(Boolean).slice(0, 5) || [];
+  const commandOperators = observedOperators.length
+    ? observedOperators
+    : ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "Unknown crawler"];
+  const observedAssets = [
+    ...new Set((dashboard?.recentActivity || []).map((row) => row.page).filter(Boolean))
+  ].slice(0, 4);
+  const commandAssets = observedAssets.length
+    ? observedAssets
+    : ["/pricing", "/docs/api", "/blog/licensing", "/premium/*"];
+  const governedValue = Number.parseInt(String(governedShare?.value || "0").replace(/[^0-9.-]/g, ""), 10) || 0;
+  const activeRuleCount = Math.max(verifiedDomainCount, governedValue, 0);
+  const riskEventCount = suspiciousInsight?.value ?? "0";
+  const licensingReadyAssets = pagesAccessedKpi?.value ?? commandAssets.length;
+  const accessDecisionCount = dashboard?.recentActivity?.length || 0;
+  const protectedAssetCount = commandAssets.length;
+  const topAssets = commandAssets.slice(0, 4);
+  const governanceCoverage = Math.min(92, Math.max(18, activeRuleCount * 18));
+  const deniedDecisionCount = Number.parseInt(String(riskEventCount).replace(/[^0-9.-]/g, ""), 10) || 0;
+  const monitorDecisionCount = Math.max(0, accessDecisionCount - deniedDecisionCount);
+  const evidenceRows = (dashboard?.recentActivity || []).map((row) => ({
+    id: row.id,
+    time: row.time,
+    operator: row.bot,
+    path: row.page,
+    policy: row.policyAction || row.policy || row.category || "Monitor",
+    status: /block|deny|failed/i.test(row.status) ? "Attention" : row.status || "Observed"
+  }));
 
   return (
     <AppShell
-      title="Operations"
-      eyebrow="Monitor"
-      subtitle="Your AI access command center: setup, crawler evidence, access rules, and monetization readiness."
+      title="AI Access Command Center"
+      eyebrow="Operations"
+      subtitle="Monitor AI operators, access decisions, governance outcomes, and licensing readiness across your tracked assets."
       action={
         <RouteLink to="/visibility" className="primaryButton smallButton">
           Check site
@@ -178,148 +214,200 @@ export default function Dashboard() {
         <div className="loadingState">Loading operations telemetry...</div>
       ) : (
         <>
-          {shouldShowOnboarding && (
-            <SetupGuide settings={state.settings} dashboard={dashboard} />
-          )}
           <section className={`dataModeNotice ${dashboard.source || "empty"}`} aria-label="Operations data status">
             <StatusBadge status={dataLabel} />
             <span>{dataDetail}</span>
           </section>
-          <section className="opsStatusRail" aria-label="Workspace infrastructure status">
+          <section className="panel app-control-widget aiCommandCenter commandHero commandHeroOperations" aria-label="AI Access Command Center">
+            <div className="panelHeader">
+              <div>
+                <span className="eyebrow">Mission control</span>
+                <h2>AI Access Command Center</h2>
+                <p>Connect AI operators, accessed assets, access rules, and evidence outcomes in one operating view.</p>
+              </div>
+              <StatusBadge status={dashboard.source === "live" ? "Receiving events" : "Waiting for live events"} />
+            </div>
+            <div className="aiCommandStats" aria-label="Command center summary">
+              <article>
+                <span>Observed operators</span>
+                <strong>{dashboard.botDistribution?.length || commandOperators.length}</strong>
+              </article>
+              <article>
+                <span>Access decisions</span>
+                <strong>{accessDecisionCount}</strong>
+              </article>
+              <article>
+                <span>Protected assets</span>
+                <strong>{protectedAssetCount}</strong>
+              </article>
+              <article>
+                <span>Licensing ready</span>
+                <strong>{licensingReadyAssets}</strong>
+              </article>
+            </div>
+            <div className="aiCommandCenterCanvas">
+              <div className="commandColumn">
+                <span className="commandColumnLabel">Observed operators</span>
+                {commandOperators.map((operator) => (
+                  <strong className="commandNode operator" key={operator}>
+                    {operator}
+                  </strong>
+                ))}
+              </div>
+              <div className="commandColumn">
+                <span className="commandColumnLabel">Observed assets</span>
+                {commandAssets.map((asset) => (
+                  <code className="commandNode asset" key={asset}>
+                    {asset}
+                  </code>
+                ))}
+              </div>
+              <div className="commandColumn policy">
+                <span className="commandColumnLabel">Access rule</span>
+                {["Monitor", "Allow", "Restrict", "Review", "Charge-ready"].map((policy) => (
+                  <span className="commandNode policyState" key={policy}>
+                    {policy}
+                  </span>
+                ))}
+              </div>
+              <div className="commandColumn outcome">
+                <span className="commandColumnLabel">Outcome</span>
+                {["Logged", "Evidence stored", "Workflow prepared", "Licensing candidate"].map((outcome) => (
+                  <span className="commandNode outcomeState" key={outcome}>
+                    {outcome}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </section>
+          <section className="opsStatusRail" aria-label="Workspace runtime status">
             <article>
               <span>Tracker</span>
               <strong>{getInstallStatusLabel(installHealth.status)}</strong>
               <em>{installHealth.sdkInstalled ? "SDK detected" : "Awaiting SDK"}</em>
             </article>
             <article>
-              <span>Policies</span>
-              <strong>{verifiedDomainCount > 0 ? "Active" : "Pending"}</strong>
-              <em>{verifiedDomainCount || 0} verified domains</em>
-            </article>
-            <article>
-              <span>Ingestion</span>
+              <span>Events</span>
               <strong>{installHealth.sdkInstalled ? "Receiving" : "Waiting"}</strong>
               <em>{formatInstallDate(installHealth.lastEventAt)}</em>
             </article>
             <article>
-              <span>Rate limits</span>
-              <strong>Active</strong>
-              <em>Redis-ready abuse controls</em>
+              <span>Policies</span>
+              <strong>{verifiedDomainCount > 0 ? "Monitoring" : "Pending"}</strong>
+              <em>{verifiedDomainCount || 0} verified domains</em>
             </article>
             <article>
-              <span>Rollups</span>
-              <strong>{dashboard.source === "live" ? "Healthy" : "Ready"}</strong>
-              <em>Analytics acceleration</em>
+              <span>Intelligence</span>
+              <strong>{dashboard.source === "live" ? "Updated" : "Ready"}</strong>
+              <em>Rollup-ready summaries</em>
             </article>
             <article>
-              <span>Notifications</span>
-              <strong>Ready</strong>
-              <em>{installHealth.eventsToday || 0} events today</em>
+              <span>Licensing</span>
+              <strong>Beta</strong>
+              <em>Commercial workflow preparation</em>
+            </article>
+            <article>
+              <span>Workspace</span>
+              <strong>{state.auth.workspace?.name || "Workspace"}</strong>
+              <em>{state.auth.user?.plan || "Free"} plan</em>
             </article>
           </section>
-          <section className="panel dashboardFeatureMapPanel" aria-label="KtrlAI control plane areas">
+          <section className="signatureWidgetGrid operationsSignatureGrid" aria-label="Mission critical command widgets">
+            <AIOperatorIntelligence
+              operator={topAiSystem?.label || commandOperators[0]}
+              trustLevel={deniedDecisionCount ? "Mixed trust" : "Observed"}
+              activity={topAiSystem?.value ? `${topAiSystem.value} requests` : "Awaiting live volume"}
+              permission="Monitor"
+              detail="Operator identity, trust posture, activity volume, and current access permission stay connected."
+              operators={commandOperators}
+            />
+            <GovernanceCoverage
+              coverage={governanceCoverage}
+              assetsProtected={protectedAssetCount}
+              policiesActive={activeRuleCount}
+              trainingRules={0}
+              licensingRules={Number.parseInt(String(licensingReadyAssets).replace(/[^0-9.-]/g, ""), 10) || 0}
+              detail="Policies are monitoring access outcomes for verified domains and high-value paths."
+            />
+            <AIAccessDecisions
+              allowed={monitorDecisionCount}
+              denied={deniedDecisionCount}
+              training={0}
+              licensing={Number.parseInt(String(licensingReadyAssets).replace(/[^0-9.-]/g, ""), 10) || 0}
+              review={Math.max(0, accessDecisionCount - monitorDecisionCount)}
+            />
+            <LicensingReadiness
+              score={dashboard.source === "live" ? 64 : 32}
+              eligibleAssets={licensingReadyAssets}
+              chargeReadyAssets={activeRuleCount}
+              opportunityLevel="Beta planning"
+            />
+          </section>
+          {shouldShowOnboarding && (
+            <SetupGuide settings={state.settings} dashboard={dashboard} />
+          )}
+          <section className="panel activityStreamPanel">
             <div className="panelHeader">
               <div>
-                <span className="eyebrow">Control plane map</span>
-                <h2>AI crawl control workflow</h2>
+                <span className="eyebrow">Live AI access feed</span>
+                <h2>Latest access events</h2>
               </div>
-              <div className="panelActions">
-                <RouteLink to="/settings#install" className="secondaryButton smallButton">
-                  View install
-                </RouteLink>
-                <RouteLink to="/docs" className="secondaryButton smallButton">
-                  Docs
-                </RouteLink>
-              </div>
+              <RouteLink to="/activity" className="textLink">
+                View stream
+              </RouteLink>
             </div>
-            <div className="dashboardFeatureGrid">
-              {controlPlaneAreas.map(([title, to, body, status]) => (
-                <RouteLink to={to} className="dashboardFeatureCard" key={title}>
-                  <span>{status}</span>
-                  <strong>{title}</strong>
-                  <p>{body}</p>
-                </RouteLink>
-              ))}
-            </div>
+            <CrawlerEvidenceStream rows={evidenceRows} />
           </section>
-          <section className="opsCommandGrid" aria-label="AI traffic operations summary">
-            <article className="opsCommandCard primary">
-              <span>AI requests</span>
-              <strong>{aiRequestKpi?.value ?? "0"}</strong>
-              <p>{aiRequestKpi?.label || "Tracked AI requests"}</p>
-            </article>
-            <article className="opsCommandCard">
-              <span>Operators detected</span>
-              <strong>{dashboard.botDistribution?.length || 0}</strong>
-              <p>{topAiSystem?.label ? `${topAiSystem.label} is currently the top operator.` : "Operators appear after live crawler events."}</p>
-            </article>
-            <article className="opsCommandCard">
-              <span>Suspicious pressure</span>
-              <strong>{suspiciousInsight?.value ?? "0"}</strong>
-              <p>{suspiciousInsight?.detail || "Suspicious crawler activity will surface here."}</p>
-            </article>
-            <article className="opsCommandCard">
-              <span>Governed requests</span>
-              <strong>{governedShare?.value ?? "0"}</strong>
-              <p>{verifiedDomainCount > 0 ? `${verifiedDomainCount} verified domain${verifiedDomainCount === 1 ? "" : "s"} under policy.` : "Verify a domain to enforce workspace policy."}</p>
-            </article>
-            <article className="opsCommandCard">
-              <span>Pages accessed</span>
-              <strong>{pagesAccessedKpi?.value ?? "0"}</strong>
-              <p>{pagesAccessedKpi?.change || "Accessed paths appear after live tracker events."}</p>
-            </article>
-            <article className="opsCommandCard">
-              <span>Top operator</span>
-              <strong>{topAiSystem?.label || "Pending"}</strong>
-              <p>{topAiSystem?.value ? `${topAiSystem.value}% of detected crawler mix.` : "Top operator appears after live traffic."}</p>
-            </article>
-          </section>
-          <section className="dashboardGrid opsTwoColumn dashboardScopeGrid">
-            <article className="panel trafficScopePanel">
+          <section className="operationalIntelligenceGrid" aria-label="Operational intelligence">
+            <article className="panel intelligenceTrendCard">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Traffic intelligence</span>
-                  <h2>Analysis scope</h2>
+                  <span className="eyebrow">Access trends</span>
+                  <h2>AI request volume</h2>
                 </div>
-                <RouteLink to="/analytics" className="textLink">
-                  Open analytics
-                </RouteLink>
+                <em>7 days</em>
               </div>
-              <div className="dashboardFilterRail" aria-label="Available analytics filters">
-                {trafficFilters.map((filter) => (
-                  <span key={filter}>{filter}</span>
-                ))}
+              <TrafficChart data={dashboard.traffic} />
+            </article>
+            <article className="panel">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Top operators</span>
+                  <h2>Observed AI systems</h2>
+                </div>
               </div>
-              <div className="dashboardSignalList">
-                {trafficSignals.map((signal) => (
-                  <div key={signal}>
-                    <strong>{signal}</strong>
-                    <em>Supported by live activity and rollup-ready summaries</em>
+              <DistributionChart data={dashboard.botDistribution} />
+            </article>
+            <article className="panel intelligenceListCard">
+              <div className="panelHeader">
+                <div>
+                  <span className="eyebrow">Top assets</span>
+                  <h2>Protected paths</h2>
+                </div>
+              </div>
+              <div className="dashboardSignalList compact">
+                {topAssets.map((asset) => (
+                  <div key={asset}>
+                    <strong>{asset}</strong>
+                    <em>Evidence-ready tracked asset</em>
                   </div>
                 ))}
               </div>
             </article>
-            <article className="panel crawlerPolicyPanel">
+            <article className="panel crawlerPolicyPanel intelligencePolicyCard">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Manage crawlers</span>
-                  <h2>Policy matrix</h2>
+                  <span className="eyebrow">Governance outcomes</span>
+                  <h2>Access decisions</h2>
                 </div>
                 <RouteLink to="/control" className="textLink">
-                  Manage policies
+                  Manage rules
                 </RouteLink>
               </div>
               <p className="honestPolicyNote">
                 Network-level blocking is not enabled yet. Policies currently drive visibility, workflow, and tracker metadata.
               </p>
-              <div className="crawlerPolicyTable" role="table" aria-label="Crawler policy readiness">
-                <div className="crawlerPolicyHeader" role="row">
-                  <span>Crawler</span>
-                  <span>Operator</span>
-                  <span>Action</span>
-                  <span>Reason</span>
-                  <span>Evidence</span>
-                </div>
+              <div className="crawlerPolicyTable compact" role="table" aria-label="Governance outcomes">
                 {crawlerPolicyRows.map(([crawler, operator, action, reason, timestamp]) => (
                   <div className="crawlerPolicyRow" role="row" key={`${crawler}-${action}`}>
                     <strong>{crawler}</strong>
@@ -331,153 +419,50 @@ export default function Dashboard() {
                 ))}
               </div>
             </article>
-          </section>
-          <section className="panel activityStreamPanel">
-            <div className="panelHeader">
-              <div>
-                <span className="eyebrow">Live AI access feed</span>
-                <h2>Latest access events</h2>
-              </div>
-              <RouteLink to="/activity" className="textLink">
-                View stream
-              </RouteLink>
-            </div>
-            {dashboard.recentActivity.length === 0 ? (
-              <div className="emptyState">
-                <strong>No recent AI activity</strong>
-                <p>Install the tracker or run a visibility check to start collecting access evidence.</p>
-              </div>
-            ) : (
-              <div className="opsEvidenceStream" role="table" aria-label="Latest AI access evidence">
-                <div className="opsEvidenceHeader" role="row">
-                  <span>Timestamp</span>
-                  <span>Operator</span>
-                  <span>Path</span>
-                  <span>Action</span>
-                  <span>Policy</span>
-                  <span>Risk</span>
-                </div>
-                {dashboard.recentActivity.map((row) => {
-                  const risk = /block|deny|failed/i.test(row.status) ? "Attention" : "Monitor";
-
-                  return (
-                    <div className="opsEvidenceRow" role="row" key={row.id}>
-                      <span className="opsEvidenceTime">{row.time}</span>
-                      <strong className="opsEvidenceOperator">{row.bot}</strong>
-                      <code className="opsEvidencePath">{row.page}</code>
-                      <span>
-                        <StatusBadge status={row.status} />
-                      </span>
-                      <span className="opsEvidencePolicy">{row.policyAction || row.policy || row.category || "Monitor"}</span>
-                      <span className={risk === "Attention" ? "opsEvidenceRisk attention" : "opsEvidenceRisk"}>{risk}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-          <section className="dashboardGrid governanceOnlyGrid">
-            <article className="panel governanceSnapshotPanel">
+            <article className="panel readinessPanel intelligenceReadinessCard">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Governance snapshot</span>
-                  <h2>Policy readiness</h2>
-                </div>
-                <StatusBadge status={verifiedDomainCount > 0 ? "Ready" : "Pending"} />
-              </div>
-              <div className="infraHealthList">
-                <div>
-                  <span>Monitored crawlers</span>
-                  <strong>{dashboard.botDistribution?.length || 0}</strong>
-                  <em>Operators tracked by workspace evidence</em>
-                </div>
-                <div>
-                  <span>Restricted crawlers</span>
-                  <strong>{suspiciousInsight?.value ?? "0"}</strong>
-                  <em>Traffic requiring review</em>
-                </div>
-                <div>
-                  <span>Licensing readiness</span>
-                  <strong>Prepared</strong>
-                  <em>Usage evidence supports future content terms</em>
-                </div>
-                <div>
-                  <span>Training-related</span>
-                  <strong>{dashboard.botDistribution?.some((item) => /gpt|claude|perplexity|google/i.test(item.label || "")) ? "Detected" : "Watching"}</strong>
-                  <em>AI access evidence can inform training policy reviews</em>
-                </div>
-              </div>
-            </article>
-          </section>
-          <section className="dashboardGrid readinessGrid">
-            <article className="panel readinessPanel">
-              <div className="panelHeader">
-                <div>
-                  <span className="eyebrow">Monetization readiness</span>
-                  <h2>Future crawl pricing workflow</h2>
+                  <span className="eyebrow">Licensing opportunities</span>
+                  <h2>Commercial readiness</h2>
                 </div>
                 <StatusBadge status="Beta" />
               </div>
               <div className="readinessTagGrid">
-                {monetizationReadiness.map((item) => (
+                {monetizationReadiness.slice(0, 4).map((item) => (
                   <span key={item}>{item}</span>
                 ))}
               </div>
-              <p>Pay Per Crawl workflows are readiness-oriented until commercial charging and enforcement are explicitly enabled.</p>
+              <p>Pay Per Crawl workflows remain readiness-oriented until commercial charging and enforcement are explicitly enabled.</p>
             </article>
-            <article className="panel readinessPanel">
+            <article className="panel readinessPanel intelligenceResourcesCard">
               <div className="panelHeader">
                 <div>
-                  <span className="eyebrow">Configuration</span>
-                  <h2>Operational setup blocks</h2>
+                  <span className="eyebrow">Developer resources</span>
+                  <h2>Setup and reference</h2>
                 </div>
                 <RouteLink to="/settings" className="textLink">
                   Open config
                 </RouteLink>
               </div>
               <div className="readinessTagGrid">
-                {configurationReadiness.map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-            </article>
-            <article className="panel readinessPanel">
-              <div className="panelHeader">
-                <div>
-                  <span className="eyebrow">Developer / agent resources</span>
-                  <h2>Reference readiness</h2>
-                </div>
-                <RouteLink to="/docs" className="textLink">
-                  View docs
-                </RouteLink>
-              </div>
-              <div className="readinessTagGrid">
-                {developerResources.map((item) => (
+                {[...configurationReadiness.slice(0, 3), ...developerResources.slice(0, 3)].map((item) => (
                   <span key={item}>{item}</span>
                 ))}
               </div>
             </article>
           </section>
-          <section className="dashboardGrid opsTwoColumn">
-            <article className="panel">
-              <div className="panelHeader">
-                <div>
-                  <span className="eyebrow">Trend</span>
-                  <h2>AI traffic over time</h2>
-                </div>
-                <em>7 days</em>
-              </div>
-              <TrafficChart data={dashboard.traffic} />
-            </article>
-            <article className="panel">
-              <div className="panelHeader">
-                <div>
-                  <span className="eyebrow">Operator mix</span>
-                  <h2>Detected crawler distribution</h2>
-                </div>
-              </div>
-              <DistributionChart data={dashboard.botDistribution} />
-            </article>
+          <section className="recommendedActionPanel panel">
+            <div>
+              <span className="eyebrow">Recommended next actions</span>
+              <h2>Move from visibility to control.</h2>
+              <p>Complete the operating loop: verify ingestion, review live evidence, tune access rules, and prepare licensing candidates.</p>
+            </div>
+            <div className="recommendedActionList">
+              <RouteLink to="/activity">Review live evidence</RouteLink>
+              <RouteLink to="/control">Tune access rules</RouteLink>
+              <RouteLink to="/analytics">Inspect traffic intelligence</RouteLink>
+              <RouteLink to="/settings#install">Verify tracker install</RouteLink>
+            </div>
           </section>
         </>
       )}

@@ -12,6 +12,8 @@ export default function Training() {
   }, [actions, state.loading.training, state.training]);
 
   const training = state.training;
+  const approvedDatasetCount = training?.uploads?.filter((file) => /ready|approved|processed/i.test(file.status || "")).length || 0;
+  const restrictedDatasetCount = training?.uploads?.filter((file) => /restricted|private|blocked/i.test(file.status || "")).length || 0;
 
   const handleUpload = (event) => {
     const file = event.target.files?.[0];
@@ -27,14 +29,61 @@ export default function Training() {
 
   return (
     <AppShell
-      title="Training Policy"
-      eyebrow="Govern"
-      subtitle="Control model-learning permissions, approved datasets, source context, and licensing summaries."
+      title="AI Training Permissions"
+      eyebrow="Training"
+      subtitle="Govern model-learning exposure, protected content, dataset permissions, and operator controls."
     >
       {!training ? (
         <div className="loadingState">Loading training permissions...</div>
       ) : (
-        <div className="trainingLayout">
+        <>
+          <section className="commandHero trainingCommandHero" aria-label="AI training permissions command summary">
+            <div className="commandHeroCopy">
+              <span className="eyebrow">AI training permissions</span>
+              <h2>Control model-learning exposure and dataset governance.</h2>
+              <p>Track approved sources, restricted datasets, privacy posture, and licensing terms before training use.</p>
+            </div>
+            <div className="commandHeroMetrics">
+              <article>
+                <span>Learning permission</span>
+                <strong>{training.trainOnData ? "Allowed" : "Restricted"}</strong>
+                <em>Workspace policy</em>
+              </article>
+              <article>
+                <span>Approved datasets</span>
+                <strong>{approvedDatasetCount}</strong>
+                <em>Ready sources</em>
+              </article>
+              <article>
+                <span>Restricted datasets</span>
+                <strong>{restrictedDatasetCount}</strong>
+                <em>Protected sources</em>
+              </article>
+              <article>
+                <span>Exposure level</span>
+                <strong>{training.privacyLevel}</strong>
+                <em>Source context</em>
+              </article>
+            </div>
+          </section>
+          <section className="trainingSummaryGrid" aria-label="Training policy summary">
+            <article className="app-dark-metric">
+              <span>Model learning</span>
+              <strong>{training.trainOnData ? "Allowed" : "Restricted"}</strong>
+              <em>Workspace-level permission</em>
+            </article>
+            <article className="app-dark-metric">
+              <span>Approved datasets</span>
+              <strong>{training.uploads.length}</strong>
+              <em>Uploaded source packages</em>
+            </article>
+            <article className="app-dark-metric">
+              <span>Privacy level</span>
+              <strong>{training.privacyLevel}</strong>
+              <em>Source context boundary</em>
+            </article>
+          </section>
+          <div className="trainingLayout">
           <section className="panel">
             <div className="panelHeader">
               <div>
@@ -135,12 +184,13 @@ export default function Training() {
 
           <section className="panel outputPreview">
             <div>
-              <span className="eyebrow">Output preview</span>
+              <span className="eyebrow">Training policy preview</span>
               <h2>Approved model behavior</h2>
             </div>
             <p>{training.preview}</p>
           </section>
         </div>
+        </>
       )}
     </AppShell>
   );
