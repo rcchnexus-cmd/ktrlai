@@ -111,9 +111,13 @@ export default function AppShell({ title, eyebrow, subtitle, children, action })
 
   return (
     <div className={`appShell app-dark-shell ${getAppSectionClass(path)}`}>
-      <aside className={isSidebarOpen ? "sidebar open" : "sidebar"}>
+      <aside className={isSidebarOpen ? "sidebar open" : "sidebar"} id="app-navigation-drawer">
         <div className="sidebarBrand">
           <Logo />
+          <button type="button" className="appDrawerClose" aria-label="Close app navigation" onClick={closeSidebar}>
+            <span />
+            <span />
+          </button>
         </div>
         <nav className="sidebarNav" aria-label="Application navigation">
           {sidebarGroups.map((group) => (
@@ -155,6 +159,7 @@ export default function AppShell({ title, eyebrow, subtitle, children, action })
               type="button"
               className="appMenuButton"
               aria-label={isSidebarOpen ? "Close app navigation" : "Open app navigation"}
+              aria-controls="app-navigation-drawer"
               aria-expanded={isSidebarOpen}
               onClick={toggleSidebar}
             >

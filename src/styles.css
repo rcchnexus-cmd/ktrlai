@@ -14082,3 +14082,1158 @@ tbody td {
     grid-column: 2;
   }
 }
+
+/* Mobile-first responsive architecture: authoritative final layout layer. */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-width: 0;
+}
+
+body.landingDrawerOpen,
+body.mobileNavOpen,
+body.appDrawerOpen {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+.n8nLandingPage,
+.marketingHeader,
+.appShell,
+.appShell .mainPanel,
+.appShell .topbar,
+.appShell .panel,
+.appShell .tableWrap,
+.appShell .compactTableWrap,
+.appShell .eventStreamList,
+.appShell .opsEvidenceStream,
+.appShell .crawlerPolicyTable {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.n8nLandingPage *,
+.marketingHeader *,
+.appShell * {
+  min-width: 0;
+}
+
+.n8nLandingPage h1,
+.n8nLandingPage h2,
+.n8nLandingPage h3,
+.n8nLandingPage p,
+.n8nLandingPage strong,
+.n8nLandingPage a,
+.appShell h1,
+.appShell h2,
+.appShell h3,
+.appShell p,
+.appShell strong,
+.appShell a,
+.appShell td,
+.appShell th {
+  overflow-wrap: anywhere;
+}
+
+.n8nMobileMenuButton,
+.n8nLandingDrawerClose,
+.appDrawerClose {
+  display: none;
+}
+
+.n8nLandingNavDrawer {
+  display: contents;
+}
+
+.n8nLandingNavScrim,
+.n8nLandingDrawerHeader {
+  display: none;
+}
+
+.workflowVisual {
+  width: 100%;
+  min-width: 0;
+}
+
+.workflowCanvasMobile {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  .appShell .mainPanel {
+    width: calc(100% - 252px);
+    max-width: calc(100% - 252px);
+    margin-left: 252px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .n8nHeroSection,
+  .n8nLandingContainer,
+  .n8nLandingFooter {
+    width: calc(100% - 32px);
+    max-width: 1180px;
+  }
+
+  .n8nHeroSection {
+    padding: 72px 0 54px;
+  }
+
+  .n8nHeroGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 34px;
+  }
+
+  .n8nHeroCopy {
+    max-width: 760px;
+  }
+
+  .workflowCanvasDesktop {
+    display: none;
+  }
+
+  .workflowCanvasMobile {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 0;
+    padding: 18px;
+    overflow: hidden;
+    color: #ffffff;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255, 155, 38, 0.16), transparent 30%),
+      linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      rgba(27, 23, 40, 0.92);
+    background-size: auto, 24px 24px, 24px 24px, auto;
+    border: 1px solid var(--kt-border-dark);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+  }
+
+  .mobileWorkflowStatus {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--kt-border-dark);
+    color: var(--kt-text-muted-dark);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mobileWorkflowStatus span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobileWorkflowStatus i {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    background: #8af4c3;
+    border-radius: 999px;
+    box-shadow: 0 0 0 4px rgba(138, 244, 195, 0.1), 0 0 18px rgba(138, 244, 195, 0.4);
+  }
+
+  .mobileWorkflowStatus strong {
+    color: #ffffff;
+  }
+
+  .mobileWorkflowNode {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 6px;
+    padding: 15px;
+    background: rgba(10, 7, 18, 0.72);
+    border: 1px solid var(--kt-border-dark-strong);
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .mobileWorkflowNode.engine {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(255, 59, 33, 0.14), transparent 38%),
+      linear-gradient(180deg, rgba(67, 45, 51, 0.92), rgba(20, 14, 31, 0.94));
+    border-color: rgba(255, 155, 38, 0.32);
+  }
+
+  .mobileWorkflowNode.outcome {
+    border-color: rgba(138, 244, 195, 0.24);
+  }
+
+  .mobileWorkflowNode > span {
+    color: var(--kt-orange);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .mobileWorkflowNode strong {
+    color: #ffffff;
+    font-size: 16px;
+  }
+
+  .mobileWorkflowNode em {
+    color: var(--kt-text-muted-dark);
+    font-size: 12px;
+    font-style: normal;
+  }
+
+  .mobileWorkflowArrow {
+    display: grid;
+    min-height: 30px;
+    place-items: center;
+    color: var(--kt-orange);
+    font-size: 18px;
+    text-shadow: 0 0 18px rgba(255, 155, 38, 0.45);
+  }
+
+  .mobileOperatorCluster {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .mobileOperatorCluster b {
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    padding: 0 11px;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.075);
+    border: 1px solid var(--kt-border-dark);
+    border-radius: 999px;
+    font-size: 12px;
+  }
+
+  .n8nUseCaseRail,
+  .n8nProofGrid,
+  .n8nCapabilityGrid,
+  .n8nWhyNowCards,
+  .n8nPlanGrid,
+  .darkPreviewGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .n8nWorkflowSteps {
+    grid-template-columns: 1fr;
+  }
+
+  .n8nWorkflowSteps article:not(:last-child)::after {
+    top: auto;
+    right: 50%;
+    bottom: -13px;
+    width: 2px;
+    height: 14px;
+    transform: translateX(50%);
+  }
+
+  .appShell .commandHero,
+  .appShell .recommendedActionPanel,
+  .appShell .visibilityHero,
+  .appShell .operationalIntelligenceGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .n8nLandingNavWrap {
+    top: 8px;
+    width: calc(100% - 24px);
+    max-width: none;
+    margin-top: 8px;
+  }
+
+  .n8nLandingNav {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 9px 8px 14px;
+    border-radius: 18px;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .n8nLandingNav .logo {
+    max-width: calc(100% - 58px);
+  }
+
+  .n8nMobileMenuButton,
+  .appDrawerClose {
+    display: inline-grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    place-items: center;
+    padding: 0;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 13px;
+  }
+
+  .n8nMobileMenuButton {
+    align-content: center;
+    gap: 5px;
+  }
+
+  .n8nMobileMenuButton span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 999px;
+    transition: transform 160ms ease, opacity 160ms ease;
+  }
+
+  .n8nLandingNav.menuOpen .n8nMobileMenuButton span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .n8nLandingNav.menuOpen .n8nMobileMenuButton span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .n8nLandingNav.menuOpen .n8nMobileMenuButton span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .n8nLandingNavScrim {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(3, 2, 8, 0.72);
+    backdrop-filter: blur(6px);
+    transition: opacity 160ms ease, visibility 160ms ease;
+  }
+
+  .n8nLandingNavScrim.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .n8nLandingNavDrawer {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 71;
+    display: flex;
+    width: min(100%, 380px);
+    max-width: 100%;
+    flex-direction: column;
+    gap: 20px;
+    padding:
+      max(18px, env(safe-area-inset-top))
+      max(18px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom))
+      18px;
+    overflow-y: auto;
+    visibility: hidden;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(255, 92, 31, 0.18), transparent 32%),
+      rgba(11, 7, 20, 0.98);
+    border-left: 1px solid var(--kt-border-dark-strong);
+    box-shadow: -28px 0 80px rgba(0, 0, 0, 0.45);
+    transform: translateX(105%);
+    transition: transform 190ms ease, visibility 190ms ease;
+  }
+
+  .n8nLandingNavDrawer.open {
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .n8nLandingDrawerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--kt-border-dark);
+  }
+
+  .n8nLandingDrawerClose {
+    position: relative;
+    display: inline-grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    place-items: center;
+    padding: 0;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 13px;
+  }
+
+  .n8nLandingDrawerClose span {
+    position: absolute;
+    width: 20px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 999px;
+    transform: rotate(45deg);
+  }
+
+  .n8nLandingDrawerClose span:last-child {
+    transform: rotate(-45deg);
+  }
+
+  .n8nLandingNavLinks,
+  .n8nLandingNavActions {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .n8nLandingNavLinks {
+    justify-content: flex-start;
+  }
+
+  .n8nLandingNavLinks a,
+  .n8nLandingNavActions a {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 14px;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 13px;
+  }
+
+  .n8nLandingNavActions {
+    margin-top: auto;
+  }
+
+  .n8nLandingNavActions .n8nGradientButton {
+    justify-content: center;
+  }
+
+  .marketingNav {
+    width: calc(100% - 24px);
+    max-width: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .marketingNav .mobileNavPanel {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    max-height: none;
+    flex-direction: column;
+    gap: 18px;
+    padding:
+      calc(76px + env(safe-area-inset-top))
+      max(18px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom))
+      max(18px, env(safe-area-inset-left));
+    overflow-y: auto;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(7, 11, 20, 0.98);
+    border: 0;
+    border-radius: 0;
+    transform: translateX(105%);
+    transition: transform 190ms ease, opacity 190ms ease, visibility 190ms ease;
+  }
+
+  .marketingNav .mobileNavPanel.open {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .marketingNav .navMenus,
+  .marketingNav .navActions {
+    width: 100%;
+  }
+
+  .marketingNav .navActions {
+    margin-top: auto;
+  }
+
+  .marketingNav .mobileMenuButton {
+    position: relative;
+    z-index: 81;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .appShell {
+    display: block;
+  }
+
+  .appShell .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 100;
+    width: min(88vw, 320px);
+    max-width: 100%;
+    height: 100dvh;
+    padding:
+      max(16px, env(safe-area-inset-top))
+      16px
+      max(18px, env(safe-area-inset-bottom))
+      max(16px, env(safe-area-inset-left));
+    overflow-y: auto;
+    border-right: 1px solid var(--app-border) !important;
+    transform: translateX(-105%);
+    transition: transform 190ms ease;
+  }
+
+  .appShell .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .appShell .sidebarBrand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .appDrawerClose {
+    position: relative;
+  }
+
+  .appDrawerClose span {
+    position: absolute;
+    width: 20px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 999px;
+    transform: rotate(45deg);
+  }
+
+  .appDrawerClose span:last-child {
+    transform: rotate(-45deg);
+  }
+
+  .appShell .sidebarScrim {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(3, 6, 14, 0.7);
+    backdrop-filter: blur(5px);
+    transition: opacity 160ms ease, visibility 160ms ease;
+  }
+
+  .appShell .sidebarScrim.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .appShell .mainPanel {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(14px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-left)) !important;
+  }
+
+  .appShell .topbar {
+    position: relative;
+    top: 0;
+    display: flex;
+    width: 100%;
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .appShell .topbarTitle {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+
+  .appShell .appMenuButton {
+    display: inline-grid;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    place-items: center;
+  }
+
+  .appShell .topbar h1 {
+    font-size: clamp(26px, 7vw, 36px);
+    line-height: 1.02;
+  }
+
+  .appShell .topbarSubtitle {
+    max-width: 100%;
+    font-size: 13px;
+  }
+
+  .appShell .topbarActions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .appShell .topbarActions > *,
+  .appShell .topbarActions .smallButton {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .appShell .topbarRuntime {
+    grid-column: 1 / -1;
+  }
+
+  .appShell .dashboardGrid,
+  .appShell .controlLayout,
+  .appShell .trainingLayout,
+  .appShell .settingsGrid,
+  .appShell .installSetupGrid,
+  .appShell .adminSectionGrid,
+  .appShell .adminSecurityGrid,
+  .appShell .adminGrid,
+  .appShell .twoColumnPanel,
+  .appShell .commandHero,
+  .appShell .recommendedActionPanel,
+  .appShell .operationalIntelligenceGrid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: start;
+  }
+
+  .appShell .metricGrid,
+  .appShell .opsCommandGrid,
+  .appShell .opsStatusRail,
+  .appShell .governanceStatusGrid,
+  .appShell .aiCommandStats,
+  .appShell .signatureWidgetGrid,
+  .appShell .insightNarrativeGrid,
+  .appShell .activitySignatureGrid,
+  .appShell .governanceSignatureGrid,
+  .appShell .visibilityReadinessGrid,
+  .appShell .trainingSummaryGrid,
+  .appShell .licensingReadinessGrid,
+  .appShell .adminMetricGrid,
+  .appShell .adminPlanGrid,
+  .appShell .adminHealthGrid,
+  .appShell .adminEnvGrid,
+  .appShell .earningsSummary,
+  .appShell .billingPlanSummary,
+  .appShell .billingMiniPlans {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: start;
+  }
+
+  .appShell .aiCommandCenterCanvas {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .appShell .aiCommandCenterCanvas::before {
+    top: 8%;
+    bottom: 8%;
+    left: 18px;
+    width: 2px;
+    height: auto;
+    background: linear-gradient(180deg, rgba(255, 159, 28, 0.12), rgba(255, 159, 28, 0.75), rgba(255, 45, 32, 0.7), rgba(176, 70, 255, 0.42));
+  }
+
+  .appShell .commandColumn {
+    min-height: 0;
+    padding-left: 24px;
+  }
+
+  .appShell .panel,
+  .appShell .metricCard,
+  .appShell .app-dark-card,
+  .appShell .app-dark-panel,
+  .appShell .app-dark-metric,
+  .appShell .ktSignatureWidget,
+  .appShell .commandHeroMetrics article {
+    max-width: 100%;
+    min-height: 0;
+    align-self: start;
+  }
+
+  .appShell .filters,
+  .appShell .ruleBuilder,
+  .appShell .priceControls,
+  .appShell .inviteMemberCard,
+  .appShell .teamList article,
+  .appShell .policyGrid article {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .appShell .teamActions,
+  .appShell .productHint,
+  .appShell .productHintActions,
+  .appShell .panelHeader,
+  .appShell .liveIngestionHeader {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .appShell input,
+  .appShell select,
+  .appShell textarea,
+  .appShell button,
+  .appShell .primaryButton,
+  .appShell .secondaryButton,
+  .appShell .logoutButton {
+    max-width: 100%;
+    min-height: 44px;
+  }
+
+  .appShell pre,
+  .appShell code,
+  .appShell .installCodeBlock,
+  .appShell .apiKeyDisplay code,
+  .appShell .apiKey code,
+  .appShell .dnsRecordGrid code {
+    max-width: 100%;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .appShell .readinessTagGrid,
+  .appShell .dashboardFilterRail,
+  .appShell .installMethodTabs,
+  .appShell .statusBadgeRow {
+    display: flex;
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .appShell .ktCoverageLayout {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+  }
+
+  .appShell .ktCoverageRing {
+    width: min(132px, 100%);
+  }
+
+  .appShell .ktEvidenceHeader,
+  .appShell .opsEvidenceHeader,
+  .appShell .eventStreamHeader,
+  .appShell .crawlerPolicyHeader {
+    display: none;
+  }
+
+  .appShell .ktEvidenceRow,
+  .appShell .opsEvidenceRow,
+  .appShell .eventStreamRow,
+  .appShell .crawlerPolicyRow {
+    display: flex;
+    width: 100%;
+    min-width: 0 !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 14px 14px 14px 20px;
+  }
+
+  .appShell .ktEvidenceOperator,
+  .appShell .opsEvidenceOperator {
+    width: 100%;
+  }
+
+  .appShell .ktEvidenceRow code,
+  .appShell .opsEvidencePath,
+  .appShell .eventStreamRow code,
+  .appShell .eventStreamRow em,
+  .appShell .crawlerPolicyRow code {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .appShell .activityLogTable,
+  .appShell .adminTable,
+  .appShell .billingTable,
+  .appShell .auditTable {
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: fixed;
+  }
+
+  .appShell .activityLogTable th,
+  .appShell .activityLogTable td,
+  .appShell .adminTable th,
+  .appShell .adminTable td,
+  .appShell .billingTable th,
+  .appShell .billingTable td,
+  .appShell .auditTable th,
+  .appShell .auditTable td {
+    padding: 9px 6px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 600px) {
+  .n8nHeroSection,
+  .n8nLandingContainer,
+  .n8nLandingFooter {
+    width: calc(100% - 24px);
+  }
+
+  .n8nHeroSection {
+    padding: 52px 0 40px;
+  }
+
+  .n8nHeroCopy {
+    gap: 16px;
+  }
+
+  .n8nHeroCopy h1 {
+    max-width: 100%;
+    font-size: clamp(28px, 9.4vw, 38px);
+    line-height: 1.02;
+    letter-spacing: -0.045em;
+  }
+
+  .n8nHeroCopy p {
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .n8nHeroTelemetry,
+  .operatorOrbit,
+  .n8nTrustSetupStrip > div,
+  .n8nLandingFooter nav {
+    display: flex;
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .n8nHeroActions,
+  .n8nFinalCtaCopy > div {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .n8nHeroActions a,
+  .n8nFinalCtaCopy > div a {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .n8nUseCaseRail,
+  .n8nProofGrid,
+  .n8nCapabilityGrid,
+  .n8nWhyNowCards,
+  .n8nPlanGrid,
+  .darkPreviewGrid,
+  .darkPreviewMetrics,
+  .n8nPolicyExamples > div,
+  .n8nTrustSetupStrip,
+  .n8nFinalCta,
+  .n8nLandingFooter {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .n8nUseCaseRail article,
+  .n8nProofGrid article,
+  .n8nCapabilityGrid article,
+  .n8nWhyNowCards article,
+  .n8nPlanGrid article,
+  .n8nWorkflowSteps article,
+  .darkPreviewMetrics article,
+  .darkPreviewStream,
+  .darkPolicyMatrix,
+  .darkSystemHealth,
+  .n8nFinalCta,
+  .n8nCtaProof {
+    display: flex;
+    max-width: 100%;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .n8nSection {
+    padding: 52px 0;
+  }
+
+  .n8nSectionIntro h2,
+  .n8nFinalCta h2,
+  .landing-section-title-xl,
+  .landing-section-title-md,
+  .landing-section-title-sm {
+    font-size: clamp(27px, 8.8vw, 36px);
+    line-height: 1.06;
+    letter-spacing: -0.04em;
+  }
+
+  .n8nUseCaseRail {
+    margin-bottom: 34px;
+  }
+
+  .n8nFinalCta {
+    margin: 38px 0 58px;
+    padding: 22px;
+  }
+
+  .darkPreviewHeader,
+  .darkPreviewStream div,
+  .darkPolicyMatrix p,
+  .darkSystemHealth p,
+  .n8nCtaProof > div {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .n8nLandingFooter {
+    align-items: start;
+  }
+
+  .n8nLandingFooter p {
+    grid-column: auto;
+  }
+
+  .appShell .topbarActions,
+  .appShell .metricGrid,
+  .appShell .opsCommandGrid,
+  .appShell .opsStatusRail,
+  .appShell .governanceStatusGrid,
+  .appShell .aiCommandStats,
+  .appShell .commandHeroMetrics,
+  .appShell .signatureWidgetGrid,
+  .appShell .insightNarrativeGrid,
+  .appShell .activitySignatureGrid,
+  .appShell .governanceSignatureGrid,
+  .appShell .visibilityReadinessGrid,
+  .appShell .trainingSummaryGrid,
+  .appShell .licensingReadinessGrid,
+  .appShell .adminMetricGrid,
+  .appShell .adminPlanGrid,
+  .appShell .adminHealthGrid,
+  .appShell .adminEnvGrid,
+  .appShell .earningsSummary,
+  .appShell .billingPlanSummary,
+  .appShell .billingMiniPlans,
+  .appShell .ktOperatorMeta,
+  .appShell .ktScoreStats,
+  .appShell .ktCoverageStats,
+  .appShell .recommendedActionList {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .appShell .panel,
+  .appShell .setupGuide,
+  .appShell .commandHero,
+  .appShell .aiCommandCenter,
+  .appShell .ktSignatureWidget {
+    padding: 15px;
+    border-radius: 18px;
+  }
+
+  .appShell .topbarTitle {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .appShell .appMenuButton {
+    grid-row: 1;
+  }
+
+  .appShell .topbarTitle > div {
+    grid-row: 2;
+  }
+
+  .appShell .commandHeroCopy h2,
+  .appShell .ktSignatureHeader h2,
+  .appShell .ktSignatureWidget h2 {
+    font-size: clamp(24px, 8.4vw, 32px);
+    line-height: 1.04;
+  }
+
+  .appShell .ktSignatureHeader,
+  .appShell .ktScoreHeader,
+  .appShell .panelHeader,
+  .appShell .liveIngestionHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .appShell .ktOperatorStack span {
+    grid-template-columns: 30px minmax(0, 1fr);
+    border-radius: 15px;
+  }
+
+  .appShell .ktOperatorStack em {
+    grid-column: 2;
+  }
+
+  .appShell .tableWrap,
+  .appShell .compactTableWrap,
+  .appShell .eventStreamList,
+  .appShell .opsEvidenceStream,
+  .appShell .crawlerPolicyTable {
+    overflow-x: hidden;
+  }
+
+  .appShell .activityLogTable,
+  .appShell .adminTable,
+  .appShell .billingTable,
+  .appShell .auditTable,
+  .appShell .activityLogTable tbody,
+  .appShell .adminTable tbody,
+  .appShell .billingTable tbody,
+  .appShell .auditTable tbody,
+  .appShell .activityLogTable tr,
+  .appShell .adminTable tr,
+  .appShell .billingTable tr,
+  .appShell .auditTable tr,
+  .appShell .activityLogTable td,
+  .appShell .adminTable td,
+  .appShell .billingTable td,
+  .appShell .auditTable td {
+    display: block;
+    width: 100%;
+  }
+
+  .appShell .activityLogTable thead,
+  .appShell .adminTable thead,
+  .appShell .billingTable thead,
+  .appShell .auditTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .appShell .activityLogTable tr,
+  .appShell .adminTable tr,
+  .appShell .billingTable tr,
+  .appShell .auditTable tr {
+    padding: 10px 12px;
+    border-top: 1px solid var(--app-border);
+  }
+
+  .appShell .activityLogTable tr:first-child,
+  .appShell .adminTable tr:first-child,
+  .appShell .billingTable tr:first-child,
+  .appShell .auditTable tr:first-child {
+    border-top: 0;
+  }
+
+  .appShell .activityLogTable td,
+  .appShell .adminTable td,
+  .appShell .billingTable td,
+  .appShell .auditTable td {
+    padding: 5px 0;
+    border: 0;
+  }
+}
+
+@media (max-width: 360px) {
+  .n8nLandingNavWrap {
+    width: calc(100% - 16px);
+  }
+
+  .n8nHeroSection,
+  .n8nLandingContainer,
+  .n8nLandingFooter {
+    width: calc(100% - 20px);
+  }
+
+  .workflowCanvasMobile,
+  .n8nFinalCta,
+  .appShell .panel,
+  .appShell .commandHero,
+  .appShell .aiCommandCenter,
+  .appShell .ktSignatureWidget {
+    padding: 13px;
+  }
+
+  .mobileWorkflowStatus {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .appShell .mainPanel {
+    padding-inline: 10px !important;
+  }
+
+  .appShell .topbar {
+    padding: 12px;
+  }
+
+  .appShell .topbar h1 {
+    font-size: 25px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .n8nLandingNavDrawer,
+  .n8nLandingNavScrim,
+  .marketingNav .mobileNavPanel,
+  .appShell .sidebar,
+  .appShell .sidebarScrim {
+    transition: none !important;
+  }
+}

@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react";
 import Logo from "../components/Logo.jsx";
 import { RouteLink } from "../navigation.jsx";
 
@@ -74,23 +75,62 @@ const useCases = [
 ];
 
 function GlassNav() {
+  const [isOpen, setIsOpen] = useState(false);
+  const closeMenu = useCallback(() => setIsOpen(false), []);
+
+  useEffect(() => {
+    document.body.classList.toggle("landingDrawerOpen", isOpen);
+
+    return () => document.body.classList.remove("landingDrawerOpen");
+  }, [isOpen]);
+
   return (
     <header className="n8nLandingNavWrap">
-      <nav className="n8nLandingNav" aria-label="KtrlAI public navigation">
+      <nav className={isOpen ? "n8nLandingNav menuOpen" : "n8nLandingNav"} aria-label="KtrlAI public navigation">
         <Logo />
-        <div className="n8nLandingNavLinks">
-          <a href="#product">Product</a>
-          <a href="#capabilities">Capabilities</a>
-          <a href="#use-cases">Use cases</a>
-          <RouteLink to="/docs">Docs</RouteLink>
-          <a href="#governance">Governance</a>
-          <a href="#pricing">Pricing</a>
-        </div>
-        <div className="n8nLandingNavActions">
-          <RouteLink to="/login">Sign in</RouteLink>
-          <RouteLink to="/signup" className="n8nGradientButton">
-            Get Started
-          </RouteLink>
+        <button
+          type="button"
+          className="n8nMobileMenuButton"
+          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-controls="landing-navigation-drawer"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen((current) => !current)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <button
+          type="button"
+          className={isOpen ? "n8nLandingNavScrim visible" : "n8nLandingNavScrim"}
+          aria-label="Close navigation menu"
+          onClick={closeMenu}
+        />
+        <div
+          className={isOpen ? "n8nLandingNavDrawer open" : "n8nLandingNavDrawer"}
+          id="landing-navigation-drawer"
+        >
+          <div className="n8nLandingDrawerHeader">
+            <Logo linked={false} />
+            <button type="button" className="n8nLandingDrawerClose" aria-label="Close navigation menu" onClick={closeMenu}>
+              <span />
+              <span />
+            </button>
+          </div>
+          <div className="n8nLandingNavLinks">
+            <a href="#product" onClick={closeMenu}>Product</a>
+            <a href="#capabilities" onClick={closeMenu}>Capabilities</a>
+            <a href="#use-cases" onClick={closeMenu}>Use cases</a>
+            <RouteLink to="/docs" onClick={closeMenu}>Docs</RouteLink>
+            <a href="#governance" onClick={closeMenu}>Governance</a>
+            <a href="#pricing" onClick={closeMenu}>Pricing</a>
+          </div>
+          <div className="n8nLandingNavActions">
+            <RouteLink to="/login" onClick={closeMenu}>Sign in</RouteLink>
+            <RouteLink to="/signup" className="n8nGradientButton" onClick={closeMenu}>
+              Get Started
+            </RouteLink>
+          </div>
         </div>
       </nav>
     </header>
@@ -99,55 +139,103 @@ function GlassNav() {
 
 function WorkflowCanvas() {
   return (
-    <aside className="workflowCanvas" aria-label="AI access workflow preview">
-      <div className="workflowCanvasStatus">
-        <span>
-          <i aria-hidden="true" />
-          Live policy graph
-        </span>
-        <strong>Evidence recorded</strong>
-      </div>
-      <div className="workflowNode source">
-        <span>Website event</span>
-        <strong>/docs/api</strong>
-        <em>GET request</em>
-      </div>
-      <div className="workflowLine horizontal" />
-      <div className="workflowNode engine">
-        <span>KtrlAI policy engine</span>
-        <strong>Classify + govern</strong>
-        <em>workspace policy context</em>
-      </div>
-      <div className="workflowLine horizontal second" />
-      <div className="workflowNode decision">
-        <span>Decision</span>
-        <strong>Training allowed?</strong>
-        <em>policy: restrict</em>
-      </div>
-      <div className="workflowBranch branchOne" />
-      <div className="workflowBranch branchTwo" />
-      <div className="workflowNode monitor">
-        <span>Branch A</span>
-        <strong>Monitor</strong>
-        <em>record evidence</em>
-      </div>
-      <div className="workflowNode restrict">
-        <span>Branch B</span>
-        <strong>Restrict</strong>
-        <em>flag operator</em>
-      </div>
-      <div className="operatorOrbit">
-        <span>OpenAI</span>
-        <span>Perplexity</span>
-        <span>Claude</span>
-        <span>Gemini</span>
-      </div>
-      <div className="workflowCanvasTelemetry">
-        <span>128k AI requests</span>
-        <span>18 policies active</span>
-        <span>42 suspicious signals</span>
-      </div>
-    </aside>
+    <div className="workflowVisual">
+      <aside className="workflowCanvas workflowCanvasDesktop" aria-label="AI access workflow preview">
+        <div className="workflowCanvasStatus">
+          <span>
+            <i aria-hidden="true" />
+            Live policy graph
+          </span>
+          <strong>Evidence recorded</strong>
+        </div>
+        <div className="workflowNode source">
+          <span>Website event</span>
+          <strong>/docs/api</strong>
+          <em>GET request</em>
+        </div>
+        <div className="workflowLine horizontal" />
+        <div className="workflowNode engine">
+          <span>KtrlAI policy engine</span>
+          <strong>Classify + govern</strong>
+          <em>workspace policy context</em>
+        </div>
+        <div className="workflowLine horizontal second" />
+        <div className="workflowNode decision">
+          <span>Decision</span>
+          <strong>Training allowed?</strong>
+          <em>policy: restrict</em>
+        </div>
+        <div className="workflowBranch branchOne" />
+        <div className="workflowBranch branchTwo" />
+        <div className="workflowNode monitor">
+          <span>Branch A</span>
+          <strong>Monitor</strong>
+          <em>record evidence</em>
+        </div>
+        <div className="workflowNode restrict">
+          <span>Branch B</span>
+          <strong>Restrict</strong>
+          <em>flag operator</em>
+        </div>
+        <div className="operatorOrbit">
+          <span>OpenAI</span>
+          <span>Perplexity</span>
+          <span>Claude</span>
+          <span>Gemini</span>
+        </div>
+        <div className="workflowCanvasTelemetry">
+          <span>128k AI requests</span>
+          <span>18 policies active</span>
+          <span>42 suspicious signals</span>
+        </div>
+      </aside>
+
+      <aside className="workflowCanvasMobile" aria-label="AI access workflow preview">
+        <div className="mobileWorkflowStatus">
+          <span><i aria-hidden="true" /> Receiving signals</span>
+          <strong>Evidence recorded</strong>
+        </div>
+        <div className="mobileWorkflowNode">
+          <span>Website event</span>
+          <strong>/docs/api</strong>
+          <em>GET request received</em>
+        </div>
+        <div className="mobileWorkflowArrow" aria-hidden="true">↓</div>
+        <div className="mobileWorkflowNode engine">
+          <span>Policy engine</span>
+          <strong>Classify + govern</strong>
+          <em>Workspace rules applied</em>
+        </div>
+        <div className="mobileWorkflowArrow" aria-hidden="true">↓</div>
+        <div className="mobileWorkflowNode">
+          <span>Decision</span>
+          <strong>Training access restricted</strong>
+          <em>Policy confidence: high</em>
+        </div>
+        <div className="mobileWorkflowArrow" aria-hidden="true">↓</div>
+        <div className="mobileWorkflowNode">
+          <span>Action</span>
+          <strong>Monitor + retain evidence</strong>
+          <em>Operator flagged for review</em>
+        </div>
+        <div className="mobileWorkflowArrow" aria-hidden="true">↓</div>
+        <div className="mobileWorkflowNode">
+          <span>Operator</span>
+          <div className="mobileOperatorCluster">
+            <b>OpenAI</b>
+            <b>Perplexity</b>
+            <b>Claude</b>
+            <b>Gemini</b>
+          </div>
+        </div>
+        <div className="mobileWorkflowArrow" aria-hidden="true">↓</div>
+        <div className="mobileWorkflowNode outcome">
+          <span>Outcome</span>
+          <strong>Evidence stored</strong>
+          <em>Analytics and workflow updated</em>
+        </div>
+      </aside>
+    </div>
   );
 }
 
